@@ -26,13 +26,15 @@ test("对标账号空白时：说清两种加法（自己加、让 AI 加），�
   assert.doesNotMatch(accountsEmpty(true).hint, /要先/);
 });
 
-test("什么都没配：三种调研都显示；缺东西的变灰，写清缺什么、要几分钟、约花多少钱，按钮是去配", () => {
+test("什么都没配：几种调研都显示；缺东西的变灰，写清缺什么、要几分钟、约花多少钱，按钮是去配；封面 VI 不用 TikHub 也能做", () => {
   const cards = researchCards({ tikhubReady: false, importedComments: 0, cost });
   assert.deepEqual(cards.map((c) => [c.title, c.ready, c.action, c.actionLabel]), [
     ["评论洞察", false, "social", "去导出评论"],
     ["视频拆解", false, "tikhub", "去接 TikHub"],
     ["账号研究", false, "tikhub", "去接 TikHub"],
+    ["封面 VI", true, "copy", "复制给 AI 的话"],
   ]);
+  assert.match(cards[3].line, /放进一个文件夹.*不花钱/);
   assert.match(cards[0].line, /社媒助手.*约 10 分钟，不花钱.*TikHub（约 5 分钟，抖音 200 条评论约 0\.07 到 0\.39 元/);
   assert.equal(cards[1].line, "还缺 TikHub：接好约 5 分钟，拆一条抖音视频不到 1 分钱。");
   assert.equal(cards[2].line, "还缺 TikHub：接好约 5 分钟，拉一个抖音博主 100 条作品约 0.04 元，带上播放量约 0.39 元。");
@@ -43,7 +45,7 @@ test("接好 TikHub：三种都能做；只导入了评论表：评论洞察能�
   assert.ok(all.every((c) => c.ready && c.action === "copy" && c.actionLabel === "复制给 AI 的话"));
   assert.match(all[0].line, /用 TikHub 采少量评论.*要完整的评论区，用社媒助手导出/);
   const onlyComments = researchCards({ tikhubReady: false, importedComments: 1280, cost });
-  assert.deepEqual(onlyComments.map((c) => c.ready), [true, false, false]);
+  assert.deepEqual(onlyComments.map((c) => c.ready), [true, false, false, true]);
   assert.equal(onlyComments[0].line, "评论表里已经有 1,280 条评论，可以直接让 AI 做。");
 });
 

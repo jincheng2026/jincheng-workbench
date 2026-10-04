@@ -25,6 +25,7 @@ import {
   writeCoverSettings,
 } from "../lib/covers.mjs";
 import { pickPort } from "../lib/ports.mjs";
+import { nextNoteName } from "../ui/lib/cover-names.ts";
 import { addOverviewRow } from "../lib/topics.mjs";
 import { readWorkDetail, readWorks, worksLayout } from "../lib/works.mjs";
 import { ensureWorkspace } from "../lib/workspace.mjs";
@@ -162,6 +163,13 @@ test("批注图：只收 PNG，存在 封面候选/批注/，同一张再批注�
   const again = saveAnnotation(layout, "T001", "02", png("note2"));
   assert.deepEqual([first.relative, again.name], ["封面候选/批注/封面-02-批注.png", "封面-02-批注-2.png"]);
   assert.equal(topicCovers(config, layout, "T001").batches[0].items[1].note, "封面-02-批注-2.png");
+  assert.equal(nextNoteName("02", "封面-02-批注-2.png"), "封面-02-批注-3.png");
+  assert.equal(nextNoteName("02", null), "封面-02-批注.png");
+  assert.equal(nextNoteName("02", "封面-02-批注.png"), "封面-02-批注-2.png");
+  // 页面先算好名字（先复制话再存图）：名字合规矩、没被占就用它；被占了、不合规矩就照旧自己起
+  assert.equal(saveAnnotation(layout, "T001", "02", png("n3"), { name: "封面-02-批注-3.png" }).name, "封面-02-批注-3.png");
+  assert.equal(saveAnnotation(layout, "T001", "02", png("n4"), { name: "封面-02-批注-3.png" }).name, "封面-02-批注-4.png");
+  assert.equal(saveAnnotation(layout, "T001", "02", png("n5"), { name: "../../坏.png" }).name, "封面-02-批注-5.png");
   assert.throws(() => saveAnnotation(layout, "T001", "02", jpg()), /要是 PNG/);
   assert.throws(() => saveAnnotation(layout, "T001", "09", png()), /找不到封面-09/);
   assert.equal(coverFile(config, layout, "T001", first.relative).mime, "image/png");

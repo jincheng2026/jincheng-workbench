@@ -4,11 +4,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { PASTE_HERE, askAddAccount, askAddTopic, askCommentReport, askResearch, askWrite } from "../ui/lib/ask-ai.ts";
+import { PASTE_HERE, askAddAccount, askAddTopic, askCommentReport, askCoverVi, askCoverViAny, askMakeCovers, askResearch, askReviseCover, askWrite } from "../ui/lib/ask-ai.ts";
 
 const brand = JSON.parse(readFileSync(new URL("../brand.json", import.meta.url), "utf8"));
 const write = { name: brand.name, repo: brand.repository, skill: `${brand.id}-write` };
 const research = { name: brand.name, repo: brand.repository, skill: `${brand.id}-research` };
+const cover = { name: brand.name, repo: brand.repository, skill: `${brand.id}-cover` };
+const account = { name: "抖音-某某", accountName: "某某", platform: "抖音" };
 
 const all = () => [
   ["写稿", askWrite("T001", write), write],
@@ -19,6 +21,10 @@ const all = () => [
   ["视频拆解", askResearch("video", research), research],
   ["账号研究", askResearch("account", research), research],
   ["加对标账号", askAddAccount(research), research],
+  ["拆对标账号的封面 VI", askCoverVi(account, cover), cover],
+  ["拆一个博主的封面 VI", askCoverViAny(cover), cover],
+  ["出一批封面", askMakeCovers("T002", cover, { count: 5, refs: ["T001_封面-03"] }), cover],
+  ["按备注改封面", askReviseCover("T002", "03", cover, { notes: ["（图上 1）标题字再大一点"], overall: "整体亮一点", markPath: "封面候选/批注/封面-03-批注.png" }), cover],
 ];
 
 test("每一段都带 Skill 名字和仓库地址：没装好时 AI 先照安装说明装好，缺什么直接装", () => {
@@ -47,6 +53,11 @@ test("写了目的和做完的样子：写成什么、最后告诉用户什么",
   assert.match(askResearch("account", research), /写成账号研究报告放进工作台的「市场调研」，做完告诉我结论/);
   assert.match(askAddAccount(research), /建好档案，让我在工作台「市场调研」的对标账号里能看到/);
   assert.match(askAddTopic(write), /把我想做的选题加进工作台，让我在工作台「选题」里能看到，做完告诉我每条的编号/);
+  assert.match(askCoverVi(account, cover), /拆对标账号「某某」（抖音）的封面 VI：看他最近 30 张封面，写成 VI 拆解放进工作台的「市场调研」，起好风格名；我还没有默认对标的话，就把他设成默认。做完告诉我/);
+  assert.match(askMakeCovers("T002", cover, { count: 5 }), /给选题 T002 出一批封面（5 张），照片和对标用我在工作台里设好的，放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题/);
+  assert.match(askMakeCovers("T002", cover, { refs: ["T001_封面-03", "T005_封面-01"] }), /（10 张）.*构图参考我收藏的 T001_封面-03、T005_封面-01。/);
+  const revise = askReviseCover("T002", "03", cover, { notes: ["（图上 1）标题字再大一点", "（图上 2）左手拿手机"], markPath: "封面候选/批注/封面-03-批注.png" });
+  assert.match(revise, /按我的备注改选题 T002 的封面-03，存成新的一张，做完告诉我新图的编号。备注：1\. （图上 1）标题字再大一点 2\. （图上 2）左手拿手机。标了编号的图在这条内容的 封面候选\/批注\/封面-03-批注\.png，只改备注说到的地方/);
 });
 
 test("用户只在最后贴一处自己知道的东西；中间不留空让人填", () => {
@@ -61,6 +72,7 @@ test("用户只在最后贴一处自己知道的东西；中间不留空让人�
   assert.match(askCommentReport(research, ["抖音评论.xlsx", "小红书.csv"]), /读我导入工作台的评论表（抖音评论\.xlsx、小红书\.csv）/);
   assert.match(askResearch("video", research), /视频链接贴在这句后面：$/);
   assert.match(askResearch("account", research), /博主的主页链接贴在这句后面：$/);
+  assert.match(askCoverViAny(cover), /博主的主页链接或者他的封面所在的文件夹贴在这句后面：$/);
   assert.match(askAddTopic(write), /选题（一条或几条都行）贴在这句后面：$/);
 });
 
@@ -70,4 +82,6 @@ test("要人做的事，AI 做到那一步再提醒", () => {
   for (const [name, text, info] of all()) {
     if (info === research) assert.match(text, /要我接 TikHub、导出评论或者同意花钱的时候，停下来告诉我怎么做。/, name);
   }
+  // 封面：放照片、接 TikHub、放封面图这些人做的事到了再提醒
+  for (const text of [askCoverVi(account, cover), askCoverViAny(cover), askMakeCovers("T002", cover)]) assert.match(text, /要我放照片、接 TikHub、放封面图或者点允许的时候，停下来告诉我怎么做。/);
 });

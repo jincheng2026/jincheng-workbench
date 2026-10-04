@@ -10,6 +10,7 @@ import { Check, Copy, FolderOpen, FolderPlus, PenLine, SquarePen } from 'lucide-
 import { toast } from 'sonner';
 import { useAppInfo } from '@/components/jc/app-info';
 import { TourHint, useTourDetail, useTourReload } from '@/components/jc/tour';
+import { CoverBlock } from '@/components/workbench/covers';
 import {
    Card,
    EmptyState,
@@ -451,6 +452,9 @@ export function WorkDetailPage({ id }: { id: string }) {
                })}
             </Block>
          )}
+
+         {/* 封面（1.1 加）：出一批、挑一张、按备注改，见 covers.tsx */}
+         <CoverBlock id={detail.id} />
 
          {others.length === 0 && countLine && (
             <p className="mt-8 text-[12.5px]" style={{ color: 'var(--jc-muted)' }}>

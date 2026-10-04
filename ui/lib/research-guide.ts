@@ -14,6 +14,15 @@ export type Account = {
    images: string[];
    updatedAt: string | null;
    problem: string | null;
+   // 封面 VI（1.1 加）：拆过没有、风格名、封面/ 里几张、是不是默认对标、对照网页在哪份调研报告里；旧的后台没有这一项
+   vi?: {
+      done: boolean;
+      style: string | null;
+      covers: number;
+      samples: string[];
+      isDefault: boolean;
+      report: { id: string; page: string } | null;
+   };
 };
 
 export type ReportPage = { file: string; title: string; subtitle: string | null };
@@ -60,7 +69,7 @@ export type TikhubCheck = {
    source?: string;
 };
 
-export const REPORT_TYPES = ['评论洞察', '视频拆解', '账号研究'] as const;
+export const REPORT_TYPES = ['评论洞察', '视频拆解', '账号研究', '封面VI'] as const;
 export type ResearchKind = 'comments' | 'video' | 'account';
 
 /** 空白的对标账号页：两种加法 */
@@ -90,7 +99,7 @@ export function reportsEmpty(anyReady: boolean) {
 }
 
 export type ResearchCard = {
-   kind: ResearchKind;
+   kind: ResearchKind | 'cover-vi'; // cover-vi：封面 VI（1.1 加），复制的话用封面 Skill（ask-ai.ts 的 askCoverViAny）
    type: string;
    title: string;
    what: string;
@@ -165,6 +174,19 @@ export function researchCards({
          line: tikhubReady ? `${cost.account}。` : needTikhub(cost.account),
          action: tikhubReady ? 'copy' : 'tikhub',
          actionLabel: tikhubReady ? '复制给 AI 的话' : '去接 TikHub',
+      },
+      // 封面 VI（1.1 加）：没接 TikHub 也能做，把博主的封面放进一个文件夹贴给 AI 就行，所以一直是能做的样子
+      {
+         kind: 'cover-vi',
+         type: '封面VI',
+         title: '封面 VI',
+         what: '拆一个博主的封面：逐张看他最近 30 张封面，找出能照着做的规律，以后出封面照他的风格来。',
+         ready: true,
+         line: tikhubReady
+            ? `贴他的主页链接，AI 用 TikHub 拉他最近的封面：${cost.account}。也可以贴一个放着他封面的文件夹，不花钱。`
+            : '把他的封面图放进一个文件夹，把文件夹贴给 AI，不花钱；接好 TikHub 以后贴主页链接就行。',
+         action: 'copy',
+         actionLabel: '复制给 AI 的话',
       },
    ];
 }

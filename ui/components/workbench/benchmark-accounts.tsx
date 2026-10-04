@@ -11,7 +11,8 @@ import { useAppInfo } from '@/components/jc/app-info';
 import { Card, DangerButton, EmptyState, PrimaryButton, SecondaryButton, SemBadge, SemBanner, copyText } from '@/components/jc/ui';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { errorText } from '@/lib/api';
-import { askAddAccount } from '@/lib/ask-ai';
+import { askAddAccount, askCoverVi } from '@/lib/ask-ai';
+import { setDefaultBenchmark } from '@/lib/covers';
 import { askInfo } from '@/lib/app-info';
 import { accountsEmpty, followersText, relatedReports } from '@/lib/research-guide';
 import {
@@ -243,7 +244,61 @@ function ImagesDialog({ account, onClose }: { account: Account; onClose: () => v
    );
 }
 
-function AccountCard({ a, reports, onEdit, onZoom }: { a: Account; reports: Report[]; onEdit: () => void; onZoom: () => void }) {
+/** 封面 VI（1.1 加）：拆过的写风格名、是不是默认对标、看拆解；没拆过给一句「复制给 AI：拆封面 VI」 */
+function ViLine({ a, onChanged }: { a: Account; onChanged: () => void }) {
+   const { info } = useAppInfo();
+   const [busy, setBusy] = useState(false);
+   const vi = a.vi;
+   if (!vi) return null;
+   const makeDefault = async () => {
+      setBusy(true);
+      try {
+         toast.success((await setDefaultBenchmark(a.name)).message);
+         onChanged();
+      } catch (err) {
+         toast.error(errorText(err));
+      } finally {
+         setBusy(false);
+      }
+   };
+   if (!vi.done) {
+      return (
+         <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }} data-vi="none">
+            封面 VI：还没拆。
+            <button
+               type="button"
+               className="font-medium"
+               style={{ color: 'var(--jc-accent)' }}
+               title="复制一段话，粘贴给 Codex 或 Claude Code"
+               onClick={() => void copyText(askCoverVi(a, askInfo(info, 'cover')), '拆封面 VI 的话', { next: '粘贴给 Codex 或 Claude Code，发出去。' })}
+            >
+               复制给 AI：拆封面 VI
+            </button>
+         </p>
+      );
+   }
+   return (
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px]" style={{ color: 'var(--jc-muted)' }} data-vi="done">
+         <span>
+            封面 VI：<b style={{ color: 'var(--jc-ink)' }}>{vi.style ?? '已拆'}</b>
+         </span>
+         {vi.isDefault ? (
+            <SemBadge tone="ok">默认对标</SemBadge>
+         ) : (
+            <button type="button" className="font-medium" style={{ color: 'var(--jc-accent)' }} disabled={busy} onClick={() => void makeDefault()}>
+               {busy ? '正在设……' : '设为默认'}
+            </button>
+         )}
+         {vi.report && (
+            <Link href={reportViewHref(vi.report.id, vi.report.page)} className="font-medium">
+               看拆解
+            </Link>
+         )}
+      </p>
+   );
+}
+
+function AccountCard({ a, reports, onEdit, onZoom, onChanged }: { a: Account; reports: Report[]; onEdit: () => void; onZoom: () => void; onChanged: () => void }) {
    const cover = a.images[0] ?? null;
    const followers = followersText(a.followers);
    const main = reports[0] ?? null;
@@ -309,6 +364,7 @@ function AccountCard({ a, reports, onEdit, onZoom }: { a: Account; reports: Repo
                   ))}
                </div>
             )}
+            <ViLine a={a} onChanged={onChanged} />
             {a.problem && a.problem !== '还没有 档案.json' && (
                <p className="text-[11.5px]" style={{ color: 'var(--jc-warn)' }}>
                   {a.problem}
@@ -461,7 +517,7 @@ export function BenchmarkAccounts({
                ) : (
                   <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(190px, calc(50% - 6px)), 1fr))' }}>
                      {shown.map((a) => (
-                        <AccountCard key={a.name} a={a} reports={relatedReports(a, reports)} onEdit={() => onEdit(a)} onZoom={() => setZoomed(a)} />
+                        <AccountCard key={a.name} a={a} reports={relatedReports(a, reports)} onEdit={() => onEdit(a)} onZoom={() => setZoomed(a)} onChanged={onChanged} />
                      ))}
                   </div>
                )}

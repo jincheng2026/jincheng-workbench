@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-react';
 import { useAppInfo } from '@/components/jc/app-info';
 import { Card, EmptyState, SecondaryButton, SemBadge, SemBanner, copyText } from '@/components/jc/ui';
-import { askResearch } from '@/lib/ask-ai';
+import { askCoverViAny, askResearch } from '@/lib/ask-ai';
 import { askInfo } from '@/lib/app-info';
 import { REPORT_TYPES, relatedReports, reportsEmpty, researchCards, type CostEstimate, type ResearchCard } from '@/lib/research-guide';
 import { reportFileUrl, reportViewHref, type Account, type Report } from '@/lib/research';
@@ -29,7 +29,7 @@ function ResearchCards({
    return (
       <section className="mb-8" aria-label="做一份新调研">
          <h2 className="mb-2.5 text-[15px] font-semibold">做一份新调研</h2>
-         <div className="grid gap-3 min-[961px]:grid-cols-3">
+         <div className="grid gap-3 min-[961px]:grid-cols-2 min-[1280px]:grid-cols-4">
             {cards.map((card) => (
                <Card
                   key={card.kind}
@@ -51,7 +51,13 @@ function ResearchCards({
                   </p>
                   <div className="mt-auto pt-1">
                      {card.action === 'copy' ? (
-                        <SecondaryButton size="small" onClick={() => void copyText(askResearch(card.kind, askInfo(info, 'research')), '给 AI 的话')} title="复制一段话，粘贴给 Codex 或 Claude Code">
+                        <SecondaryButton
+                           size="small"
+                           onClick={() =>
+                              void copyText(card.kind === 'cover-vi' ? askCoverViAny(askInfo(info, 'cover')) : askResearch(card.kind, askInfo(info, 'research')), '给 AI 的话')
+                           }
+                           title="复制一段话，粘贴给 Codex 或 Claude Code"
+                        >
                            <Copy size={14} /> {card.actionLabel}
                         </SecondaryButton>
                      ) : (

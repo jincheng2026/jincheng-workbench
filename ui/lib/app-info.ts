@@ -19,6 +19,7 @@ export type AppInfo = {
       commentImports: string;
       prompts: string;
       promptUsage: string;
+      coverAssets?: string;
       trash: string;
    };
    configFile: string;
@@ -27,6 +28,8 @@ export type AppInfo = {
    creation: { skill: string; repo: string; savePort: number };
    // 市场调研：调研 Skill 的名字、还差几步没配好（TikHub 没接、评论表没导入各算一步）
    research: { skill: string; missing: number };
+   // 封面（1.1 加）：封面 Skill 的名字（「复制给 AI 的话」里要写）；旧的后台没有这一项
+   cover?: { skill: string };
    // 新手指引第 3 步的一键打开：这台 Mac 上装好了处理官方链接的程序没有（没装好就不放按钮）
    aiLinks: { codex: boolean; 'claude-desktop'?: boolean; claude: boolean };
 };
@@ -39,8 +42,14 @@ export const APP_AUTHOR = process.env.NEXT_PUBLIC_APP_AUTHOR || '';
 export const APP_REPO = process.env.NEXT_PUBLIC_APP_REPO || '';
 
 /** 交给 AI 的话（lib/ask-ai.ts）要的三样：工作台的名字、仓库地址、用哪个 Skill */
-export function askInfo(info: AppInfo, which: 'write' | 'research') {
-   return { name: info.app.name || APP_NAME, repo: APP_REPO, skill: which === 'write' ? info.creation.skill : info.research.skill };
+export function askInfo(info: AppInfo, which: 'write' | 'research' | 'cover') {
+   const skill =
+      which === 'write'
+         ? info.creation.skill
+         : which === 'research'
+           ? info.research.skill
+           : info.cover?.skill || `${info.app.id || process.env.NEXT_PUBLIC_APP_ID || 'jincheng-workbench'}-cover`;
+   return { name: info.app.name || APP_NAME, repo: APP_REPO, skill };
 }
 
 /** 接口连不上时先用这一份把页面框架画出来，页面里再说清楚连不上。 */

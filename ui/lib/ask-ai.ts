@@ -1,4 +1,4 @@
-// 交给 AI 的话：页面上「复制给 AI」的那几段（写稿、加选题、三种调研、加对标账号），全在这里。
+// 交给 AI 的话：页面上「复制给 AI」的那几段（写稿、加选题、三种调研、加对标账号、封面的拆 VI 出一批按备注改），全在这里。
 // 只放纯函数（不引别的模块），页面和测试（tests/ask-ai.test.mjs）都直接用。
 //
 // 每段都照「提示词标准」写（原作者 2026-10-03 定，全文在仓库根目录 AGENTS.md「交给 AI 的话怎么写」）：
@@ -60,6 +60,41 @@ export function askResearch(kind: ResearchKind, info: AskInfo, { importedFiles =
 /** 导入评论表以后的「复制给 AI：生成评论报告」 */
 export function askCommentReport(info: AskInfo, files: string[]): string {
    return askResearch('comments', info, { importedFiles: files });
+}
+
+// —— 封面（1.1 加，封面 Skill）——
+const COVER_HUMAN = '要我放照片、接 TikHub、放封面图或者点允许的时候，停下来告诉我怎么做。';
+const VI_GOAL =
+   '看他最近 30 张封面，写成 VI 拆解放进工作台的「市场调研」，起好风格名；我还没有默认对标的话，就把他设成默认。做完告诉我他的封面最值得学的几条规律。';
+
+/** 对标账号卡片上的「复制给 AI：拆封面 VI」：账号已知，不用贴东西 */
+export function askCoverVi(account: { name: string; accountName: string; platform: string | null }, info: AskInfo): string {
+   const who = `对标账号「${account.accountName}」${account.platform ? `（${account.platform}）` : ''}`;
+   return `用${info.name}的封面 Skill（${info.skill}），拆${who}的封面 VI：${VI_GOAL}${tail(info, COVER_HUMAN)}`;
+}
+
+/** 调研页「封面 VI」卡片上的那一句：博主还没加进对标账号也行，最后贴主页链接或者封面所在的文件夹 */
+export function askCoverViAny(info: AskInfo): string {
+   return `用${info.name}的封面 Skill（${info.skill}），拆一个博主的封面 VI：${VI_GOAL}${tail(info, COVER_HUMAN)}博主的主页链接或者他的封面所在的文件夹${PASTE_HERE}`;
+}
+
+/** 详情页的「复制给 AI：出一批封面」：张数、构图参考（收藏里挑的）照页面上选的 */
+export function askMakeCovers(id: string, info: AskInfo, { count = 10, refs = [] as string[] } = {}): string {
+   const ref = refs.length ? `构图参考我收藏的 ${refs.join('、')}。` : '';
+   return `用${info.name}的封面 Skill（${info.skill}），给选题 ${id} 出一批封面（${count} 张），照片和对标用我在工作台里设好的，放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题。${ref}${tail(info, COVER_HUMAN)}`;
+}
+
+/** 详情页批注弹窗的「复制给 AI：按备注改」：备注逐条写进话里，批注图写成这条内容草稿文件夹里的相对位置 */
+export function askReviseCover(
+   id: string,
+   no: string,
+   info: AskInfo,
+   { notes = [] as string[], overall = '', markPath = '' } = {}
+): string {
+   const list = notes.map((text, i) => `${i + 1}. ${text}`).join(' ');
+   const asks = [list, overall ? `整体：${overall}` : ''].filter(Boolean).join('；');
+   const mark = markPath ? `标了编号的图在这条内容的 ${markPath}，` : '';
+   return `用${info.name}的封面 Skill（${info.skill}），按我的备注改选题 ${id} 的封面-${no}，存成新的一张，做完告诉我新图的编号。备注：${asks}。${mark}只改备注说到的地方，其余照旧。${tail(info, WRITE_HUMAN)}`;
 }
 
 /** 对标账号页的「复制给 AI 的话」：把一个博主加进对标账号 */
