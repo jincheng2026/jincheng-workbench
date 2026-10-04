@@ -25,6 +25,7 @@ test("第一次读设置：按默认值写出设置文件，路径都在工作�
     commentImports: path.join(work, "市场调研", "评论导入"),
     prompts: path.join(work, "提示词"),
     promptUsage: path.join(work, "提示词", "_使用记录.jsonl"),
+    coverAssets: path.join(work, "封面素材"),
     trash: path.join(work, "回收站"),
   });
   assert.deepEqual(config.contentTypes, ["教程", "科普", "口播"]);
