@@ -13,6 +13,7 @@
   python3 cover.py record note T002 "按备注改 封面-03 → 封面-12"   # 往「## 记录」追加一行，带时间
   python3 cover.py record summary T002 [--tries 11] [--errors 1]  # 这批的「生成 N 次，报错 M 次，实际像素 …」
   python3 cover.py save T002 --no 03 [--from 图片]     # 把 Codex 刚生成的图存成 封面候选/封面-03.png
+  python3 cover.py select T002 --no 03               # 你定了用这张：复制成草稿文件夹里的 封面-选定.png
 
 每个命令加 -h 看参数。退出码：0 成功；2 有问题（第一行就说了怎么办）；1 程序自己的问题。
 只用 Python 自带的模块；装了 Pillow 时拆 VI 多做两项检查，没装照样能跑完。
@@ -36,7 +37,7 @@ from cover_kit import record as R  # noqa: E402
 from cover_kit import settings as S  # noqa: E402
 from cover_kit import vi as V  # noqa: E402
 from cover_kit import where as W  # noqa: E402
-from cover_kit.text import minute, one_line, read_bytes, today  # noqa: E402
+from cover_kit.text import minute, one_line, read_bytes, today, unique_file  # noqa: E402
 
 ENV = os.environ
 TOOLS = ("image_gen", "只出提示词")
@@ -409,6 +410,44 @@ def cmd_record_summary(args):
     return 0
 
 
+# ---------- 选定 ----------
+
+def cmd_select(args):
+    """你在对话里定了用哪张：复制成草稿文件夹里的 封面-选定.<扩展名>，和工作台上点「就用这张」一样；「## 记录」记一行。
+    原来选定的那份扩展名不一样的，挪进回收站（文件名前加日期）；候选原图不动。"""
+    p = places()
+    cid = PL.content_id(args.content)
+    draft, _ = _draft(p, cid)
+    folder = os.path.join(draft, W.CANDIDATES)
+    no = _number(args.no)
+    k = W.candidates(draft, cid, p["cover_assets"])
+    name = next((n for n in k["images"] if int(W.COVER_FILE.match(n).group(1)) == no), None)
+    if not name:
+        only_prompt = any(int(W.PROMPT_FILE.match(n).group(1)) == no for n in k["prompt_only"])
+        raise UserError("封面候选里没有 封面-%s 的图（%s）%s。" % (
+            W.number_text(no), folder, "：这张只出了提示词，图还没放进来" if only_prompt else "：先用 where %s 看有哪几张" % cid))
+    ext = os.path.splitext(name)[1].lower()
+    ext = ".jpg" if ext == ".jpeg" else ext
+    moved = []
+    for old in sorted(os.listdir(draft)):
+        stem, old_ext = os.path.splitext(old)
+        path = os.path.join(draft, old)
+        if stem == W.SELECTED and old_ext.lower() != ext and os.path.isfile(path):
+            os.makedirs(p["trash"], exist_ok=True)
+            target = unique_file(p["trash"], "%s_%s_%s" % (today(), cid, stem), old_ext)
+            shutil.move(path, target)
+            moved.append(os.path.basename(target))
+    target = os.path.join(draft, W.SELECTED + ext)
+    shutil.copyfile(os.path.join(folder, name), target)
+    line = "%s 选定 封面-%s" % (minute(), W.number_text(no))
+    R.edit(folder, cid, lambda doc: doc.add_log(line))
+    say("选定了 封面-%s：%s（候选原图不动）" % (W.number_text(no), target))
+    if moved:
+        say("  原来选定的那份挪进了回收站：%s" % "、".join(moved))
+    say("  记下了：- %s" % line)
+    return 0
+
+
 # ---------- 存图 ----------
 
 def codex_images_dir():
@@ -558,6 +597,11 @@ def build_parser():
     rs.add_argument("--pixels", help="实际像素，比如 1024x1536（不写就从图上读）")
     rs.add_argument("--batch", type=int, help="第几批（不写就是最新一批）")
     rs.set_defaults(func=cmd_record_summary)
+
+    sl = sub.add_parser("select", help="你定了用哪张：复制成草稿文件夹里的 封面-选定，和工作台「就用这张」一样")
+    sl.add_argument("content", help="内容编号，比如 T002")
+    sl.add_argument("--no", required=True, help="编号，比如 03")
+    sl.set_defaults(func=cmd_select)
 
     sv = sub.add_parser("save", help="把 Codex 刚生成的图（或者 --from 的图）存成 封面候选/封面-NN")
     sv.add_argument("content", help="内容编号，比如 T002")
