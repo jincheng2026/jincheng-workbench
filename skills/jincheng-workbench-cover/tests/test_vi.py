@@ -122,7 +122,7 @@ class ViFlowTest(unittest.TestCase):
         self.assertEqual(sorted(os.listdir(report)), ["VI规范.md", "images", "index.html", "inventory.json", "meta.json", "study.json"])
         self.assertEqual(json.loads(read(os.path.join(report, "meta.json")), object_pairs_hook=OrderedDict),
                          OrderedDict([("title", "示例博主的封面 VI"), ("date", "2026-10-05"), ("type", "封面VI"), ("source", ACCOUNT),
-                                      ("pages", ["index.html"]), ("workbenchVisible", True)]))
+                                      ("pages", [OrderedDict([("file", "index.html"), ("title", "封面 VI")])]), ("workbenchVisible", True)]))
         self.assertEqual(sorted(os.listdir(os.path.join(report, "images"))), ["K01.png", "K02.jpg", "K03.png", "K04.png"])
         for name in os.listdir(os.path.join(report, "images")):
             with open(os.path.join(report, "images", name), "rb") as a, open(os.path.join(self.covers, name), "rb") as b:

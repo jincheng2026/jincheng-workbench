@@ -3,7 +3,7 @@
 //   node scripts/rename.mjs --name "新名字" --id NewId --package new-name --holder "署名" [--year 2026] [--dry-run]
 // 只写要改的那几项就行。改的是 git 管着的文字文件里出现的旧值（brand.json、package.json、LICENSE、README、docs 等），
 // 不碰 ui/LICENSE.md（circle 原作者的版权声明必须原样保留）。
-// 改 id 时，写稿 Skill 和调研 Skill 的文件夹 skills/<旧 id>-write、skills/<旧 id>-research 也跟着改名（Skill 的名字就是文件夹名）。
+// 改 id 时，写稿、调研、封面三个 Skill 的文件夹 skills/<旧 id>-write、skills/<旧 id>-research、skills/<旧 id>-cover 也跟着改名（Skill 的名字就是文件夹名）。
 // 已经在用的人：他电脑上的 ~/Documents/<旧 id> 和 ~/Library/Application Support/<旧 id> 不会自动搬，改 id 前想清楚；
 // 装好的 Skill（~/.claude/skills/<旧 id>-write 等）也要照安装说明重新装一次。
 import { execFileSync } from "node:child_process";
@@ -81,7 +81,7 @@ for (const file of files) {
 }
 // 写稿 Skill、调研 Skill 的文件夹跟着 id 改名
 const skillMoves = wanted.id && wanted.id !== brand.id
-  ? ["write", "research"].map((kind) => [path.join(ROOT, "skills", `${brand.id}-${kind}`), path.join(ROOT, "skills", `${wanted.id}-${kind}`)])
+  ? ["write", "research", "cover"].map((kind) => [path.join(ROOT, "skills", `${brand.id}-${kind}`), path.join(ROOT, "skills", `${wanted.id}-${kind}`)])
   : [];
 for (const [from, to] of skillMoves) {
   if (!existsSync(from)) continue;

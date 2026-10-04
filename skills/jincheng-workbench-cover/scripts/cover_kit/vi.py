@@ -633,7 +633,7 @@ def build(account, reports_dir):
                     "RULES": "".join(rules_html), "CASES": "".join(cases_html), "CARDS": "".join(cards)}
     write_text(os.path.join(out, "index.html"), re.sub(r"\{\{([A-Z]+)\}\}", lambda m: replacements[m.group(1)], template))
     meta = OrderedDict([("title", "%s的封面 VI" % label), ("date", today()), ("type", REPORT_TYPE), ("source", os.path.basename(account)),
-                        ("pages", ["index.html"]), ("workbenchVisible", True)])
+                        ("pages", [OrderedDict([("file", "index.html"), ("title", "封面 VI")])]), ("workbenchVisible", True)])
     write_json(os.path.join(out, "meta.json"), meta)
     result.update({"output": out, "index": os.path.join(out, "index.html"), "title": meta["title"]})
     return result
