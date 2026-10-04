@@ -14,6 +14,7 @@ import {
   batchInfo,
   contentForm,
   coverFile,
+  defaultSizeFor,
   coverLibrary,
   createImageStyle,
   listPhotos,
@@ -111,10 +112,14 @@ test("读生成记录：批次按标题认，「## 记录」可以夹在中间�
   assert.deepEqual(batchInfo(record.batches[1].info), { style: "风格/2026-10-04_8张", styleName: "蓝白大字风", size: "横版 2.35:1" });
   assert.deepEqual(batchInfo("对标：抖音-某某；照片：我的照片/正脸.jpg"), { style: "抖音-某某", styleName: null, size: null }, "第一版的写法（没有尺寸）照样认");
   assert.deepEqual(batchInfo(null), { style: null, styleName: null, size: null });
+  // 账号名里自己带括号：最后一个括号才是风格名；没起名时 Skill 写「还没起名」
+  assert.deepEqual(batchInfo("对标：抖音-某某（AI）（暖黄手写风）；照片：1 张；尺寸：方形 1:1"), { style: "抖音-某某（AI）", styleName: "暖黄手写风", size: "方形 1:1" });
+  assert.deepEqual(batchInfo("对标：抖音-某某（还没起名）；照片：1 张"), { style: "抖音-某某", styleName: null, size: null });
 });
 
-test("视频还是文章：内容类型的名字带「文章」「图文」「公众号」这些字的算文章", () => {
+test("视频还是文章：内容类型的名字带「文章」「图文」「公众号」这些字的算文章；默认尺寸小红书的用竖版", () => {
   assert.deepEqual(["教程", "口播", "公众号文章", "小红书图文", "知识星球", "长文"].map(contentForm), ["视频", "视频", "文章", "文章", "文章", "文章"]);
+  assert.deepEqual(["口播", "公众号文章", "小红书笔记", "小红书图文", "知识星球"].map(defaultSizeFor), ["竖版 3:4", "横版 2.35:1", "竖版 3:4", "竖版 3:4", "横版 2.35:1"]);
 });
 
 test("一条内容的封面：按批次排，带上每批的风格和尺寸；只有提示词的也列出来，没登记的放最后；认出选定的是哪张", () => {

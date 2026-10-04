@@ -18,7 +18,8 @@
 
 - 批次小节标题固定「## 第 N 批」；只有一张表、没写小节标题时算第 1 批。
 - 小节里第一行写法固定（第二版约定）：「对标：<风格编号>（<风格名>）；照片：<几张>；日期：YYYY-MM-DD；软件：Codex；生图：image_gen；尺寸：竖版 3:4」。
-  工作台按它认风格：「对标：」后面到「（」之前是风格编号，括号里是风格名；尺寸是 sizes.py 里三种之一。
+  工作台按它认风格：最后一个括号里是风格名（还没起名写「还没起名」，括号一定有），「对标：」后面到这个括号之前是风格编号，
+  所以账号名里自己带括号也认得出；尺寸是 sizes.py 里三种之一。
 - 「## 记录」从第二版起只由 Skill 写（选定、按评论改、按备注改……），一行一件事；以前工作台写的行照样认。小节的先后不固定，读的时候按标题认。
 - 批次小节只由 AI 写，而且只用这里的命令写：AI 不手改表格。
 """
@@ -301,7 +302,7 @@ def edit(candidates_dir, cid, change):
 
 def info_line(style_id, style_name, photos, date, app, tool, size=None):
     """每批第一行，写法固定：对标：<风格编号>（<风格名>）；照片：<几张>；日期：…；软件：…；生图：…；尺寸：竖版 3:4"""
-    head = "对标：%s（%s）" % (style_id, style_name) if style_name else "对标：%s" % style_id
+    head = "对标：%s（%s）" % (style_id, style_name or "还没起名")
     line = "%s；照片：%s；日期：%s；软件：%s；生图：%s" % (head, photos, date, app, tool)
     return line + ("；尺寸：%s" % size.text if size is not None else "")
 

@@ -34,9 +34,9 @@ class SizesTest(unittest.TestCase):
 
     def test_没说尺寸时的默认值(self):
         self.assertEqual(Z.default(Z.SQUARE, "口播"), (Z.SQUARE, "这条内容上一批用的"))
-        for kind in ("公众号文章", "图文", "知识星球", "长文", "帖子", "小红书笔记", "文章"):
+        for kind in ("公众号文章", "图文", "知识星球", "长文", "帖子", "文章"):
             self.assertIs(Z.default(None, kind)[0], Z.WIDE, kind)
-        for kind in ("口播", "教程", "科普", None):
+        for kind in ("口播", "教程", "科普", "小红书笔记", "小红书图文", None):
             self.assertIs(Z.default(None, kind)[0], Z.PORTRAIT, kind)
 
     def test_从一行字里找尺寸(self):

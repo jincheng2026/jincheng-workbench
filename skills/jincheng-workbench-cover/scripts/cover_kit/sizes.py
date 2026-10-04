@@ -6,8 +6,8 @@
     | 方形 1:1    | 公众号次图、朋友圈    | 1024×1024  | 不用裁                        |
 
 - 生成记录每批第一行末尾写「；尺寸：竖版 3:4」这样的固定写法（三种之一），工作台按它认。
-- 没说尺寸时的默认（和工作台一样）：这条内容上一批用的 → 内容类型的名字带「文章」「图文」「公众号」「长文」「星球」「帖子」「笔记」的算文章，
-  用横版 2.35:1 → 其余算视频，用竖版 3:4。
+- 没说尺寸时的默认（和工作台一样）：这条内容上一批用的 → 内容类型的名字带「小红书」的用竖版 3:4（小红书图文、小红书笔记的封面是竖的）
+  → 带「文章」「图文」「公众号」「长文」「星球」「帖子」「笔记」的算文章，用横版 2.35:1 → 其余算视频，用竖版 3:4。
 - 裁图只用 macOS 自带的 sips（`sips -c 高 宽` 默认从中间裁），不装别的；sips 写不了 webp，webp 裁完存成 png。
   测试用环境变量 COVER_SIPS 指定 sips 在哪（写一个不存在的路径就当作没有 sips），别的时候不用它。
 """
@@ -20,6 +20,7 @@ from . import UserError
 from . import images as I
 
 ARTICLE_WORDS = ("文章", "图文", "公众号", "长文", "星球", "帖子", "笔记")
+PORTRAIT_WORDS = ("小红书",)  # 小红书图文、小红书笔记：封面是竖的
 
 
 class Size(object):
@@ -111,6 +112,8 @@ def default(previous=None, content_type=None):
     """没说尺寸时用哪种、为什么：(Size, 理由)。和工作台定默认值的顺序一样。"""
     if previous is not None:
         return previous, "这条内容上一批用的"
+    if content_type and any(word in content_type for word in PORTRAIT_WORDS):
+        return PORTRAIT, "内容类型「%s」是小红书的，封面用竖版" % content_type
     if is_article(content_type):
         return WIDE, "内容类型「%s」算文章" % content_type
     if content_type:
