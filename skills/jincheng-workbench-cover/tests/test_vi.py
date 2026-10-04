@@ -143,7 +143,8 @@ class ViFlowTest(unittest.TestCase):
         self.assertIn("四到八个字", out)
         code, out = self.cli(env, "vi", "export", ACCOUNT, "--style", "暖黄手写风")
         self.assertEqual(code, 0, out)
-        self.assertIn("下一步：用户还没有默认对标，直接设成默认：settings set-default %s" % ACCOUNT, out)
+        self.assertIn("下一步：用户还没有默认风格，直接设成默认：settings set-default \"%s\"" % ACCOUNT, out)
+        self.assertEqual(json.loads(read(os.path.join(self.account, "默认构图.json")))["ids"], ["K01"])  # 没写 --compositions：照案例的顺序取
         lines = read(os.path.join(self.account, "VI拆解.md")).splitlines()
         self.assertEqual(lines[:2], ["# 示例博主：封面 VI 拆解", "风格名：暖黄手写风"])
         text = "\n".join(lines)
@@ -159,7 +160,7 @@ class ViFlowTest(unittest.TestCase):
         code, out = self.cli(env, "settings", "set-default", ACCOUNT)
         self.assertEqual(code, 0, out)
         code, out = self.cli(env, "where")
-        self.assertIn("默认对标：%s（风格名：暖黄手写风）" % ACCOUNT, out)
+        self.assertIn("默认风格：%s（风格名：暖黄手写风）" % ACCOUNT, out)
 
         code, out = self.cli(env, "vi", "build", ACCOUNT)  # 同一天再出一次：另起一个，不覆盖
         self.assertEqual(code, 0, out)

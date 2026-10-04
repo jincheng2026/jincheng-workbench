@@ -1,10 +1,14 @@
 """cover.py save：把 Codex 刚生成的图（$CODEX_HOME/generated_images/ 里最新的一张）存成 封面候选/封面-NN；
-不覆盖、编号不复用、拿到的是旧图或者重复的图就停下。CODEX_HOME 指向临时文件夹，不碰真实的 ~/.codex。"""
+不覆盖、编号不复用、拿到的是旧图或者重复的图就停下。CODEX_HOME 指向临时文件夹，不碰真实的 ~/.codex。
+--size（第二版约定）：用 macOS 自带的 sips 从中间裁成这批的比例再存（方形不用裁）；没写就照生成记录里这批写的尺寸。
+真的裁图要有 sips，没有 sips 的电脑上那几条跳过（写明原因）；没有 sips 时报清楚的那一条用 COVER_SIPS 指到不存在的路径，哪都能跑。"""
 import os
 import time
 import unittest
 
-from support import TempWorkbench, jpeg, png, run_cli, write
+from support import NO_SIPS, TempWorkbench, banded_png, jpeg, png, png_pixels, run_cli, sips_here, write
+
+from cover_kit import images as I
 
 
 class SaveTest(unittest.TestCase):
@@ -81,6 +85,115 @@ class SaveTest(unittest.TestCase):
         code, out = self.save("--no", "02", "--from", txt)
         self.assertEqual(code, 2)
         self.assertIn("不是 png、jpg 或 webp 图片", out)
+
+
+GREEN = (0, 255, 0)
+
+
+def near(color, want, slack=8):
+    return all(abs(a - b) <= slack for a, b in zip(color, want))
+
+
+class SaveSizeTest(unittest.TestCase):
+    def setUp(self):
+        self.wb = TempWorkbench()
+        self.wb.topic("T002", "用 AI 十分钟写周报")
+        self.draft = self.wb.draft("T002", "用AI写周报")
+        self.cand = os.path.join(self.draft, "封面候选")
+        self.gen = os.path.join(self.wb.codex, "generated_images")
+        self.env = self.wb.env()
+
+    def tearDown(self):
+        self.wb.cleanup()
+
+    def generated(self, name, data):
+        return write(os.path.join(self.gen, "会话-1", name), data)
+
+    def save(self, *args, env=None):
+        return run_cli(["save", "T002"] + list(args), env or self.env)
+
+    def pixels(self, name):
+        with open(os.path.join(self.cand, name), "rb") as f:
+            return png_pixels(f.read())
+
+    def assert_all_green_edges(self, name):
+        """四个角和四条边的中点都是绿的：红条、蓝条都裁掉了，是从中间裁的。"""
+        width, height, pixel = self.pixels(name)
+        for x, y in ((0, 0), (width - 1, 0), (0, height - 1), (width - 1, height - 1), (width // 2, 0), (width // 2, height - 1), (0, height // 2), (width - 1, height // 2)):
+            self.assertTrue(near(pixel(x, y), GREEN), "%s 的 (%d, %d) 是 %r，不是绿的：没从中间裁" % (name, x, y, pixel(x, y)))
+
+    @unittest.skipUnless(sips_here(), NO_SIPS)
+    def test_竖版_1024x1536_从中间裁成_1024x1365(self):
+        source = self.generated("ig_1.png", banded_png(1024, 1536, 80))
+        code, out = self.save("--no", "01", "--size", "竖版3:4")
+        self.assertEqual(code, 0, out)
+        self.assertIn("存好了：%s（1024×1365，从 %s 的中间裁的）" % (os.path.join(self.cand, "封面-01.png"), source), out)
+        self.assertIn("尺寸：竖版 3:4（--size 写的）：从 1024×1536 的中间裁成了 1024×1365", out)
+        self.assertEqual(I.image_size(os.path.join(self.cand, "封面-01.png")), (1024, 1365))
+        self.assert_all_green_edges("封面-01.png")
+        self.assertTrue(os.path.isfile(source))  # 没裁的原图还在 Codex 的生图文件夹里
+        self.assertEqual(sorted(os.listdir(self.cand)), ["封面-01.png"])  # 工作文件夹里只有裁好的这张
+
+    @unittest.skipUnless(sips_here(), NO_SIPS)
+    def test_横版_1536x1024_从中间裁成_1536x654_同一张不存两次(self):
+        self.generated("ig_1.png", banded_png(1536, 1024, 180))
+        code, out = self.save("--no", "01", "--size", "横版 2.35:1")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(I.image_size(os.path.join(self.cand, "封面-01.png")), (1536, 654))
+        self.assert_all_green_edges("封面-01.png")
+        code, out = self.save("--no", "02", "--size", "横版2.35:1")  # 这次没生成出来新图：裁出来和 01 一模一样
+        self.assertEqual(code, 2)
+        self.assertIn("这张图已经存过了，就是 封面-01.png", out)
+        self.assertFalse(os.path.exists(os.path.join(self.cand, "封面-02.png")))
+
+    @unittest.skipUnless(sips_here(), NO_SIPS)
+    def test_方形不裁_竖版收到方图时切左右并提醒(self):
+        data = banded_png(1024, 1024, 100, vertical=True)
+        self.generated("ig_1.png", data)
+        code, out = self.save("--no", "01", "--size", "方形1:1")
+        self.assertEqual(code, 0, out)
+        self.assertIn("已经是这个比例，不用裁", out)
+        with open(os.path.join(self.cand, "封面-01.png"), "rb") as f:
+            self.assertEqual(f.read(), data)  # 原样存，一个字节都不动
+        code, out = self.save("--no", "02", "--size", "竖版3:4", "--from", self.generated("ig_2.png", banded_png(1024, 1024, 120, vertical=True)))
+        self.assertEqual(code, 0, out)
+        self.assertEqual(I.image_size(os.path.join(self.cand, "封面-02.png")), (768, 1024))
+        self.assert_all_green_edges("封面-02.png")
+        self.assertIn("这张是 1024×1024 的方图，竖版 3:4 要的是 1024×1536 的竖图", out)
+
+    @unittest.skipUnless(sips_here(), NO_SIPS)
+    def test_没写尺寸就照生成记录里这批写的_jpg照样是jpg(self):
+        write(os.path.join(self.cand, "生成记录.md"), "# T002 封面生成记录\n\n## 第 1 批\n\n对标：抖音-某某（暖黄手写风）；照片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：横版 2.35:1\n")
+        self.generated("ig_1.jpg", jpeg(1536, 1024))
+        code, out = self.save("--no", "01")
+        self.assertEqual(code, 0, out)
+        self.assertIn("尺寸：横版 2.35:1（照第 1 批写的）", out)
+        self.assertEqual(I.image_size(os.path.join(self.cand, "封面-01.jpg")), (1536, 654))
+        with open(os.path.join(self.cand, "封面-01.jpg"), "rb") as f:
+            self.assertEqual(I.sniff(f.read(16)), "JPEG")
+
+    def test_没有sips_说清楚_什么都不存(self):
+        no_sips = self.wb.env(COVER_SIPS=os.path.join(self.wb.home, "没有这个工具"))
+        self.generated("ig_1.png", png(64, 96))
+        code, out = self.save("--no", "01", "--size", "竖版3:4", env=no_sips)
+        self.assertEqual(code, 2)
+        self.assertIn("这台电脑上找不到 sips", out.splitlines()[0])
+        self.assertFalse(os.path.exists(os.path.join(self.cand, "封面-01.png")))
+        # 已经是这个比例的不用裁，没有 sips 也能存
+        self.generated("ig_2.png", png(30, 40))
+        code, out = self.save("--no", "01", "--size", "竖版3:4", env=no_sips)
+        self.assertEqual(code, 0, out)
+        self.assertIn("不用裁", out)
+        code, out = self.save("--no", "02", "--size", "4:3")
+        self.assertEqual(code, 2)
+        self.assertIn("尺寸只能写", out)
+
+    def test_没写尺寸_生成记录里也没写_原样存(self):
+        self.generated("ig_1.png", png(64, 96))
+        code, out = self.save("--no", "01")
+        self.assertEqual(code, 0, out)
+        self.assertIn("没写 --size，生成记录里这批也没写尺寸：原样存的，没裁", out)
+        self.assertEqual(I.image_size(os.path.join(self.cand, "封面-01.png")), (64, 96))
 
 
 if __name__ == "__main__":

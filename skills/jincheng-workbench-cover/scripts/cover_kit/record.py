@@ -4,26 +4,29 @@
 
     ## 第 1 批
 
-    对标：抖音-某某（暖黄手写风）；照片：我的照片/正脸.jpg；日期：2026-10-05；软件：Codex；生图：image_gen
+    对标：抖音-某某（暖黄手写风）；照片：2 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
 
     | 编号 | 本张变化 | 自检 | 文件名 |
     | --- | --- | --- | --- |
     | 01 | K03 讲台：人在右后，前景放大的手机 | 通过 | 封面-01.png |
 
-    生成 1 次，报错 0 次，实际像素 1024×1536
+    生成 1 次，报错 0 次，实际像素 1024×1365
 
     ## 记录
 
-    - 2026-10-05 21:10 按备注改 封面-03 → 封面-12
+    - 2026-10-05 21:10 按评论改 封面-03 → 封面-12
 
-- 批次小节标题固定「## 第 N 批」；只有一张表、没写小节标题时算第 1 批。小节里第一行是这批的对标、照片、日期、软件、生图方式。
-- 「## 记录」由工作台（选定、删除、收藏……）和 AI（按备注改）往后追加；小节的先后不固定，读的时候按标题认。
+- 批次小节标题固定「## 第 N 批」；只有一张表、没写小节标题时算第 1 批。
+- 小节里第一行写法固定（第二版约定）：「对标：<风格编号>（<风格名>）；照片：<几张>；日期：YYYY-MM-DD；软件：Codex；生图：image_gen；尺寸：竖版 3:4」。
+  工作台按它认风格：「对标：」后面到「（」之前是风格编号，括号里是风格名；尺寸是 sizes.py 里三种之一。
+- 「## 记录」从第二版起只由 Skill 写（选定、按评论改、按备注改……），一行一件事；以前工作台写的行照样认。小节的先后不固定，读的时候按标题认。
 - 批次小节只由 AI 写，而且只用这里的命令写：AI 不手改表格。
 """
 import os
 import re
 
 from . import UserError
+from . import sizes as Z
 from .text import one_line, update_text
 
 FILE = "生成记录.md"
@@ -33,7 +36,7 @@ BATCH_RE = re.compile(r"^##\s*第\s*(\d+)\s*批\s*$")
 LOG_RE = re.compile(r"^##\s*记录\s*$")
 H2_RE = re.compile(r"^##(?!#)")
 ROW_RE = re.compile(r"^\|\s*(\d{2,})\s*\|")
-SUMMARY_RE = re.compile(r"^生成\s*\d+\s*次")
+SUMMARY_RE = re.compile(r"^(?:生成\s*\d+\s*次|只出了提示词\s*\d+\s*份)")  # 这批的统计那一行（两种写法）
 MAX_CHECK = 30  # 自检一句话、30 字以内（工作台卡片上看的就是它）
 
 
@@ -120,6 +123,25 @@ class Doc(object):
         sections = self.batch_sections()
         return max(sections, key=lambda s: s.batch) if sections else None
 
+    def info_of(self, section):
+        """这一批小节的第一行（表格和统计之前的那一行）；没有返回 None。"""
+        for line in section.body:
+            s = line.strip()
+            if not s:
+                continue
+            if s.startswith("|") or SUMMARY_RE.match(s) or s.startswith("只出了提示词"):
+                return None
+            return s
+        return None
+
+    def last_size(self):
+        """最近一批写了尺寸的是哪种：(第几批, Size)；都没写返回 (None, None)。"""
+        for section in sorted(self.batch_sections(), key=lambda s: s.batch, reverse=True):
+            size = Z.find(self.info_of(section) or "")
+            if size is not None:
+                return section.batch, size
+        return None, None
+
     # ---- 改 ----
 
     def ensure_title(self):
@@ -193,6 +215,20 @@ class Doc(object):
         section.body = body
         return n
 
+    def fill_row(self, no_text, cells):
+        """只出了提示词的那一行（文件名是 生图描述-NN.md）换成图的那一行：Claude Code 出的提示词，用户在别处生成好图交回来时用。
+        返回这一行在第几批；没有这样的一行返回 None。"""
+        groups = [(1, self.prelude)] if self.legacy() else [(s.batch, s.body) for s in self.batch_sections()]
+        for n, lines in groups:
+            for i, line in enumerate(lines):
+                if not ROW_RE.match(line.strip()):
+                    continue
+                old = [c.strip() for c in line.strip().strip("|").split("|")]
+                if old and old[0] == no_text and len(old) >= 4 and re.match(r"^生图描述-\d{2,}\.md$", old[3]):
+                    lines[i] = "| " + " | ".join(cells) + " |"
+                    return n
+        return None
+
     def set_summary(self, n, text):
         section = self.find_batch(n)
         if section is None:
@@ -263,9 +299,31 @@ def edit(candidates_dir, cid, change):
     return result.get("value")
 
 
-def info_line(benchmark, style, photo, date, app, tool):
-    head = "对标：%s（%s）" % (benchmark, style) if style else "对标：%s" % benchmark
-    return "%s；照片：%s；日期：%s；软件：%s；生图：%s" % (head, photo, date, app, tool)
+def info_line(style_id, style_name, photos, date, app, tool, size=None):
+    """每批第一行，写法固定：对标：<风格编号>（<风格名>）；照片：<几张>；日期：…；软件：…；生图：…；尺寸：竖版 3:4"""
+    head = "对标：%s（%s）" % (style_id, style_name) if style_name else "对标：%s" % style_id
+    line = "%s；照片：%s；日期：%s；软件：%s；生图：%s" % (head, photos, date, app, tool)
+    return line + ("；尺寸：%s" % size.text if size is not None else "")
+
+
+def parse_info(line):
+    """把每批第一行拆开：{"style_id", "style_name", "photos", "date", "app", "tool", "size"}（size 是 Size 或者 None）。"""
+    out = {"style_id": None, "style_name": None, "photos": None, "date": None, "app": None, "tool": None, "size": None}
+    keys = {"对标": "style_id", "照片": "photos", "日期": "date", "软件": "app", "生图": "tool"}
+    for part in str(line or "").split("；"):
+        key, sep, value = part.partition("：")
+        if not sep:
+            continue
+        key, value = key.strip(), value.strip()
+        if key == "对标":
+            sid, paren, rest = value.partition("（")
+            out["style_id"] = sid.strip() or None
+            out["style_name"] = rest[:-1].strip() if paren and rest.endswith("）") else None
+        elif key == "尺寸":
+            out["size"] = Z.find("尺寸：" + value)
+        elif key in keys:
+            out[keys[key]] = value
+    return out
 
 
 def row_cells(no, change, check, file):

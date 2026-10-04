@@ -1,5 +1,5 @@
-"""cover.py where：位置、当前打开的文件夹和读写（说法照创作页的 where.py）、工作台在不在运行、照片和默认对标；
-给了编号再说封面候选、下一张的编号（删掉的、收藏的、生成记录里提过的都不复用）、第几批、详情页链接。"""
+"""cover.py where：位置、当前打开的文件夹和读写（说法照创作页的 where.py）、工作台在不在运行、照片和默认风格、全部风格（两种来源）；
+给了编号再说封面候选、下一张的编号（删掉的、第一版收藏过的、生成记录里提过的都不复用）、第几批、上一批的尺寸、这条选题的页面。"""
 import errno
 import hashlib
 import json
@@ -38,8 +38,9 @@ class WhereTest(unittest.TestCase):
                      "内容草稿：%s" % self.wb.drafts, "一批几张：5"):
             self.assertIn(line, out)
         self.assertIn("工作台：没在运行", out)
-        self.assertIn("照片：没设，我的照片 里也没有", out)
-        self.assertIn("默认对标：没设，也还没有拆过封面 VI 的对标账号", out)
+        self.assertIn("照片：我的照片 里还没有", out)
+        self.assertIn("默认风格：没设，也还没有拆过封面 VI 的风格", out)
+        self.assertIn("风格：0 个（拆过 0 个，还没拆 0 个）", out)
         self.assertEqual([n for n in os.listdir(self.wb.work) if n.startswith(".jc-write-check-")], [])  # 查完删掉
 
     def test_开在别的文件夹_能写就照常_写不了先申请(self):
@@ -66,8 +67,8 @@ class WhereTest(unittest.TestCase):
             server.routes["/api/health"] = (200, "application/json", health(PL.brand_id(), self.wb.settings_file, 40123))
             code, out = self.where("T002")
             self.assertEqual(code, 0, out)
-            self.assertIn("工作台：正在运行，http://127.0.0.1:40123", out)  # 用它报的界面端口
-            self.assertIn("工作台详情页：http://127.0.0.1:40123/content/T002", out)
+            self.assertIn("工作台：正在运行，http://127.0.0.1:40123（「封面」页：http://127.0.0.1:40123/content?tab=covers）", out)  # 用它报的界面端口
+            self.assertIn("工作台里这条选题的页面：http://127.0.0.1:40123/content/T002", out)
             self.assertEqual(server.requests[-1]["host"], "127.0.0.1:%d" % server.port)
         finally:
             server.close()
@@ -115,9 +116,11 @@ class WhereTest(unittest.TestCase):
         self.assertIn("批次：现在是第 2 批（登记了 1 张）；再开一批是第 3 批，生成计划写进 %s" % os.path.join(cand, "生成计划-第3批.md"), out)
         self.assertIn("生成记录：%s" % os.path.join(cand, "生成记录.md"), out)
         self.assertIn("选定的封面：封面-选定.png", out)
-        self.assertIn("批注图：1 张", out)
+        self.assertNotIn("批注", out)  # 第一版的批注图只用来认编号，不再说给用户
         self.assertIn("创作页：有", out)
-        self.assertIn("工作台详情页：http://127.0.0.1:39871/content/T002", out)
+        self.assertIn("T002 的内容类型：口播", out)
+        self.assertIn("尺寸：还没有哪一批写过尺寸；没说的话默认 竖版 3:4（内容类型「口播」算视频）", out)
+        self.assertIn("工作台里这条选题的页面：http://127.0.0.1:39871/content/T002", out)
 
     def test_还没有草稿文件夹_选题名从选题总览来(self):
         write(os.path.join(self.wb.work, "选题库", "00_选题总览.md"),
@@ -135,19 +138,37 @@ class WhereTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("内容编号要写成 T 加三位或四位数字", out)
 
-    def test_照片和默认对标(self):
-        write(os.path.join(self.wb.assets, "我的照片", "正脸.jpg"), jpeg(30, 40))
+    def test_照片_默认风格_全部风格两种来源(self):
+        photo = os.path.join(self.wb.assets, "我的照片", "正脸.jpg")
+        write(photo, jpeg(30, 40))
         account = self.wb.account("抖音-某某")
         write(os.path.join(account, "VI拆解.md"), "# 某某：封面 VI 拆解\n风格名：暖黄手写风\n")
+        for n in (1, 2, 3):
+            write(os.path.join(account, "封面", "K%02d.png" % n), png(6, 8, (n, 0, 0)))
+        write(os.path.join(account, "默认构图.json"), json.dumps({"ids": ["K03", "K01"], "by": "AI", "updatedAt": "2026-10-04T21:00:00+08:00"}))
         self.wb.account("抖音-还没拆")
+        mine = self.wb.style_folder("2026-10-04_2张", {"a.png": png(4, 4), "b.jpg": jpeg(8, 8)})
+        write(os.path.join(mine, "VI拆解.md"), "# 放进来的 2 张图：封面 VI 拆解\n风格名：蓝白大字风\n")
+        write(os.path.join(mine, "默认构图.json"), json.dumps({"ids": ["K02"], "by": "你", "updatedAt": "2026-10-04T22:00:00+08:00"}, ensure_ascii=False))
+        self.wb.style_folder("2026-10-05_1张", {"c.png": png(4, 4)})
         code, out = self.where()
-        self.assertIn("照片：没设。我的照片 里有 1 张：%s" % os.path.join(self.wb.assets, "我的照片", "正脸.jpg"), out)
-        self.assertIn("默认对标：没设。拆过封面 VI 的有：抖音-某某（暖黄手写风）", out)
-        self.assertIn("拆过封面 VI 的 1 个：抖音-某某「暖黄手写风」；还没拆的 1 个", out)
+        self.assertIn("照片：1 张，出封面默认都用", out)
+        self.assertIn("    1. %s" % photo, out)
+        self.assertIn("默认风格：没设。拆过的有：抖音-某某（暖黄手写风）、风格/2026-10-04_2张（蓝白大字风）", out)
+        self.assertIn("风格：4 个（拆过 2 个，还没拆 2 个）：", out)
+        self.assertRegex(out, r"  - 抖音-某某（对标账号）：风格名「暖黄手写风」（\d{4}-\d{2}-\d{2} 拆的），原图 3 张，默认构图：K03、K01（AI 挑的）\n")
+        self.assertIn("  - 抖音-还没拆（对标账号）：还没拆，原图 0 张，默认构图：还没有\n", out)
+        self.assertRegex(out, r"  - 风格/2026-10-04_2张（放进来的图）：风格名「蓝白大字风」（[^）]+），原图 2 张，默认构图：K02（你改过的）\n")
+        self.assertIn("  - 风格/2026-10-05_1张（放进来的图）：还没拆，原图 1 张，默认构图：还没有\n", out)
+        self.assertIn("放进来的图：%s" % os.path.join(self.wb.assets, "风格"), out)
+        write(os.path.join(self.wb.assets, "封面设置.json"), json.dumps({"photo": "我的照片/正脸.jpg", "benchmark": "风格/2026-10-04_2张", "batchSize": 6}, ensure_ascii=False))
+        code, out = self.where()
+        self.assertIn("    1. %s（主照片）" % photo, out)
+        self.assertIn("默认风格：风格/2026-10-04_2张（风格名：蓝白大字风）；VI拆解：%s" % os.path.join(mine, "VI拆解.md"), out)
+        self.assertRegex(out, r"  - 风格/2026-10-04_2张（放进来的图）：风格名「蓝白大字风」（[^）]+），原图 2 张，默认构图：K02（你改过的），默认风格\n")
         write(os.path.join(self.wb.assets, "封面设置.json"), json.dumps({"photo": "我的照片/正脸.jpg", "benchmark": "抖音-某某", "batchSize": 6}))
         code, out = self.where()
-        self.assertIn("照片：%s（在）" % os.path.join(self.wb.assets, "我的照片", "正脸.jpg"), out)
-        self.assertIn("默认对标：抖音-某某（风格名：暖黄手写风）；VI拆解：%s" % os.path.join(account, "VI拆解.md"), out)
+        self.assertIn("默认风格：抖音-某某（风格名：暖黄手写风）；VI拆解：%s" % os.path.join(account, "VI拆解.md"), out)
         self.assertIn("一批几张：6", out)
         code, out = run_cli(["where", "--json"], self.env, cwd=self.wb.work)
         data = json.loads(out)
