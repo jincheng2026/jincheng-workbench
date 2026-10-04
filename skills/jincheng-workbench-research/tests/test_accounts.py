@@ -86,8 +86,9 @@ class ProfileTest(unittest.TestCase):
             A.save_works(folder, profile, works, "tikhub")
             with open(os.path.join(folder, "作品.json"), encoding="utf-8") as f:
                 text = f.read()
-            self.assertNotIn("cover_url", text)  # 带签名的图片链接不存
-            self.assertNotIn(server.base, text)
+            data = json.loads(text)
+            self.assertTrue(all(w.get("cover_url", "").startswith(server.base) for w in data["works"]))  # 封面链接存下来，拆封面 VI 时马上下载
+            self.assertNotIn("avatar", text)  # 头像链接不存
         finally:
             server.close()
 

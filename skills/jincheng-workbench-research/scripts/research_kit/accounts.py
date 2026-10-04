@@ -170,7 +170,8 @@ def _tags(value):
 
 
 def save_works(folder, profile, works, source):
-    """作品.json：这次拉到的最近作品（不存图片链接：带签名、会过期）。"""
+    """作品.json：这次拉到的最近作品。封面链接（cover_url）也存：封面 Skill 拆封面 VI 时马上照它下载；
+    链接带签名、过几天会过期，过期了重新拉一次。头像链接不存。"""
     payload = OrderedDict([
         ("platform", profile.get("platform")),
         ("account_name", profile.get("name")),
@@ -187,7 +188,7 @@ def save_works(folder, profile, works, source):
 
 
 def _public_work(w):
-    keys = ("id", "url", "title", "desc", "published_at", "duration_seconds", "type", "likes", "comments", "collects", "shares", "pinned", "tags", "cover")
+    keys = ("id", "url", "title", "desc", "published_at", "duration_seconds", "type", "likes", "comments", "collects", "shares", "pinned", "tags", "cover", "cover_url")
     return OrderedDict((k, w.get(k)) for k in keys if k in w)
 
 

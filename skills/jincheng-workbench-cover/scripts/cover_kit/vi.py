@@ -135,7 +135,7 @@ def _digest(path):
         return hashlib.sha256(f.read()).hexdigest()
 
 
-def prepare(account, max_count=30, source=None):
+def prepare(account, max_count=20, source=None):
     """把对标账号的封面整理好：缺的从 作品.json 的封面链接下载（最近的 max_count 张，下过的不重下）；
     source 给了就从那个文件夹复制图进来；然后把不叫 Kxx 的图按顺序改名、写 原文件名.md、生成 VI研究/records.json。"""
     covers, study = folders(account)
@@ -359,7 +359,7 @@ def inventory(account):
     account_info = data.get("account", {})
     require(isinstance(account_info, dict) and account_info.get("label") and account_info.get("verification"), "account 要有 label 和 verification")
     selection = data.get("selection", {})
-    mode, limit = selection.get("mode", "provided"), selection.get("limit", 30)
+    mode, limit = selection.get("mode", "provided"), selection.get("limit", 20)
     require(mode in ("provided", "latest"), "selection.mode 只能是 provided 或 latest")
     require(limit is None or (type(limit) is int and limit > 0), "limit 要是正整数或者 null")
     rows = data.get("records")
@@ -426,7 +426,7 @@ def inventory(account):
         limitations.append("来源只有日期，可按日期分组；同日作品的先后顺序未核验")
     if mode == "provided":
         limitations.append("研究的是提供的样本，不据此宣称账号最新或完整历史")
-    if len(picked) < 30:
+    if len(picked) < (limit or 20):
         limitations.append("实际研究 %d 张；样本量与覆盖范围限制规则的外推" % len(picked))
     if any(not r.get("work_id") for r in picked):
         limitations.append("部分作品 ID 未知，按独立图片去重，不能确认独立作品总数")

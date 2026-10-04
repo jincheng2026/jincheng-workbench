@@ -2,7 +2,7 @@
 """封面 Skill 的命令：找位置、拆封面 VI 的文件活、封面设置、存图、登记生成记录。
 
   python3 cover.py where [T002]                      # 东西都放在哪、能不能读写、照片和默认对标；给了编号再说这条的封面候选
-  python3 cover.py vi prepare <对标账号> [--from 文件夹]   # 补封面（作品.json 有封面链接就下载最近 30 张）、改名 K01…、写清单
+  python3 cover.py vi prepare <对标账号> [--from 文件夹]   # 补封面（作品.json 有封面链接就下载最近 20 张）、改名 K01…、写清单
   python3 cover.py vi inventory <对标账号>             # 查每张能不能打开、有没有重复，写 VI研究/inventory.json
   python3 cover.py vi check <对标账号>                 # 核对 VI研究/study.json（逐图观察、规则、案例）
   python3 cover.py vi build <对标账号>                 # 出能点原图对比的报告：调研报告/<日期>_<账号名>封面VI/
@@ -81,7 +81,8 @@ def cmd_vi_prepare(args):
             hint = "作品.json 里没有封面链接"
         else:
             hint = "这个账号还没有作品数据（作品.json）"
-        raise UserError("「%s」还没有能拆的封面：%s 里没有图，%s。请用户把这个博主的 10 到 30 张封面放进这个文件夹"
+        raise UserError("「%s」还没有能拆的封面：%s 里没有图，%s。抖音、小红书的账号接了 TikHub 的，用调研 Skill 重新拉一次他最近 20 条作品"
+                        "（account add 主页链接 --max 20），拉完马上再跑 vi prepare；拉不了的，请用户把这个博主最近的 10 到 20 张封面放进这个文件夹"
                         "（从新到旧排更好），放好回一句「好了」再跑一次；封面在别的文件夹里的话，加 --from 那个文件夹。"
                         % (os.path.basename(account), covers, hint))
     say("封面整理好了：%s" % covers)
@@ -96,9 +97,10 @@ def cmd_vi_prepare(args):
     if network:
         say("  " + network)
     if r["download_failed"]:
-        say("  有 %d 张下载失败（封面链接多半过期了）。不够 10 张的话，请用户补几张进 %s 再跑一次。" % (r["download_failed"], covers))
+        say("  有 %d 张下载失败（封面链接多半过期了）。不够 10 张的话，用调研 Skill 重新拉一次这个账号（account add 主页链接 --max 20）马上再跑；"
+            "拉不了的，请用户补几张进 %s 再跑一次。" % (r["download_failed"], covers))
     if r["work_json"] and not r["cover_urls"] and r["count"] < args.max:
-        say("  作品.json 里没有封面链接，没法自动补；现在的 %d 张是放进来的。" % r["count"])
+        say("  作品.json 里没有封面链接（旧版调研 Skill 拉的），没法自动补；现在的 %d 张是放进来的。要补就用调研 Skill 重新拉一次这个账号再跑。" % r["count"])
     if r["skipped"]:
         say("  没纳入的：%s（报告网页显示不了这种格式。heic 可以用 macOS 自带的 sips 转成 jpg，比如 sips -s format jpeg 图.heic --out 图.jpg，转好放回 封面/ 再跑一次）" % "、".join(r["skipped"]))
     if r["skipped_source"]:
@@ -508,7 +510,7 @@ def build_parser():
     pr = vsub.add_parser("prepare", help="补封面、改名 K01…、写 VI研究/records.json")
     pr.add_argument("account", help="对标账号文件夹名，比如「抖音-某某」")
     pr.add_argument("--from", dest="source", help="封面在别的文件夹里：从这里复制进 封面/（不动原文件夹）")
-    pr.add_argument("--max", type=int, default=30, help="最多研究几张，默认 30；作品.json 有封面链接时补到这么多张")
+    pr.add_argument("--max", type=int, default=20, help="最多研究几张，默认 20；作品.json 有封面链接时补到这么多张")
     pr.set_defaults(func=cmd_vi_prepare)
     for name, func, text in (("inventory", cmd_vi_inventory, "查每张能不能打开、有没有重复，写 VI研究/inventory.json"),
                              ("check", cmd_vi_check, "核对 VI研究/study.json"),
