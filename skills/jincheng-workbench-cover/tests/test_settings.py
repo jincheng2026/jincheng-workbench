@@ -37,7 +37,7 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("照片设好了：我的照片/我.jpg", out)
         self.assertTrue(os.path.isfile(src))  # 原来那张不动
-        self.assertEqual(self.saved(), OrderedDict([("photo", "我的照片/我.jpg"), ("benchmark", None), ("batchSize", 10)]))
+        self.assertEqual(self.saved(), OrderedDict([("photo", "我的照片/我.jpg"), ("benchmark", None), ("batchSize", 5)]))
         # 同一张再放一次：不重复复制；同名的另一张：加 -2
         self.cli("settings", "set-photo", src)
         other = write(os.path.join(self.wb.home, "下载", "我.jpg"), jpeg(32, 40))
@@ -107,7 +107,7 @@ class SettingsTest(unittest.TestCase):
         code, out = self.cli("settings")
         self.assertEqual(code, 0, out)
         self.assertIn("photo 应该是一个路径或者 null", out)
-        self.assertIn("batchSize 应该是不小于 1 的整数，按 10 张处理", out)
+        self.assertIn("batchSize 应该是不小于 1 的整数，按 5 张处理", out)
         self.assertIn("一批几张：10", out)
         src = write(os.path.join(self.wb.home, "a.png"), png(4, 4))
         code, out = self.cli("settings", "set-photo", src)

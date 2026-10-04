@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { Check, ChevronLeft, ChevronRight, Copy, FolderOpen, Heart, ImagePlus, MessageSquarePlus, Trash2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppInfo } from '@/components/jc/app-info';
+import { OpenInAi } from '@/components/jc/open-in-ai';
 import { Card, PrimaryButton, SecondaryButton, SemBadge, copyText } from '@/components/jc/ui';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { errorText } from '@/lib/api';
@@ -94,7 +95,7 @@ export function CoverBlock({ id }: { id: string }) {
    // 删掉了、不在了的勾选自动去掉
    useEffect(() => setChecked((list) => list.filter((no) => byNo.get(no)?.image)), [byNo]);
 
-   const batchSize = count ?? covers?.settings.batchSize ?? 10;
+   const batchSize = count ?? covers?.settings.batchSize ?? 5;
    const askInfoCover = askInfo(app, 'cover');
 
    async function act(key: string, run: () => Promise<{ message: string; covers?: TopicCovers }>) {
@@ -125,10 +126,7 @@ export function CoverBlock({ id }: { id: string }) {
       else setTrashing(no);
    };
 
-   const copyMake = () => {
-      const text = askMakeCovers(id, askInfoCover, { count: batchSize, refs });
-      void copyText(text, '出一批封面的话', { next: AFTER_COPY });
-   };
+   const makeText = askMakeCovers(id, askInfoCover, { count: batchSize, refs });
 
    if (!covers) {
       return (
@@ -151,7 +149,6 @@ export function CoverBlock({ id }: { id: string }) {
    const total = withImage.length;
    const promptOnly = shown.length - total;
    const again = total > 0 || promptOnly > 0;
-   const MakeButton = again ? SecondaryButton : PrimaryButton;
 
    return (
       <section id="covers" className="mt-8" data-tour="covers">
@@ -222,7 +219,7 @@ export function CoverBlock({ id }: { id: string }) {
             <div className="border-b px-4 py-3.5" style={{ borderColor: 'var(--jc-border)' }}>
                <p className="text-[13px] leading-relaxed">
                   <b style={{ color: 'var(--jc-accent)' }}>{again ? `再出一批（第 ${covers.next.batch} 批）：` : '出一批封面：'}</b>
-                  把这句话复制给 Codex 或 Claude Code 发出去。Codex 会直接出图，出一张这里亮一张；Claude Code 不能直接出图，会把每张的生图提示词写好，你拿去能生图的工具里生成。
+                  交给 Codex 或 Claude Code。Codex 会直接出图，出一张这里亮一张；Claude Code 不能直接出图，会把每张的生图提示词写好，你拿去能生图的工具里生成。
                   {!photo && ' 还没放照片的话，AI 做到那一步会提醒你。'}
                </p>
                <div className="mt-2.5 flex flex-wrap items-center gap-2">
@@ -236,9 +233,7 @@ export function CoverBlock({ id }: { id: string }) {
                         </button>
                      ))}
                   </div>
-                  <MakeButton size="small" onClick={copyMake} title="复制一段话，粘贴给 Codex 或 Claude Code">
-                     <Copy size={14} /> 复制给 AI：{again ? '再出一批' : '出一批封面'}
-                  </MakeButton>
+                  <OpenInAi text={makeText} action={again ? '再出一批' : '出一批封面'} what="出一批封面的话" />
                </div>
                {favorites.length > 0 && (
                   <div className="mt-3">

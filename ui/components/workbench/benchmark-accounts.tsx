@@ -8,6 +8,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Copy, ImageIcon, Images, Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppInfo } from '@/components/jc/app-info';
+import { OpenInAi } from '@/components/jc/open-in-ai';
 import { Card, DangerButton, EmptyState, PrimaryButton, SecondaryButton, SemBadge, SemBanner, copyText } from '@/components/jc/ui';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { errorText } from '@/lib/api';
@@ -265,15 +266,7 @@ function ViLine({ a, onChanged }: { a: Account; onChanged: () => void }) {
       return (
          <p className="text-[11.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }} data-vi="none">
             封面 VI：还没拆。
-            <button
-               type="button"
-               className="font-medium"
-               style={{ color: 'var(--jc-accent)' }}
-               title="复制一段话，粘贴给 Codex 或 Claude Code"
-               onClick={() => void copyText(askCoverVi(a, askInfo(info, 'cover')), '拆封面 VI 的话', { next: '粘贴给 Codex 或 Claude Code，发出去。' })}
-            >
-               复制给 AI：拆封面 VI
-            </button>
+            <OpenInAi text={askCoverVi(a, askInfo(info, 'cover'))} action="拆封面 VI" what="拆封面 VI 的话" variant="link" />
          </p>
       );
    }

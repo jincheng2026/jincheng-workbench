@@ -1,9 +1,9 @@
 """封面素材/封面设置.json：默认照片、默认对标、一批几张。工作台和这个 Skill 都会写它（约定见 docs/开发记录.md「封面 Skill」）。
 
-{ "photo": "我的照片/正脸.jpg", "benchmark": "抖音-某某", "batchSize": 10 }
+{ "photo": "我的照片/正脸.jpg", "benchmark": "抖音-某某", "batchSize": 5 }
 
-- photo：相对「封面素材」的路径；没设是 null。benchmark：对标账号文件夹名；没设是 null。batchSize：一批默认几张，默认 10。
-- 文件不存在等于三项都没设、一批 10 张。写的时候整份读出来、改一项、先写临时文件再换过去，不认识的键原样留着。
+- photo：相对「封面素材」的路径；没设是 null。benchmark：对标账号文件夹名；没设是 null。batchSize：一批默认几张，默认 5。
+- 文件不存在等于三项都没设、一批 5 张。写的时候整份读出来、改一项、先写临时文件再换过去，不认识的键原样留着。
 """
 import hashlib
 import json
@@ -18,7 +18,7 @@ from .text import read_bytes, read_json, update_text
 FILE = "封面设置.json"
 PHOTO_DIR = "我的照片"
 FAV_DIR = "收藏"
-DEFAULT_BATCH = 10
+DEFAULT_BATCH = 5
 MAX_BATCH = 30  # 对标原图最多拆 30 张；一批再多，只能反复用同几张构图
 VI_FILE = "VI拆解.md"
 STYLE_PREFIX = "风格名："
@@ -30,7 +30,7 @@ def path(places):
 
 def read(places):
     """读封面设置。返回 {"file", "exists", "raw", "photo", "benchmark", "batch_size", "problems"}：
-    raw 是文件里的原样（保留键的先后），后三项是整理好的值；某一项写得不对按没设（一批 10 张）处理，并记进 problems。
+    raw 是文件里的原样（保留键的先后），后三项是整理好的值；某一项写得不对按没设（一批 5 张）处理，并记进 problems。
     文件写坏了（不是合法的 JSON）直接报错，不悄悄当成没设。"""
     file = path(places)
     out = {"file": file, "exists": os.path.isfile(file), "raw": OrderedDict(), "photo": None, "benchmark": None,
@@ -59,7 +59,7 @@ def read(places):
     if isinstance(batch, int) and not isinstance(batch, bool) and batch >= 1:
         out["batch_size"] = batch
     else:
-        out["problems"].append("batchSize 应该是不小于 1 的整数，按 10 张处理")
+        out["problems"].append("batchSize 应该是不小于 1 的整数，按 5 张处理")
     return out
 
 
@@ -207,7 +207,7 @@ def set_batch(places, count):
     try:
         n = int(str(count).strip())
     except ValueError:
-        raise UserError("一批几张要写数字，比如 10（收到的是「%s」）。" % count)
+        raise UserError("一批几张要写数字，比如 5（收到的是「%s」）。" % count)
     if not 1 <= n <= MAX_BATCH:
         raise UserError("一批要在 1 到 %d 张之间（对标原图最多拆 %d 张，一批再多只能反复用同几张构图）。" % (MAX_BATCH, MAX_BATCH))
     update(places, "batchSize", n)

@@ -181,10 +181,10 @@ test("批注图：只收 PNG，存在 封面候选/批注/，同一张再批注�
 
 test("封面设置：没有文件按没设算；改一项整份写回，不认识的键留着；写坏了说出来", () => {
   const { config } = setup();
-  assert.deepEqual(readCoverSettings(config), { raw: {}, photo: null, benchmark: null, batchSize: 10, problem: null });
+  assert.deepEqual(readCoverSettings(config), { raw: {}, photo: null, benchmark: null, batchSize: 5, problem: null });
   writeFileSync(path.join(config.paths.coverAssets, "封面设置.json"), JSON.stringify({ photo: "我的照片/a.jpg", 以后的设置: 1 }));
-  const next = writeCoverSettings(config, { batchSize: 5 });
-  assert.deepEqual([next.photo, next.batchSize, next.raw["以后的设置"]], ["我的照片/a.jpg", 5, 1]);
+  const next = writeCoverSettings(config, { batchSize: 8 });
+  assert.deepEqual([next.photo, next.batchSize, next.raw["以后的设置"]], ["我的照片/a.jpg", 8, 1]);
   writeFileSync(path.join(config.paths.coverAssets, "封面设置.json"), "{坏了");
   assert.match(readCoverSettings(config).problem, /写坏了/);
 });

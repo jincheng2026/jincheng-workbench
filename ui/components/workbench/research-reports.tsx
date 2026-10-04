@@ -7,8 +7,9 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-react';
 import { useAppInfo } from '@/components/jc/app-info';
+import { OpenInAi } from '@/components/jc/open-in-ai';
 import { Card, EmptyState, SecondaryButton, SemBadge, SemBanner, copyText } from '@/components/jc/ui';
-import { askCoverViAny, askResearch } from '@/lib/ask-ai';
+import { askCoverViAny, askResearch, type ResearchKind } from '@/lib/ask-ai';
 import { askInfo } from '@/lib/app-info';
 import { REPORT_TYPES, relatedReports, reportsEmpty, researchCards, type CostEstimate, type ResearchCard } from '@/lib/research-guide';
 import { reportFileUrl, reportViewHref, type Account, type Report } from '@/lib/research';
@@ -50,11 +51,13 @@ function ResearchCards({
                      {card.line}
                   </p>
                   <div className="mt-auto pt-1">
-                     {card.action === 'copy' ? (
+                     {card.kind === 'cover-vi' ? (
+                        <OpenInAi text={askCoverViAny(askInfo(info, 'cover'))} action="拆封面 VI" what="拆封面 VI 的话" />
+                     ) : card.action === 'copy' ? (
                         <SecondaryButton
                            size="small"
                            onClick={() =>
-                              void copyText(card.kind === 'cover-vi' ? askCoverViAny(askInfo(info, 'cover')) : askResearch(card.kind, askInfo(info, 'research')), '给 AI 的话')
+                              void copyText(askResearch(card.kind as ResearchKind, askInfo(info, 'research')), '给 AI 的话')
                            }
                            title="复制一段话，粘贴给 Codex 或 Claude Code"
                         >
