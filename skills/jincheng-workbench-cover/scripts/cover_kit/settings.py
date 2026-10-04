@@ -1,8 +1,11 @@
-"""封面素材/封面设置.json：默认照片、默认对标、一批几张。工作台和这个 Skill 都会写它（约定见 docs/开发记录.md「封面 Skill」）。
+"""封面素材/封面设置.json：主照片、默认风格、一批几张。工作台和这个 Skill 都会写它（约定见 docs/开发记录.md「封面 Skill」）。
 
-{ "photo": "我的照片/正脸.jpg", "benchmark": "抖音-某某", "batchSize": 5 }
+{ "photo": "我的照片/正脸.jpg", "benchmark": "风格/2026-10-04_8张", "batchSize": 5 }
 
-- photo：相对「封面素材」的路径；没设是 null。benchmark：对标账号文件夹名；没设是 null。batchSize：一批默认几张，默认 5。
+- photo：主照片，相对「封面素材」的路径；没设是 null。出封面时「我的照片」里的照片默认都用：主照片在前，再按放进来的先后，
+  一张封面最多 3 张当长相参考（photo_set）。
+- benchmark：默认风格的风格编号（对标账号文件夹名，或者「风格/<文件夹名>」，见 styles.py）；没设是 null。键名不改，老文件照样读。
+- batchSize：一批默认几张，默认 5。
 - 文件不存在等于三项都没设、一批 5 张。写的时候整份读出来、改一项、先写临时文件再换过去，不认识的键原样留着。
 """
 import hashlib
@@ -13,15 +16,15 @@ from collections import OrderedDict
 
 from . import UserError
 from . import images as I
+from . import styles as ST
 from .text import read_bytes, read_json, update_text
 
 FILE = "封面设置.json"
 PHOTO_DIR = "我的照片"
 FAV_DIR = "收藏"
 DEFAULT_BATCH = 5
-MAX_BATCH = 30  # 对标原图最多拆 30 张；一批再多，只能反复用同几张构图
-VI_FILE = "VI拆解.md"
-STYLE_PREFIX = "风格名："
+MAX_BATCH = 30  # 一批再多，只能反复用同几张构图
+MAX_PHOTOS = 3  # 一张封面最多给生图几张照片当长相参考
 
 
 def path(places):
@@ -40,7 +43,7 @@ def read(places):
     try:
         raw = read_json(file)
     except ValueError as e:
-        raise UserError("封面设置写坏了，不是合法的 JSON：%s（%s）。改好它再试；或者把它挪进回收站，照片、默认对标就都按没设算。" % (file, e))
+        raise UserError("封面设置写坏了，不是合法的 JSON：%s（%s）。改好它再试；或者把它挪进回收站，主照片、默认风格就都按没设算。" % (file, e))
     except OSError as e:
         raise UserError("读不出封面设置 %s：%s" % (file, e))
     if not isinstance(raw, dict):
@@ -55,7 +58,7 @@ def read(places):
     if isinstance(benchmark, str) and benchmark.strip():
         out["benchmark"] = benchmark.strip()
     elif benchmark is not None:
-        out["problems"].append("benchmark 应该是对标账号文件夹名或者 null，按没设处理")
+        out["problems"].append("benchmark 应该是风格编号或者 null，按没设处理")
     if isinstance(batch, int) and not isinstance(batch, bool) and batch >= 1:
         out["batch_size"] = batch
     else:
@@ -96,13 +99,49 @@ def photo_path(places, rel):
 
 
 def photos(places):
-    """我的照片/ 里的照片（按名字排）。"""
+    """我的照片/ 里的照片：按放进来的先后（文件的修改时间从早到晚，和工作台列照片用的是同一个时间；一样时按名字）。"""
     folder = os.path.join(places["cover_assets"], PHOTO_DIR)
     try:
-        names = sorted(n for n in os.listdir(folder) if not n.startswith(".") and os.path.splitext(n)[1].lower() in I.PHOTO_EXTS)
+        names = [n for n in os.listdir(folder) if not n.startswith(".") and os.path.splitext(n)[1].lower() in I.PHOTO_EXTS]
     except OSError:
         return []
-    return [os.path.join(folder, n) for n in names if os.path.isfile(os.path.join(folder, n))]
+    found = []
+    for name in names:
+        path = os.path.join(folder, name)
+        try:
+            if os.path.isfile(path):
+                found.append((os.path.getmtime(path), name, path))
+        except OSError:
+            continue
+    return [path for _t, _n, path in sorted(found)]
+
+
+def photo_set(places, settings=None, limit=MAX_PHOTOS):
+    """出封面用哪几张照片：「我的照片」里的默认都用，主照片（封面设置的 photo）在前，再按放进来的先后；一张封面最多 limit 张。
+    返回 {"all": 全部（排好的完整路径）, "used": 这次用的, "primary": 主照片（设置里写的）, "primary_abs", "primary_missing": 设了但找不到}。"""
+    cs = settings or read(places)
+    primary = cs["photo"]
+    primary_abs = photo_path(places, primary) if primary else None
+    ok = bool(primary_abs and os.path.isfile(primary_abs))
+    ordered = [primary_abs] if ok else []
+    for path in photos(places):
+        if not (ok and os.path.realpath(path) == os.path.realpath(primary_abs)):
+            ordered.append(path)
+    return {"all": ordered, "used": ordered[:limit], "primary": primary, "primary_abs": primary_abs,
+            "primary_ok": ok, "primary_missing": bool(primary and not ok)}
+
+
+def find_photo(places, value):
+    """这次说要用的一张照片：完整路径，或者相对「封面素材」的路径，或者「我的照片」里的文件名。不复制、不改设置。找不到、不像照片报错。"""
+    text = str(value or "").strip()
+    candidates = [os.path.abspath(os.path.expanduser(text))] if os.path.isabs(os.path.expanduser(text)) else [
+        os.path.join(places["cover_assets"], text), os.path.join(places["cover_assets"], PHOTO_DIR, text)]
+    path = next((c for c in candidates if os.path.isfile(c)), None)
+    if not path:
+        raise UserError("找不到照片「%s」：写完整路径，或者「我的照片」里的文件名（%s）。" % (text, os.path.join(places["cover_assets"], PHOTO_DIR)))
+    if os.path.splitext(path)[1].lower() not in I.PHOTO_EXTS or I.sniff(read_bytes(path)[:64]) not in ("JPEG", "PNG", "WEBP", "HEIC"):
+        raise UserError("这不像照片：%s。能用的有 jpg、png、webp、heic。" % path)
+    return os.path.abspath(path)
 
 
 def import_photo(places, source):
@@ -143,64 +182,15 @@ def set_photo(places, source):
     return rel, dest
 
 
-# ---------- 默认对标 ----------
+# ---------- 默认风格 ----------
 
-def style_name(account_folder):
-    """这个对标账号的风格名：VI拆解.md 第二行「风格名：…」。没有 VI拆解.md 或者没写，返回 None。"""
-    try:
-        with open(os.path.join(account_folder, VI_FILE), encoding="utf-8-sig") as f:
-            lines = f.read().splitlines()
-    except OSError:
-        return None
-    if len(lines) >= 2 and lines[1].startswith(STYLE_PREFIX):
-        name = lines[1][len(STYLE_PREFIX):].strip()
-        return name or None
-    return None
-
-
-def account_folder(places, name):
-    """对标账号文件夹：写文件夹名（「抖音-某某」），也可以写它的完整路径。找不到报错。"""
-    text = str(name or "").strip().rstrip("/")
-    if not text:
-        raise UserError("要告诉我是哪个对标账号（「市场调研/对标账号」里的文件夹名，比如「抖音-某某」）。")
-    candidate = os.path.abspath(os.path.expanduser(text))
-    if os.path.isdir(candidate) and is_account_dir(places, candidate):
-        return candidate
-    inside = os.path.join(places["accounts"], text)
-    if os.path.isdir(inside) and "/" not in text and not text.startswith("."):
-        return inside
-    raise UserError("「对标账号」里没有「%s」（%s）。有主页链接的话，先用调研 Skill 把这个博主加进对标账号；"
-                    "只有一批封面图的话，先用调研 Skill 手动建档（account add --manual），再接着做。" % (text, places["accounts"]))
-
-
-def is_account_dir(places, folder):
-    return os.path.realpath(os.path.dirname(folder)) == os.path.realpath(places["accounts"])
-
-
-def vi_accounts(places):
-    """拆过封面 VI（有 VI拆解.md）的对标账号：[(文件夹名, 风格名)]，和还没拆的个数。"""
-    done, todo = [], 0
-    try:
-        names = sorted(n for n in os.listdir(places["accounts"]) if not n.startswith("."))
-    except OSError:
-        return done, todo
-    for name in names:
-        folder = os.path.join(places["accounts"], name)
-        if not os.path.isdir(folder):
-            continue
-        if os.path.isfile(os.path.join(folder, VI_FILE)):
-            done.append((name, style_name(folder)))
-        else:
-            todo += 1
-    return done, todo
-
-
-def set_benchmark(places, name):
-    folder = account_folder(places, name)
-    if not os.path.isfile(os.path.join(folder, VI_FILE)):
-        raise UserError("「%s」还没有 VI拆解.md：先拆它的封面 VI（vi prepare、看图写观察、vi export），再设成默认对标。" % os.path.basename(folder))
-    update(places, "benchmark", os.path.basename(folder))
-    return os.path.basename(folder), style_name(folder)
+def set_benchmark(places, text):
+    """把一个拆过封面 VI 的风格设成默认风格：写它的风格编号（对标账号文件夹名，或者「风格/<文件夹名>」）。返回 (风格编号, 风格名)。"""
+    style = ST.resolve(places, text)
+    if not style.done():
+        raise UserError("「%s」还没有 VI拆解.md：先拆它的封面 VI（vi prepare、看图写观察、vi export），再设成默认风格。" % style.id)
+    update(places, "benchmark", style.id)
+    return style.id, style.name()
 
 
 def set_batch(places, count):
@@ -209,6 +199,6 @@ def set_batch(places, count):
     except ValueError:
         raise UserError("一批几张要写数字，比如 5（收到的是「%s」）。" % count)
     if not 1 <= n <= MAX_BATCH:
-        raise UserError("一批要在 1 到 %d 张之间（对标原图最多拆 %d 张，一批再多只能反复用同几张构图）。" % (MAX_BATCH, MAX_BATCH))
+        raise UserError("一批要在 1 到 %d 张之间（一批再多，只能反复用同几张构图）。" % MAX_BATCH)
     update(places, "batchSize", n)
     return n

@@ -1,7 +1,7 @@
 """测试用的小工具：假的家目录和工作台设置、现造的小图片、只听 127.0.0.1 的小服务、跑命令。
 
 所有测试都在系统临时文件夹里造假的家目录和工作文件夹，不碰真实的设置、照片和 ~/.codex；
-图片全是测试代码现造的几十个像素的纯色图，仓库里不放任何真实图片；小服务只监听 127.0.0.1，不连外网。
+图片全是测试代码现造的纯色图和三色条纹图（裁图测试用），仓库里不放任何真实图片；小服务只监听 127.0.0.1，不连外网。
 """
 import json
 import math
@@ -56,6 +56,70 @@ def jpeg(width, height, orientation=None):
     bits += "1" * (-len(bits) % 8)
     data = bytes(int(bits[i:i + 8], 2) for i in range(0, len(bits), 8))
     return out + data + b"\xff\xd9"
+
+
+def banded_png(width, height, band, vertical=False):
+    """一张三色条纹的 PNG（真的能解码）：上下（vertical 时是左右）各 band 像素宽的红条和蓝条，中间是绿的。
+    从中间裁掉的多于 band 时，裁出来的应该整张是绿的；裁偏了就会带上红或蓝。"""
+    red, green, blue = (255, 0, 0), (0, 255, 0), (0, 0, 255)
+    if vertical:
+        row = b"\x00" + bytes(red) * band + bytes(green) * (width - 2 * band) + bytes(blue) * band
+        raw = row * height
+    else:
+        raw = b"".join(b"\x00" + bytes(red if y < band else blue if y >= height - band else green) * width for y in range(height))
+
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+
+
+def png_pixels(data):
+    """读一张 8 位、不隔行的 PNG（灰、RGB、RGBA 都行）：返回 (宽, 高, 取色函数 pixel(x, y) → (r, g, b))。
+    只用 Python 自带的 zlib 解五种行过滤；给裁图测试看 sips 裁出来的图是不是从中间裁的。"""
+    pos, idat, info = 8, b"", None
+    while pos + 8 <= len(data):
+        length = struct.unpack(">I", data[pos:pos + 4])[0]
+        kind = data[pos + 4:pos + 8]
+        body = data[pos + 8:pos + 8 + length]
+        if kind == b"IHDR":
+            info = struct.unpack(">IIBBBBB", body)
+        elif kind == b"IDAT":
+            idat += body
+        pos += 12 + length
+    width, height, depth, color, _c, _f, interlace = info
+    if depth != 8 or interlace:
+        raise ValueError("只认 8 位、不隔行的 PNG（这张是 %d 位、隔行 %d）" % (depth, interlace))
+    channels = {0: 1, 2: 3, 4: 2, 6: 4}[color]
+    stride = width * channels
+    raw = zlib.decompress(idat)
+    rows, prev, i = [], bytearray(stride), 0
+    for _ in range(height):
+        kind, line = raw[i], bytearray(raw[i + 1:i + 1 + stride])
+        i += 1 + stride
+        for x in range(stride):
+            a = line[x - channels] if x >= channels else 0
+            b = prev[x]
+            c = prev[x - channels] if x >= channels else 0
+            if kind == 1:
+                line[x] = (line[x] + a) & 255
+            elif kind == 2:
+                line[x] = (line[x] + b) & 255
+            elif kind == 3:
+                line[x] = (line[x] + (a + b) // 2) & 255
+            elif kind == 4:
+                p = a + b - c
+                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+                line[x] = (line[x] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
+        rows.append(bytes(line))
+        prev = line
+
+    def pixel(x, y):
+        cell = rows[y][x * channels:(x + 1) * channels]
+        return (cell[0],) * 3 if channels < 3 else tuple(cell[:3])
+
+    return width, height, pixel
 
 
 def gif_head(width, height):
@@ -144,6 +208,23 @@ class TempWorkbench(object):
         os.makedirs(os.path.join(folder, "封面候选"), exist_ok=True)
         return folder
 
+    def style_folder(self, name, images, created="2026-10-04T20:30:00+08:00"):
+        """工作台在「封面」页建的一组放进来的图：封面素材/风格/<name>/封面/ 里按原文件名放图，再写 风格.json。
+        images：{原文件名: 图片字节}。返回文件夹。"""
+        folder = os.path.join(self.assets, "风格", name)
+        for filename, data in images.items():
+            write(os.path.join(folder, "封面", filename), data)
+        write(os.path.join(folder, "风格.json"), json.dumps({"from": "放进来的图", "createdAt": created, "count": len(images)}, ensure_ascii=False))
+        return folder
+
+    def photo(self, name, data, minutes_ago=0):
+        """放一张照片进「我的照片」，修改时间往前拨 minutes_ago 分钟（照片按放进来的先后排，就是按这个时间）。"""
+        import time
+        path = write(os.path.join(self.assets, "我的照片", name), data)
+        stamp = time.time() - minutes_ago * 60
+        os.utime(path, (stamp, stamp))
+        return path
+
     def account(self, folder_name, account_name=None, works=None):
         """一个对标账号文件夹：档案.json（调研 Skill 的格式），works 给了再写 作品.json。"""
         folder = os.path.join(self.accounts, folder_name)
@@ -182,6 +263,14 @@ def run_cli(args, env, cwd=None):
     done = subprocess.run([sys.executable, os.path.join(SCRIPTS, "cover.py")] + list(args), env=env, cwd=cwd,
                           capture_output=True, text=True, timeout=120)
     return done.returncode, done.stdout + done.stderr
+
+
+def sips_here():
+    """这台电脑上有没有 sips（macOS 自带的图片工具）：裁图的测试要真的用它。"""
+    return bool(shutil.which("sips") or os.path.isfile("/usr/bin/sips"))
+
+
+NO_SIPS = "这台电脑上没有 sips（macOS 自带的图片工具，别的系统没有）：真的裁图的测试跳过；没有 sips 时说清楚的那一条照样跑"
 
 
 def pillow_here():

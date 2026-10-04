@@ -1,10 +1,10 @@
-"""拆封面 VI 的文件活：整理对标封面（补封面、改名 K01…、写清单），建研究清单、校验、出对照网页、导出 VI拆解.md。
-脚本只管整理文件、查引用、算频次、拼页面，不替 AI 看图。
+"""拆封面 VI 的文件活：整理一个风格的原图（补封面、改名 K01…、写清单），建研究清单、校验、出对照网页、导出 VI拆解.md 和默认构图。
+脚本只管整理文件、查引用、算频次、拼页面，不替 AI 看图。风格有两种来源（对标账号、你放进来的图），文件夹里放的东西一样，见 styles.py。
 
 从学员版 cover-vi 的三个脚本（建清单.py、vi.py、导出VI拆解.py）搬来，方法和字段不变，改了这些：
 - 只用 Python 自带的模块：宽高从文件头读，重复按文件内容的 sha256 认；装了 Pillow 时多解码一遍、多按像素认重复（images.py）。
-- 文件位置照工作台的约定：封面在对标账号文件夹的「封面/」，研究数据在「VI研究/」，对照网页出在「调研报告/<日期>_<账号名>封面VI/」，
-  VI拆解.md 在对标账号文件夹里，第二行是「风格名：…」。
+- 文件位置照工作台的约定：原图在风格文件夹的「封面/」，研究数据在「VI研究/」，对照网页出在「调研报告/<日期>_<名字>封面VI/」，
+  VI拆解.md 和默认构图.json 在风格文件夹里，VI拆解.md 第二行是「风格名：…」。
 - 清单里的图片路径写成相对 VI研究/ 的（工作文件夹挪了位置也能用），不写本机的完整路径。
 """
 import hashlib
@@ -18,12 +18,12 @@ from datetime import datetime, timezone
 
 from . import UserError
 from . import images as I
-from . import settings as S
+from . import styles as ST
 from .text import natural_key, read_json, safe_name, today, unique_dir, unique_file, write_json, write_text
 
-COVERS = "封面"
+COVERS = ST.COVERS
 STUDY_DIR = "VI研究"
-NAMES_FILE = "原文件名.md"
+NAMES_FILE = ST.NAMES_FILE
 RECORDS = "records.json"
 INVENTORY = "inventory.json"
 STUDY = "study.json"
@@ -50,20 +50,8 @@ def require(condition, message):
         raise StudyError(message)
 
 
-def folders(account):
-    return os.path.join(account, COVERS), os.path.join(account, STUDY_DIR)
-
-
-def account_label(account):
-    """给人看的账号名：档案.json 的 account_name；没有就用文件夹名去掉「平台-」。"""
-    try:
-        name = (read_json(os.path.join(account, "档案.json")) or {}).get("account_name")
-        if isinstance(name, str) and name.strip():
-            return name.strip()
-    except (OSError, ValueError, AttributeError):
-        pass
-    base = os.path.basename(account)
-    return base.split("-", 1)[1] if "-" in base else base
+def folders(style):
+    return os.path.join(style.folder, COVERS), os.path.join(style.folder, STUDY_DIR)
 
 
 def _load(path, what):
@@ -92,30 +80,6 @@ def _iso(published):
         return None
 
 
-def _old_names(covers_dir):
-    """原文件名.md 里已有的对照：[(新名, 原名)]"""
-    try:
-        with open(os.path.join(covers_dir, NAMES_FILE), encoding="utf-8-sig") as f:
-            lines = f.read().splitlines()
-    except OSError:
-        return []
-    out = []
-    for line in lines:
-        cells = [c.strip() for c in line.strip().strip("|").split("|")] if line.strip().startswith("|") else []
-        if len(cells) >= 2 and KPAT.match(cells[0]):
-            out.append((cells[0], cells[1]))
-    return out
-
-
-def _write_names(covers_dir, rows, skipped):
-    lines = ["# 原文件名对照", "", "封面/ 里的图按顺序改名成 K01、K02……（从新到旧；不知道发布时间的按给的顺序），原来的名字记在这里。图没有删，只是改了名。", "",
-             "| 新名 | 原名 |", "| --- | --- |"]
-    lines += ["| %s | %s |" % (new, old.replace("|", "／")) for new, old in rows]
-    if skipped:
-        lines += ["", "没纳入的（报告网页显示不了这几种格式，转成 jpg 或 png 再放进来）：" + "、".join(skipped)]
-    write_text(os.path.join(covers_dir, NAMES_FILE), "\n".join(lines) + "\n")
-
-
 def _k_files(covers_dir):
     """封面/ 里已经叫 Kxx 的图：{编号数字: 文件名}；同一个编号有两个文件就报错。"""
     found = {}
@@ -135,10 +99,12 @@ def _digest(path):
         return hashlib.sha256(f.read()).hexdigest()
 
 
-def prepare(account, max_count=20, source=None):
-    """把对标账号的封面整理好：缺的从 作品.json 的封面链接下载（最近的 max_count 张，下过的不重下）；
-    source 给了就从那个文件夹复制图进来；然后把不叫 Kxx 的图按顺序改名、写 原文件名.md、生成 VI研究/records.json。"""
-    covers, study = folders(account)
+def prepare(style, max_count=20, source=None):
+    """把一个风格的原图整理好：对标账号缺的从 作品.json 的封面链接下载（最近的 max_count 张，下过的不重下）；
+    source 给了就从那个文件夹复制图进来；然后把不叫 Kxx 的图按顺序改名、写 原文件名.md、生成 VI研究/records.json。
+    你放进来的图（工作台按原文件名放进 封面/ 的）没有作品数据，只按文件名顺序改名，选取方式是 provided（研究给的样本）。"""
+    account = style.folder
+    covers, study = folders(style)
     os.makedirs(covers, exist_ok=True)
     os.makedirs(study, exist_ok=True)
     old_records = {}
@@ -149,7 +115,7 @@ def prepare(account, max_count=20, source=None):
                     old_records[r["id"]] = r
         except (OSError, ValueError, AttributeError):
             old_records = {}
-    names = _old_names(covers)
+    names, moves = ST.read_names(covers)
     report = {"downloaded": 0, "download_failed": 0, "copied": 0, "renamed": 0, "skipped": [], "skipped_source": [], "work_json": False,
               "cover_urls": 0, "network": None}
     known_digests = {_digest(os.path.join(covers, n)) for n in os.listdir(covers)
@@ -161,7 +127,7 @@ def prepare(account, max_count=20, source=None):
         src = os.path.abspath(os.path.expanduser(source))
         if not os.path.isdir(src):
             raise UserError("找不到封面所在的文件夹：%s" % src)
-        same_account = os.path.realpath(src) == os.path.realpath(account)
+        same_account = style.is_account and os.path.realpath(src) == os.path.realpath(account)
         if os.path.realpath(src) != os.path.realpath(covers):
             for name in sorted(os.listdir(src), key=natural_key):
                 path = os.path.join(src, name)
@@ -189,7 +155,7 @@ def prepare(account, max_count=20, source=None):
 
     # 2. 作品.json 里有封面链接：封面不够 max_count 张时，按发布时间从新到旧下载，下过的作品不再下
     works_file = os.path.join(account, "作品.json")
-    if os.path.isfile(works_file):
+    if style.is_account and os.path.isfile(works_file):
         report["work_json"] = True
         try:
             works = read_json(works_file).get("works") or []
@@ -258,7 +224,7 @@ def prepare(account, max_count=20, source=None):
         meta[new] = info
         renamed.append((new, info["origin"]))
     report["renamed"] = len(renamed)
-    _write_names(covers, names + renamed, sorted(report["skipped"], key=natural_key))
+    ST.write_names(covers, names + renamed, sorted(report["skipped"], key=natural_key), moves)
 
     # 4. VI研究/records.json：封面/ 里全部 Kxx，编号从小到大
     k_files = _k_files(covers)
@@ -286,10 +252,12 @@ def prepare(account, max_count=20, source=None):
             ("published_at", published), ("date_source", "作品.json（调研 Skill 拉的作品数据）" if published else "未知"),
             ("source", source), ("preservation", "original-download" if work_id else "provided-copy"),
         ]))
-    label = account_label(account)
+    label = style.label() if style.is_account else "放进来的 %d 张图" % len(records)
     all_dated = all(r["published_at"] for r in records)
     downloaded = sum(1 for r in records if r["work_id"])
-    if downloaded == len(records):
+    if not style.is_account:
+        verification = "用户放进工作台「封面」的 %d 张图（%s），可能来自不同的博主；没有在线核验，发布时间未知" % (len(records), style.id)
+    elif downloaded == len(records):
         verification = "对标账号「%s」最近作品的封面，从调研 Skill 拉的作品数据（作品.json）里的封面链接下载；没有在平台上逐张核验" % label
     elif downloaded:
         verification = "对标账号「%s」的封面：%d 张从作品数据里的封面链接下载，%d 张是用户放进来的；没有在平台上逐张核验" % (label, downloaded, len(records) - downloaded)
@@ -350,9 +318,9 @@ def _image_info(path, rid):
         raise StudyError("%s 打不开（%s）：%s" % (rid, e, path))
 
 
-def inventory(account):
+def inventory(style):
     """读 VI研究/records.json，查每张能不能打开、有没有重复、纳入了哪些，写 VI研究/inventory.json。"""
-    _covers, study = folders(account)
+    _covers, study = folders(style)
     input_path = os.path.join(study, RECORDS)
     data = _load(input_path, "VI研究/records.json（先跑 vi prepare）")
     require(isinstance(data, dict), "records.json 最外层要是 { … }")
@@ -425,12 +393,13 @@ def inventory(account):
     if date_only:
         limitations.append("来源只有日期，可按日期分组；同日作品的先后顺序未核验")
     if mode == "provided":
-        limitations.append("研究的是提供的样本，不据此宣称账号最新或完整历史")
+        limitations.append("研究的是提供的样本，不据此宣称账号最新或完整历史" if style.is_account
+                           else "研究的是用户放进来的这几张图，可能来自不同的博主，不代表哪个博主的全部封面")
     if len(picked) < (limit or 20):
         limitations.append("实际研究 %d 张；样本量与覆盖范围限制规则的外推" % len(picked))
-    if any(not r.get("work_id") for r in picked):
+    if style.is_account and any(not r.get("work_id") for r in picked):
         limitations.append("部分作品 ID 未知，按独立图片去重，不能确认独立作品总数")
-    if any(not r.get("account_id") for r in picked):
+    if style.is_account and any(not r.get("account_id") for r in picked):
         limitations.append("部分图片没有账号 ID，身份字段检查不等于平台核验")
     if I.pillow() is None:
         limitations.append("本机没有 Pillow：宽高从文件头读，重复按文件内容认，没有逐张解码确认图片完整")
@@ -471,8 +440,8 @@ def _id_list(value, allowed, context, allow_empty=True):
     return set(value)
 
 
-def load_pair(account):
-    _covers, study = folders(account)
+def load_pair(style):
+    _covers, study = folders(style)
     inv = _load(os.path.join(study, INVENTORY), "VI研究/inventory.json（先跑 vi inventory）")
     study_path = os.path.join(study, STUDY)
     if not os.path.isfile(study_path):
@@ -541,8 +510,8 @@ def validate(inv, study, base):
             "limits": "仅检查文件、结构和引用；不代表视觉事实、网页交互或审美已通过"}
 
 
-def check(account):
-    inv, study, base = load_pair(account)
+def check(style):
+    inv, study, base = load_pair(style)
     return validate(inv, study, base)
 
 
@@ -556,14 +525,26 @@ def frequency_text(rule):
     return "%d / %d 张可判，另有 %d 张不可判；统计范围共 %d 张" % (p, p + a, u, p + a + u)
 
 
-def build(account, reports_dir):
-    """先校验，过了才在「调研报告」里新建「<日期>_<账号名>封面VI」：index.html、VI规范.md、清单和研究数据、images/、meta.json。
-    同一天再出一次，文件夹名后面加 -2，不覆盖旧的。"""
-    inv, study, base = load_pair(account)
+def report_title(style, count):
+    """报告的名字（meta.json 的 title）：对标账号是「<账号名>的封面 VI」；你放进来的图是「<风格名>的封面 VI」，还没起名时「N 张封面的 VI」。"""
+    if style.is_account:
+        return "%s的封面 VI" % style.label()
+    name = style.name()
+    return "%s的封面 VI" % name if name else "%d 张封面的 VI" % count
+
+
+def build(style, reports_dir):
+    """先校验，过了才在「调研报告」里新建「<日期>_<名字>封面VI」：index.html、VI规范.md、清单和研究数据、images/、meta.json。
+    同一天再出一次，文件夹名后面加 -2，不覆盖旧的。meta.json 的 source 写风格编号。"""
+    inv, study, base = load_pair(style)
     result = validate(inv, study, base)
-    label = account_label(account)
+    title = report_title(style, len(inv["selected_ids"]))
+    if style.is_account:
+        piece = style.label()
+    else:
+        piece = style.name() or "放进来的%d张" % len(inv["selected_ids"])
     os.makedirs(reports_dir, exist_ok=True)
-    out = unique_dir(reports_dir, "%s_%s封面VI" % (today(), safe_name(label, 40, "对标账号")))
+    out = unique_dir(reports_dir, "%s_%s封面VI" % (today(), safe_name(piece, 40, "风格")))
     os.makedirs(os.path.join(out, "images"))
     portable = json.loads(json.dumps(inv), object_pairs_hook=OrderedDict)
     by_id = {}
@@ -632,16 +613,16 @@ def build(account, reports_dir):
                     "SOURCE": esc(inv["account"]["verification"]), "LIMITATIONS": "".join("<li>%s</li>" % esc(x) for x in limitations), "REVIEW": esc(review),
                     "RULES": "".join(rules_html), "CASES": "".join(cases_html), "CARDS": "".join(cards)}
     write_text(os.path.join(out, "index.html"), re.sub(r"\{\{([A-Z]+)\}\}", lambda m: replacements[m.group(1)], template))
-    meta = OrderedDict([("title", "%s的封面 VI" % label), ("date", today()), ("type", REPORT_TYPE), ("source", os.path.basename(account)),
+    meta = OrderedDict([("title", title), ("date", today()), ("type", REPORT_TYPE), ("source", style.id),
                         ("pages", [OrderedDict([("file", "index.html"), ("title", "封面 VI")])]), ("workbenchVisible", True)])
     write_json(os.path.join(out, "meta.json"), meta)
     result.update({"output": out, "index": os.path.join(out, "index.html"), "title": meta["title"]})
     return result
 
 
-def latest_report(account, reports_dir):
-    """这个对标账号最近一次出的封面 VI 报告文件夹（meta.json 的 type 是「封面VI」、source 是它的文件夹名）。没有返回 None。"""
-    name = os.path.basename(account)
+def latest_report(style, reports_dir):
+    """这个风格最近一次出的封面 VI 报告文件夹（meta.json 的 type 是「封面VI」、source 是它的风格编号）。没有返回 None。"""
+    name = style.id
     found = []
     try:
         entries = os.listdir(reports_dir)
@@ -660,7 +641,7 @@ def latest_report(account, reports_dir):
     return os.path.join(reports_dir, max(found)[2])
 
 
-# ---------- 第五步：导出 VI拆解.md ----------
+# ---------- 第五步：导出 VI拆解.md 和默认构图 ----------
 
 def check_style(style):
     name = str(style or "").strip()
@@ -669,20 +650,31 @@ def check_style(style):
     return name
 
 
-def export(account, reports_dir, style=None):
-    """把 study.json（逐图观察、规则、案例）导出成做封面时读的 VI拆解.md，放在对标账号文件夹里。第二行固定「风格名：…」。
-    style 不给时沿用 VI拆解.md 里原来的风格名。"""
-    covers, study_dir = folders(account)
+def export(style_obj, reports_dir, style=None, compositions=None):
+    """把 study.json（逐图观察、规则、案例）导出成做封面时读的 VI拆解.md，放在风格文件夹里。第二行固定「风格名：…」。
+    style（风格名）不给时沿用 VI拆解.md 里原来的。然后写默认构图.json：compositions 给了（AI 挑的原图编号）就用它，
+    不给就按 study.json 里案例的顺序取前 5 个不重复的原图编号；by 写「AI」；已经有、by 是「你」的不覆盖。
+    你放进来的图这种风格：最近一份报告的名字还不是「<风格名>的封面 VI」的，跟着改过来（meta.json 的 title）。"""
+    account = style_obj.folder
+    covers, study_dir = folders(style_obj)
     study_path = os.path.join(study_dir, STUDY)
     if not os.path.isfile(study_path):
         raise UserError("还没有 VI研究/study.json：先逐张看图、写观察（格式见 references/evidence.md）。")
     study = _load(study_path, "VI研究/study.json")
     inv_path = os.path.join(study_dir, INVENTORY)
     inv = _load(inv_path, "VI研究/inventory.json") if os.path.isfile(inv_path) else None
-    style = check_style(style) if style else S.style_name(account)
+    style = check_style(style) if style else style_obj.name()
     if not style:
         raise UserError("要给这套风格起个名字：加 --style「四到八个字」，说得出画面特点，比如「暖黄手写风」。")
-    label = account_label(account)
+    have = style_obj.k_images()
+    if compositions is not None:
+        picked = ST.parse_ids(compositions, "默认构图的原图编号")
+        if not picked:
+            raise UserError("--compositions 要写几张原图的编号，比如 K03,K07,K12,K01,K05。")
+        ST.check_ids(style_obj, picked, "默认构图")
+    else:
+        picked = ST.compositions_from_study(study, have)
+    label = style_obj.label()
     obs = {o["id"]: o for o in study.get("observations", []) if isinstance(o, dict) and o.get("id")}
     ids = list(inv["selected_ids"]) if inv else sorted(obs)
     files = {}
@@ -696,13 +688,20 @@ def export(account, reports_dir, style=None):
                 files[stem] = COVERS + "/" + name
     link = lambda i: "[%s](%s)" % (i, files.get(i, i))  # noqa: E731
     links = lambda arr: "、".join(link(i) for i in arr) if arr else "无"  # noqa: E731
-    report = latest_report(account, reports_dir)
+    report = latest_report(style_obj, reports_dir)
     where = "能点原图对比的网页在工作台「市场调研」的调研报告「%s」里" % os.path.basename(report) if report else "能点原图对比的网页还没出（vi build）"
-    md = ["# %s：封面 VI 拆解" % label, S.STYLE_PREFIX + style, ""]
-    md.append("对象是对标账号「%s」的 %d 张封面（封面/ 里的 %s 到 %s）。%s观察和迁移建议不是作者的官方规范，也不以播放量证明效果。完整研究数据在 VI研究/，%s。"
-              % (label, len(ids), ids[0] if ids else "", ids[-1] if ids else "", (study.get("summary", "").strip() + " ") if study.get("summary") else "", where))
+    span = "封面/ 里的 %s 到 %s" % (ids[0] if ids else "", ids[-1] if ids else "")
+    if style_obj.is_account:
+        who = "对标账号「%s」的 %d 张封面（%s）" % (label, len(ids), span)
+        authors = "作者"
+    else:
+        who = "用户放进工作台「封面」的 %d 张图（%s，%s），可能来自不同的博主" % (len(ids), style_obj.id, span)
+        authors = "这些封面作者"
+    md = ["# %s：封面 VI 拆解" % label, ST.STYLE_NAME_PREFIX + style, ""]
+    md.append("对象是%s。%s观察和迁移建议不是%s的官方规范，也不以播放量证明效果。完整研究数据在 VI研究/，%s。"
+              % (who, (study.get("summary", "").strip() + " ") if study.get("summary") else "", authors, where))
     md.append("")
-    md.append("用法：做封面时每张候选选一张原图当构图参考，实际打开看，再照下面的「保留关系」写画面；原图会作为第二张输入图交给生图工具，提示词里必须写明「只换成我这个人，不混脸、不继承对方的发型衣服」。")
+    md.append("用法：做封面时每张候选选一张原图当构图参考，实际打开看，再照下面的「保留关系」写画面；原图作为最后一张输入图交给生图工具（前面几张是用户的照片），提示词里必须写明「只换成我这个人，不混脸、不继承对方的发型衣服」。")
     md.append("")
     md.append("## 整体规律")
     md.append("")
@@ -761,6 +760,23 @@ def export(account, reports_dir, style=None):
     md.append("- 画面事实：%s；迁移验证：%s；审美评审：%s" % (names.get(rv.get("visual_facts"), rv.get("visual_facts")), names.get(rv.get("migration"), rv.get("migration")),
                                                      names.get(rv.get("aesthetic"), rv.get("aesthetic"))))
     md.append("")
-    out = os.path.join(account, S.VI_FILE)
+    out = os.path.join(account, ST.VI_FILE)
     write_text(out, "\n".join(md))
-    return {"path": out, "count": len(ids), "rules": len(study.get("rules", [])), "cases": len(study.get("cases", [])), "style": style, "report": report}
+    if picked:
+        written, comp = ST.write_compositions(style_obj, picked)
+    else:
+        written, comp = False, ST.read_compositions(style_obj)
+    renamed = None
+    if report and not style_obj.is_account:
+        meta_path = os.path.join(report, "meta.json")
+        try:
+            meta = read_json(meta_path)
+        except (OSError, ValueError):
+            meta = None
+        title = "%s的封面 VI" % style
+        if isinstance(meta, dict) and meta.get("title") != title:
+            meta["title"] = title
+            write_json(meta_path, meta)
+            renamed = title
+    return {"path": out, "count": len(ids), "rules": len(study.get("rules", [])), "cases": len(study.get("cases", [])), "style": style, "report": report,
+            "compositions": comp, "compositions_written": written, "compositions_wanted": picked, "report_renamed": renamed}

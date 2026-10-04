@@ -192,7 +192,7 @@ def one_draft_dir(cid, places):
     """这条内容唯一的草稿文件夹；没有或者有好几个都报错。"""
     dirs = draft_dirs(cid, places["drafts"])
     if not dirs:
-        raise UserError("内容草稿里还没有 %s 开头的文件夹（%s）。先开一批（record batch %s）会建好；按备注改的话，先确认编号对不对。" % (cid, places["drafts"], cid))
+        raise UserError("内容草稿里还没有 %s 开头的文件夹（%s）。先开一批（record batch %s）会建好；改一张、定一张的话，先确认编号对不对。" % (cid, places["drafts"], cid))
     if len(dirs) > 1:
         raise UserError("%s 有 %d 个草稿文件夹，先问用户用哪个：%s" % (cid, len(dirs), "、".join(dirs)))
     return dirs[0]
@@ -276,6 +276,51 @@ def topic_title(cid, places):
     return None, None
 
 
+def topic_type(cid, places):
+    """这条内容是哪一类（工作台的「内容类型」，比如「口播」「公众号文章」）：和工作台一样，先看选题总览「## 选题总表」里
+    它在哪个「### 类型」下面，再看选题卡放在 选题库/<类型>/ 的哪一类里。找不到返回 None。出一批没说尺寸时用它定默认尺寸。"""
+    try:
+        with open(places["overview"], encoding="utf-8-sig") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        lines = []
+    section, kind, header = "", None, None
+    for line in lines:
+        s = line.strip()
+        if s.startswith("## "):
+            section, kind, header = s[3:].strip(), None, None
+            continue
+        if s.startswith("### "):
+            kind, header = s[4:].strip(), None
+            continue
+        if not s.startswith("|"):
+            header = None
+            continue
+        cells = _cells(s)
+        if cells and all(re.match(r"^:?-+:?$", c) for c in cells):
+            continue
+        if header is None:
+            header = cells
+            continue
+        if section.startswith("选题总表") and kind and "编号" in header:
+            number = cells[header.index("编号")] if header.index("编号") < len(cells) else ""
+            if re.search(r"%s(?!\d)" % cid, number):
+                return kind
+    base = places["topics"]
+    pattern = re.compile(r"^%s(?!\d)" % cid)
+    if os.path.isdir(base):
+        for name in sorted(os.listdir(base)):
+            folder = os.path.join(base, name)
+            if name.startswith(".") or not os.path.isdir(folder):
+                continue
+            for root, dirs, files in os.walk(folder):  # 选题库/<类型>/T002_….md 或者 选题库/<类型>/<待做|已做>/T002_….md
+                depth = root.count(os.sep) - folder.count(os.sep)
+                dirs[:] = [] if depth >= 1 else sorted(d for d in dirs if not d.startswith("."))
+                if any(f.endswith(".md") and pattern.match(f) for f in files):
+                    return name
+    return None
+
+
 def folder_title(title):
     """草稿文件夹名里的选题名：和工作台「建草稿文件夹」一样，去掉访达不认的字符，最多 40 个字。"""
     clean = re.sub(r'[\x00-\x1f\\/:*?"<>|]', " ", str(title or ""))
@@ -345,5 +390,10 @@ def workbench(places, tries=20, timeout=0.4):
 
 
 def detail_link(origin, cid):
-    """工作台里这条内容的详情页（在这里挑封面、写备注）。"""
+    """工作台里这条选题的页面：出一批的设置、这条选题出过的封面（只看，选定的排第一）。"""
     return "%s/content/%s" % (origin, cid)
+
+
+def covers_link(origin):
+    """工作台「内容」栏的「封面」页：风格、拆一个新风格、我的封面、我的照片。"""
+    return "%s/content?tab=covers" % origin

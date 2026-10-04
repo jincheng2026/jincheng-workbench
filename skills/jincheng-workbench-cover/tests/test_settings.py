@@ -1,4 +1,4 @@
-"""封面设置.json：show、set-photo、set-default、batch。整份读出来改一项再写回，不认识的键原样留着；写坏了不覆盖。"""
+"""封面设置.json：show、set-photo（主照片）、set-default（默认风格，两种风格编号都认）、batch。整份读出来改一项再写回，不认识的键原样留着；写坏了不覆盖。"""
 import json
 import os
 import unittest
@@ -26,16 +26,17 @@ class SettingsTest(unittest.TestCase):
     def test_还没有设置文件_三项都按没设(self):
         code, out = self.cli("settings")
         self.assertEqual(code, 0, out)
-        self.assertIn("还没有：照片、默认对标都没设，一批 5 张", out)
-        self.assertIn("照片：没设", out)
-        self.assertIn("默认对标：没设", out)
+        self.assertIn("还没有：主照片、默认风格都没设，一批 5 张", out)
+        self.assertIn("主照片：没设", out)
+        self.assertIn("照片：我的照片 里还没有", out)
+        self.assertIn("默认风格：没设", out)
         self.assertFalse(os.path.exists(self.file))  # 只看不写
 
     def test_放照片_复制进我的照片_设成默认(self):
         src = write(os.path.join(self.wb.home, "桌面", "我.jpg"), jpeg(30, 40))
         code, out = self.cli("settings", "set-photo", src)
         self.assertEqual(code, 0, out)
-        self.assertIn("照片设好了：我的照片/我.jpg", out)
+        self.assertIn("主照片设好了：我的照片/我.jpg", out)
         self.assertTrue(os.path.isfile(src))  # 原来那张不动
         self.assertEqual(self.saved(), OrderedDict([("photo", "我的照片/我.jpg"), ("benchmark", None), ("batchSize", 5)]))
         # 同一张再放一次：不重复复制；同名的另一张：加 -2
@@ -73,7 +74,7 @@ class SettingsTest(unittest.TestCase):
         write(os.path.join(account, "VI拆解.md"), "# 示例博主：封面 VI 拆解\n风格名：蓝白手账风\n")
         code, out = self.cli("settings", "set-default", "小红书-示例博主")
         self.assertEqual(code, 0, out)
-        self.assertIn("默认对标设好了：小红书-示例博主（风格名：蓝白手账风）", out)
+        self.assertIn("默认风格设好了：小红书-示例博主（风格名：蓝白手账风）", out)
         self.assertEqual(self.saved(), OrderedDict([("batchSize", 6), ("photo", "我的照片/旧.png"), ("工作台以后加的", {"a": 1}), ("benchmark", "小红书-示例博主")]))
         code, out = self.cli("settings", "batch", "12")
         self.assertEqual(code, 0, out)
@@ -89,8 +90,21 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertIn("没有「抖音-没有这个人」", out)
         code, out = self.cli("settings", "show")
-        self.assertIn("默认对标：小红书-示例博主（风格名：蓝白手账风）", out)
-        self.assertIn("找不到这个文件了", out)  # 设的照片 旧.png 不在
+        self.assertIn("默认风格：小红书-示例博主（风格名：蓝白手账风）", out)
+        self.assertIn("找不到这个文件了", out)  # 设的主照片 旧.png 不在
+        # 你放进来的图拆出的风格：写「风格/<文件夹名>」，存的也是这个
+        folder = self.wb.style_folder("2026-10-04_8张", {"a.png": png(4, 4)})
+        code, out = self.cli("settings", "set-default", "风格/2026-10-04_8张")
+        self.assertEqual(code, 2)
+        self.assertIn("「风格/2026-10-04_8张」还没有 VI拆解.md", out)
+        write(os.path.join(folder, "VI拆解.md"), "# 放进来的 1 张图：封面 VI 拆解\n风格名：蓝白大字风\n")
+        for given in ("风格/2026-10-04_8张", "2026-10-04_8张", folder, os.path.join(folder, "封面")):
+            code, out = self.cli("settings", "set-default", given)
+            self.assertEqual(code, 0, out)
+            self.assertIn("默认风格设好了：风格/2026-10-04_8张（风格名：蓝白大字风）", out)
+            self.assertEqual(self.saved()["benchmark"], "风格/2026-10-04_8张")
+        code, out = self.cli("settings", "show")
+        self.assertIn("默认风格：风格/2026-10-04_8张（风格名：蓝白大字风）", out)
 
     def test_写坏了就报错_不覆盖(self):
         write(self.file, '{"photo": "我的照片/a.jpg",}')
