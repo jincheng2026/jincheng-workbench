@@ -26,7 +26,7 @@ class SettingsTest(unittest.TestCase):
     def test_还没有设置文件_三项都按没设(self):
         code, out = self.cli("settings")
         self.assertEqual(code, 0, out)
-        self.assertIn("还没有：照片、默认对标都没设，一批 10 张", out)
+        self.assertIn("还没有：照片、默认对标都没设，一批 5 张", out)
         self.assertIn("照片：没设", out)
         self.assertIn("默认对标：没设", out)
         self.assertFalse(os.path.exists(self.file))  # 只看不写
@@ -108,7 +108,7 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("photo 应该是一个路径或者 null", out)
         self.assertIn("batchSize 应该是不小于 1 的整数，按 5 张处理", out)
-        self.assertIn("一批几张：10", out)
+        self.assertIn("一批几张：5", out)
         src = write(os.path.join(self.wb.home, "a.png"), png(4, 4))
         code, out = self.cli("settings", "set-photo", src)
         self.assertEqual(code, 0, out)

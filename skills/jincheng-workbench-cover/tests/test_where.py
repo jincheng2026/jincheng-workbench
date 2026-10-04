@@ -35,7 +35,7 @@ class WhereTest(unittest.TestCase):
         for line in ("设置文件：%s" % self.wb.settings_file, "工作文件夹：%s" % self.wb.work,
                      "当前打开的文件夹：%s（就是工作文件夹）" % os.path.realpath(self.wb.work), "读写：工作文件夹能读能写",
                      "封面素材：%s" % self.wb.assets, "对标账号：%s" % self.wb.accounts, "调研报告：%s" % self.wb.reports,
-                     "内容草稿：%s" % self.wb.drafts, "一批几张：10"):
+                     "内容草稿：%s" % self.wb.drafts, "一批几张：5"):
             self.assertIn(line, out)
         self.assertIn("工作台：没在运行", out)
         self.assertIn("照片：没设，我的照片 里也没有", out)
