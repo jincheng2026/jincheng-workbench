@@ -589,8 +589,22 @@ def cmd_save(args):
     folder = os.path.join(draft, W.CANDIDATES)
     no = _number(args.no)
     k = W.candidates(draft, cid, p["cover_assets"])
-    if no in k["taken"]:
-        raise UserError("封面-%s 这个编号已经用过了（已经有图，或者生成记录里有它）：编号不复用，用 封面-%s。" % (W.number_text(no), W.number_text(k["next"])))
+    keep = Z.parse_keep(args.keep)
+    replacing = []
+    if args.replace:
+        # 换个裁法重存：只给刚存进去、还没登记的那张用（生成记录的表和「## 记录」里都还没有它）；原图还在 Codex 的生图文件夹里
+        mine = [n for n in k["images"] if int(W.COVER_FILE.match(n).group(1)) == no]
+        doc = R.load(folder, cid)
+        registered = any(number.isdigit() and int(number) == no for _b, number, _c, _k, _f in doc.all_rows())
+        mentioned = any(int(x) == no for line in doc.text().splitlines() if line.startswith("- ") for x in W.NUMBER_IN_TEXT.findall(line))
+        if not mine:
+            raise UserError("封面候选里还没有 封面-%s，没什么可以重存的：去掉 --replace 直接存。" % W.number_text(no))
+        if registered or mentioned:
+            raise UserError("封面-%s 已经登记进生成记录了，不能重存：编号不复用，换个裁法存成 封面-%s。" % (W.number_text(no), W.number_text(k["next"])))
+        replacing = [os.path.join(folder, n) for n in mine]
+    elif no in k["taken"]:
+        raise UserError("封面-%s 这个编号已经用过了（已经有图，或者生成记录里有它）：编号不复用，用 封面-%s。"
+                        "刚存的这张裁得不好、还没登记的话，加 --replace 换个 --keep 重存。" % (W.number_text(no), W.number_text(k["next"])))
     if args.size:
         size, size_from = Z.parse(args.size), "--size 写的"
     else:
@@ -615,6 +629,8 @@ def cmd_save(args):
         raise UserError("这不是 png、jpg 或 webp 图片：%s" % source)
     existing = {}
     for name in k["images"]:
+        if os.path.join(folder, name) in replacing:
+            continue
         existing[hashlib.sha256(read_bytes(os.path.join(folder, name))).hexdigest()] = name
     same = existing.get(hashlib.sha256(data).hexdigest())
     if same:
@@ -622,31 +638,42 @@ def cmd_save(args):
     workdir = tempfile.mkdtemp(prefix="cover-save-")  # 裁图用的临时文件夹，不在工作文件夹里
     try:
         if size is not None:
-            cut = Z.crop(source, size, workdir)
+            cut = Z.crop(source, size, workdir, keep)
         else:
             got = I.image_size(source)
-            cut = {"path": source, "format": fmt, "before": got, "after": got, "cropped": False}
+            cut = {"path": source, "format": fmt, "before": got, "after": got, "cropped": False, "keep": "中", "offset": (0, 0)}
         out_data = read_bytes(cut["path"])
         same = existing.get(hashlib.sha256(out_data).hexdigest())
         if same:
             raise UserError("这张图已经存过了，就是 %s：多半这次没生成出来新图。先确认生成成功了再存。" % same)
         os.makedirs(folder, exist_ok=True)
         dest = os.path.join(folder, "封面-%s%s" % (W.number_text(no), I.EXT_OF_FORMAT[cut["format"]]))
+        for old in replacing:  # 换个裁法重存：先把刚才存的那张拿掉（还没登记，原图还在生图文件夹里）
+            os.remove(old)
         if os.path.exists(dest):
             raise UserError("%s 已经有了，不覆盖：用 封面-%s。" % (dest, W.number_text(k["next"])))
         shutil.copyfile(cut["path"], dest)
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
     size_text = "%d×%d" % cut["after"] if cut["after"] else "读不出宽高"
-    say("存好了：%s（%s，从 %s %s）" % (dest, size_text, source, "的中间裁的" if cut["cropped"] else "复制"))
+    how = ("裁的，%s" % Z.KEEP_TEXT[cut["keep"]] if isinstance(cut["keep"], str) else "裁的，从上边第 %d 像素开始留" % cut["offset"][0]) if cut["cropped"] else "复制"
+    say("%s：%s（%s，从 %s %s）" % ("重存好了" if replacing else "存好了", dest, size_text, source, how))
     if no in k["fillable"]:
         say("  封面-%s 原来只出了提示词（生图描述-%s.md），这张就是照它出的：登记时照样写 --no %s --file %s，会把只出了提示词的那一行换成这张。"
             % (W.number_text(no), W.number_text(no), W.number_text(no), os.path.basename(dest)))
     if size is None:
         say("  没写 --size，生成记录里这批也没写尺寸：原样存的，没裁。")
     elif cut["cropped"]:
-        say("  尺寸：%s（%s）：从 %d×%d 的中间裁成了 %d×%d；没裁的原图还在原处，没有放进工作文件夹。"
-            % (size.text, size_from, cut["before"][0], cut["before"][1], cut["after"][0], cut["after"][1]))
+        (bw, bh), (aw, ah) = cut["before"], cut["after"]
+        top, left = cut["offset"]
+        if bh > ah:
+            where = "上面裁掉 %d 像素、下面裁掉 %d 像素" % (top, bh - ah - top)
+        else:
+            where = "左边裁掉 %d 像素、右边裁掉 %d 像素" % (left, bw - aw - left)
+        say("  尺寸：%s（%s）：从 %d×%d 裁成了 %d×%d，%s；没裁的原图还在原处，没有放进工作文件夹。"
+            % (size.text, size_from, bw, bh, aw, ah, where))
+        say("  存完打开这张看一眼：字、脸、手都完整再登记（record add）；切到了就换 --keep（上、中、下，或者从上边第几像素开始留）"
+            "加 --replace 再存一次。")
     else:
         say("  尺寸：%s（%s）：已经是这个比例，不用裁。" % (size.text, size_from))
     if size is not None and cut["before"]:
@@ -767,6 +794,8 @@ def build_parser():
     sv.add_argument("--no", required=True, help="编号，比如 03")
     sv.add_argument("--size", help=SIZE_HELP + "；不写就照生成记录里最近一批写的尺寸")
     sv.add_argument("--from", dest="source", help="图在哪（不写就用 Codex 生图文件夹里最新的一张）")
+    sv.add_argument("--keep", default="中", help="从哪里裁：上（标题靠上时从下面多裁）、中（默认）、下，或者从上边第几像素开始留")
+    sv.add_argument("--replace", action="store_true", help="刚存的这张裁得不好、还没登记：换个 --keep 重新存（拿掉刚存的那张）")
     sv.set_defaults(func=cmd_save)
     return ap
 

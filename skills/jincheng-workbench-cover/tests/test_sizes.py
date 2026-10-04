@@ -39,6 +39,15 @@ class SizesTest(unittest.TestCase):
         for kind in ("口播", "教程", "科普", "小红书笔记", "小红书图文", None):
             self.assertIs(Z.default(None, kind)[0], Z.PORTRAIT, kind)
 
+    def test_从哪里裁(self):
+        self.assertEqual([Z.parse_keep(x) for x in ("上", "中", "下", "top", "", "左", "右", "40")], ["上", "中", "下", "上", "中", "上", "下", 40])
+        with self.assertRaises(Exception):
+            Z.parse_keep("斜着")
+        # 竖着裁（1024×1536 → 1024×1365，能挪 171 像素）：上、中、下、数字（超过就挪到头）；sips 给 0 当没给、给到头不裁，所以在 1 到 170 之间
+        self.assertEqual([Z.offsets((1024, 1536), (1024, 1365), k) for k in ("上", "中", "下", 40, 0, 999)], [(1, 0), (85, 0), (170, 0), (40, 0), (1, 0), (170, 0)])
+        # 横着裁（1536×1024 → 1024×1024）：上就是左、下就是右
+        self.assertEqual([Z.offsets((1536, 1024), (1024, 1024), k) for k in ("上", "中", "下")], [(0, 1), (0, 256), (0, 511)])
+
     def test_从一行字里找尺寸(self):
         self.assertIs(Z.find("对标：甲；照片：2 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：横版 2.35:1"), Z.WIDE)
         self.assertIsNone(Z.find("对标：甲；照片：我的照片/正脸.jpg"))

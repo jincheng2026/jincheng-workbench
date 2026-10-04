@@ -134,10 +134,40 @@ def sips_path():
     return "/usr/bin/sips" if os.path.isfile("/usr/bin/sips") else None
 
 
-def crop(source, size, workdir):
-    """把 source 从中间裁成 size 的比例，裁好的存进 workdir（会话自己的临时文件夹，不是工作文件夹）。
-    返回 {"path", "format", "before": (宽, 高), "after": (宽, 高), "cropped": 裁没裁}。已经是这个比例就不裁，path 是原图。
-    宽高按显示的方向算（JPEG 的拍摄方向转过来以后的）；sips 按存的方向裁，竖拍的照片把高和宽对调再交给它。"""
+KEEP_WORDS = {"上": "上", "top": "上", "左": "上", "中": "中", "center": "中", "middle": "中", "": "中", "下": "下", "bottom": "下", "右": "下"}
+KEEP_TEXT = {"上": "从上边开始裁（多裁下面）", "中": "从中间裁", "下": "从下边开始裁（多裁上面）"}
+
+
+def parse_keep(text):
+    """从哪里裁：「上」「中」「下」（横着裁时上就是左、下就是右），或者一个数（从上边、左边第几像素开始留）。认不出报错。"""
+    raw = str(text if text is not None else "").strip()
+    value = raw.lower()
+    if value in KEEP_WORDS:
+        return KEEP_WORDS[value]
+    if re.fullmatch(r"\d{1,5}", value):
+        return int(value)
+    raise UserError("--keep 写「上」「中」「下」，或者从上边第几像素开始留（收到的是「%s」）。" % raw)
+
+
+def offsets(before, after, keep):
+    """裁的时候从哪开始：(从上边第几像素, 从左边第几像素)。只沿着要裁的那一边挪；数字超过能挪的就挪到头。
+    sips 的 --cropOffset 给的是「从原图第几行（列）开始留」，可是给 0 会被当成没给、照旧从中间裁，挪到最底下那一格时又整张不裁
+    （2026-10-04 在 macOS 26.2 上用每行颜色都不同的图测的），所以不从中间裁时只在 1 到「能挪的格数减 1」之间挪，差的这一行像素看不出来。"""
+    (bw, bh), (aw, ah) = before, after
+    excess_h, excess_w = max(0, bh - ah), max(0, bw - aw)
+    def pick(excess):
+        if keep == "中" or excess < 2:
+            return excess // 2
+        want = keep if isinstance(keep, int) else {"上": 0, "下": excess}[keep]
+        return max(1, min(excess - 1, want))
+    return (pick(excess_h), 0) if excess_h else (0, pick(excess_w))
+
+
+def crop(source, size, workdir, keep="中"):
+    """把 source 裁成 size 的比例（keep：从哪里裁，「上」「中」「下」或者从上边第几像素开始留），裁好的存进 workdir
+    （会话自己的临时文件夹，不是工作文件夹）。返回 {"path", "format", "before": (宽, 高), "after": (宽, 高), "cropped": 裁没裁,
+    "keep": 实际怎么裁的, "offset": (从上边, 从左边)}。已经是这个比例就不裁，path 是原图。
+    宽高按显示的方向算（JPEG 的拍摄方向转过来以后的）；sips 按存的方向裁，竖拍的照片把高和宽对调再交给它（这种只从中间裁）。"""
     with open(source, "rb") as f:
         head = f.read(256 * 1024)
     try:
@@ -148,7 +178,9 @@ def crop(source, size, workdir):
     before = (height, width) if turned else (width, height)
     after = size.target(*before)
     if after == before:
-        return {"path": source, "format": fmt, "before": before, "after": after, "cropped": False}
+        return {"path": source, "format": fmt, "before": before, "after": after, "cropped": False, "keep": "中", "offset": (0, 0)}
+    if turned and keep != "中":
+        keep = "中"  # 竖拍的照片存的方向和看到的方向不一样，挪的方向对不上，只从中间裁
     sips = sips_path()
     if not sips:
         raise UserError("这台电脑上找不到 sips（macOS 自带的图片工具），裁不了图：这张是 %d×%d，要裁成 %s。"
@@ -161,7 +193,11 @@ def crop(source, size, workdir):
     elif out_fmt == "JPEG":
         cmd += ["-s", "formatOptions", "high"]
     stored = (after[1], after[0]) if turned else after  # 交给 sips 的是存的方向：(宽, 高)
-    cmd += ["-c", str(stored[1]), str(stored[0]), source, "--out", out]
+    cmd += ["-c", str(stored[1]), str(stored[0])]
+    offset = offsets(before, after, keep)
+    if keep != "中" and max(before[0] - after[0], before[1] - after[1]) >= 2:
+        cmd += ["--cropOffset", str(offset[0]), str(offset[1])]
+    cmd += [source, "--out", out]
     try:
         done = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     except (OSError, subprocess.TimeoutExpired) as e:
@@ -173,7 +209,7 @@ def crop(source, size, workdir):
     if got != after:
         raise UserError("裁出来是 %s，不是要的 %d×%d（%s）：这张先别存，把这句话原样告诉用户。"
                         % ("%d×%d" % got if got else "读不出宽高的图", after[0], after[1], size.text))
-    return {"path": out, "format": out_fmt, "before": before, "after": after, "cropped": True}
+    return {"path": out, "format": out_fmt, "before": before, "after": after, "cropped": True, "keep": keep, "offset": offset}
 
 
 def shape_note(size, before):

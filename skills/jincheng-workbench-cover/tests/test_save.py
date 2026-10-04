@@ -88,6 +88,7 @@ class SaveTest(unittest.TestCase):
 
 
 GREEN = (0, 255, 0)
+RED = (255, 0, 0)
 
 
 def near(color, want, slack=8):
@@ -127,12 +128,54 @@ class SaveSizeTest(unittest.TestCase):
         source = self.generated("ig_1.png", banded_png(1024, 1536, 80))
         code, out = self.save("--no", "01", "--size", "竖版3:4")
         self.assertEqual(code, 0, out)
-        self.assertIn("存好了：%s（1024×1365，从 %s 的中间裁的）" % (os.path.join(self.cand, "封面-01.png"), source), out)
-        self.assertIn("尺寸：竖版 3:4（--size 写的）：从 1024×1536 的中间裁成了 1024×1365", out)
+        self.assertIn("存好了：%s（1024×1365，从 %s 裁的，从中间裁）" % (os.path.join(self.cand, "封面-01.png"), source), out)
+        self.assertIn("尺寸：竖版 3:4（--size 写的）：从 1024×1536 裁成了 1024×1365，上面裁掉 85 像素、下面裁掉 86 像素", out)
+        self.assertIn("存完打开这张看一眼", out)
         self.assertEqual(I.image_size(os.path.join(self.cand, "封面-01.png")), (1024, 1365))
         self.assert_all_green_edges("封面-01.png")
         self.assertTrue(os.path.isfile(source))  # 没裁的原图还在 Codex 的生图文件夹里
         self.assertEqual(sorted(os.listdir(self.cand)), ["封面-01.png"])  # 工作文件夹里只有裁好的这张
+
+    @unittest.skipUnless(sips_here(), NO_SIPS)
+    def test_标题靠上时从上边开始裁_也能写从第几像素开始留(self):
+        self.generated("ig_1.png", banded_png(1024, 1536, 80))
+        code, out = self.save("--no", "01", "--size", "竖版3:4", "--keep", "上")
+        self.assertEqual(code, 0, out)
+        self.assertIn("从上边开始裁（多裁下面）", out)
+        self.assertIn("上面裁掉 1 像素、下面裁掉 170 像素", out)
+        width, height, pixel = self.pixels("封面-01.png")
+        self.assertEqual((width, height), (1024, 1365))
+        self.assertTrue(near(pixel(0, 0), RED), "上边的红条留着：从上边开始裁的")
+        self.assertTrue(near(pixel(0, height - 1), GREEN), "下边的蓝条裁掉了")
+        self.generated("ig_2.png", banded_png(1024, 1536, 80, ))
+        os.utime(os.path.join(self.gen, "会话-1", "ig_2.png"))
+        with open(os.path.join(self.gen, "会话-1", "ig_2.png"), "ab") as f:  # 内容和第一张不一样，才不会被当成同一张
+            f.write(b"\0")
+        code, out = self.save("--no", "02", "--size", "竖版3:4", "--keep", "40")
+        self.assertEqual(code, 0, out)
+        self.assertIn("从上边第 40 像素开始留", out)
+        self.assertIn("上面裁掉 40 像素、下面裁掉 131 像素", out)
+
+    @unittest.skipUnless(sips_here(), NO_SIPS)
+    def test_没登记前能换个裁法重存_登记以后不能(self):
+        source = self.generated("ig_1.png", banded_png(1024, 1536, 80))
+        self.assertEqual(self.save("--no", "01", "--size", "竖版3:4")[0], 0)
+        code, out = self.save("--no", "01", "--size", "竖版3:4", "--from", source)
+        self.assertEqual(code, 2, out)
+        self.assertIn("加 --replace 换个 --keep 重存", out)
+        code, out = self.save("--no", "01", "--size", "竖版3:4", "--keep", "上", "--replace", "--from", source)
+        self.assertEqual(code, 0, out)
+        self.assertIn("重存好了", out)
+        self.assertTrue(near(self.pixels("封面-01.png")[2](0, 0), RED), "换成了从上边裁的那张")
+        self.assertEqual(sorted(os.listdir(self.cand)), ["封面-01.png"])
+        code, out = run_cli(["record", "add", "T002", "--no", "01", "--change", "K01 讲台", "--check", "通过", "--file", "封面-01.png", "--tool", "image_gen", "--app", "Codex"], self.env)
+        self.assertEqual(code, 0, out)
+        code, out = self.save("--no", "01", "--size", "竖版3:4", "--keep", "中", "--replace", "--from", source)
+        self.assertEqual(code, 2, out)
+        self.assertIn("已经登记进生成记录了，不能重存", out)
+        code, out = self.save("--no", "02", "--replace", "--from", source)
+        self.assertEqual(code, 2, out)
+        self.assertIn("封面候选里还没有 封面-02", out)
 
     @unittest.skipUnless(sips_here(), NO_SIPS)
     def test_横版_1536x1024_从中间裁成_1536x654_同一张不存两次(self):

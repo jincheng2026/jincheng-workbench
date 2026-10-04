@@ -289,15 +289,18 @@ python3 "$WB/skills/jincheng-workbench-cover/scripts/cover.py" record batch T002
 - 你的照片是 heic：先用 `sips -s format jpeg <照片> --out <会话的临时目录>/照片.jpg` 转一份 jpg 再交给生图，转出来的不放进工作文件夹。
 - **Codex**：image_gen 生成这一张，画面大小选这个尺寸的生图尺寸（竖版 1024×1536、横版 1536×1024、方形 1024×1024；工具不能选就在提示词里写明），然后：
   ```bash
-  python3 "$WB/skills/jincheng-workbench-cover/scripts/cover.py" save T002 --no 03 --size 竖版3:4
+  python3 "$WB/skills/jincheng-workbench-cover/scripts/cover.py" save T002 --no 03 --size 竖版3:4 --keep 上
   python3 "$WB/skills/jincheng-workbench-cover/scripts/cover.py" record add T002 --no 03 --change "K03 讲台：人在右后，前景放大的手机" --check "通过" --file 封面-03.png
   ```
-  `save` 用 macOS 自带的 `sips` 从中间裁好再存，打印裁之前和裁之后的大小；没裁的原图留在 Codex 的生图文件夹里，不放进工作文件夹。`save` 之后打开存进封面候选的这张（裁好的那张），按 `references/验收.md` 看，再登记。登记完在对话里紧跟着这张图写一行「封面-03：K03 讲台，人在右后；自检：通过」：你在 Codex 里点开图、切到 Canvas 看这一批时，每张都对得上编号。
+  - `save` 之前先看刚生成的这张原图，定从哪里裁（`--keep`）：标题、脸靠近上边（常见），写 `--keep 上`，从上边开始留、多裁下面；脚、手、字靠近下边写 `--keep 下`；上下都留得有空用默认的「中」；拿不准就写从上边第几像素开始留（比如 `--keep 40`）。2026-10-04 真跑时生图把标题放在离顶边约 56 像素的地方，从中间裁会切掉上面约 85 像素，标题就被切了一截。
+  - `save` 用 macOS 自带的 `sips` 裁好再存，打印裁之前、裁之后的大小和上下各裁掉几像素；没裁的原图留在 Codex 的生图文件夹里，不放进工作文件夹。
+  - `save` 之后打开存进封面候选的这张（裁好的那张）看：字、脸、手被切到了，换个 `--keep` 加 `--replace` 再存一次（只有还没登记的这张能重存），再看，都完整了再按 `references/验收.md` 自检、登记。自检写的是裁好以后的样子；只有裁成什么样都切到字的，才在自检里写问题。
+  - 登记完在对话里紧跟着这张图写一行「封面-03：K03 讲台，人在右后；自检：通过」：你在 Codex 里点开图、切到 Canvas 看这一批时，每张都对得上编号。
 - **Claude Code**：写好生图描述就登记：
   ```bash
   python3 "$WB/skills/jincheng-workbench-cover/scripts/cover.py" record add T002 --no 03 --change "K03 讲台：人在右后，前景放大的手机" --check "只出了提示词" --file 生图描述-03.md
   ```
-  你在别处生成好图交回来（拖进对话，或者告诉 AI 在哪）：AI 先把拖进来的存成文件，再 `save T002 --no 03 --from "<图>" --size 竖版3:4`（存成同一个编号，从中间裁好），看过以后 `record add T002 --no 03 … --file 封面-03.png`（把只出了提示词的那一行换成这张），都放进来以后再跑一次 `record summary`。
+  你在别处生成好图交回来（拖进对话，或者告诉 AI 在哪）：AI 先把拖进来的存成文件，看一眼定从哪里裁，再 `save T002 --no 03 --from "<图>" --size 竖版3:4 --keep 上`（存成同一个编号，裁好），看过以后 `record add T002 --no 03 … --file 封面-03.png`（把只出了提示词的那一行换成这张），都放进来以后再跑一次 `record summary`。
 - 编号从 `record batch` 打印的那个开始往后排，一张一个。
 - 「本张变化」写成「原图编号 一句话画面」。用了文字回退（见 `生成方法.md`）的，在这句末尾写「（参考方式：文字回退）」。
 - 自检一句话、30 字以内、先写结论：全过写「通过」；有问题只写问题本身，比如「头发遮住「AI」的 A」「三只手」「标题被裁掉一截」。检查过程不写进这一句，你看这一批时对照的就是它。
