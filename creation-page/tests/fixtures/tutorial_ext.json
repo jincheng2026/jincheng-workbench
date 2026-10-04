@@ -1,0 +1,84 @@
+{
+  "content_id": "T991",
+  "type": "教程",
+  "stage": "录制准备",
+  "title": "扩展性验证：用 AI 三分钟做一张视频封面",
+  "narrative": {
+    "story": "假数据：演示怎么用 AI 生图工具三分钟做出一张能用的视频封面。",
+    "audience": "假数据：会用手机剪视频、但没做过封面的新手。",
+    "problem": "假数据：封面总是临时凑，想有一个固定的三步做法。"
+  },
+  "speech_rate": 4,
+  "service_origin": "http://127.0.0.1:18977",
+  "segments": [
+    {
+      "id": "tutseg01",
+      "title": "打开工具，贴提示词",
+      "role": "第一步：进工具、贴提示词",
+      "refs": [
+        {
+          "who": "某教程博主",
+          "source_type": "口播原话",
+          "time": "0:05 到 0:20",
+          "text": "第一步，打开生图工具，把我给你的这段提示词原样贴进去。",
+          "url": "https://www.example.com/video/tutorial-demo",
+          "visual": "录屏：浏览器打开生图工具首页，鼠标点「图片生成」，把提示词粘进输入框"
+        }
+      ],
+      "baseline": "第一步，先打开生图工具，把下面这段提示词贴进去。",
+      "mine": "第一步，先打开生图工具，把下面这段提示词原样贴进去，别改。",
+      "note": "",
+      "fields": { "our_visual": "", "visual_type": "录屏" }
+    },
+    {
+      "id": "tutseg02",
+      "title": "挑一张，改字",
+      "role": "第二步：挑图、改标题字",
+      "refs": [
+        {
+          "who": "某教程博主",
+          "source_type": "口播原话",
+          "time": "0:20 到 0:41",
+          "text": "出来四张，挑一张最顺眼的，把标题字换成你自己的。",
+          "url": "https://www.example.com/video/tutorial-demo",
+          "visual": "录屏：四张草图并排，点第二张放大，在编辑框里改标题"
+        },
+        {
+          "source_type": "说明",
+          "time": "",
+          "text": "对方这里没讲怎么改字号，我们这版补了一句。"
+        }
+      ],
+      "baseline": "出来四张以后，挑一张，把标题换成你的。",
+      "mine": "出来四张以后，挑一张最顺眼的，把标题换成你自己的，字号拉大一点。",
+      "note": "",
+      "fields": { "our_visual": "", "visual_type": "" }
+    }
+  ],
+  "suggestions": [
+    {
+      "id": "tutsug01",
+      "segment": 2,
+      "category": "拗口",
+      "source": "AI",
+      "original": "字号拉大一点",
+      "proposed": "字放大一点",
+      "reason": "「字号拉大」念着绕，口播里说「字放大」就行。",
+      "basis": { "type": "AI 自己的判断", "text": "假数据。" },
+      "verdict": "待你定"
+    }
+  ],
+  "items": [
+    {
+      "id": "tutstep01",
+      "kind": "step",
+      "locked": {
+        "segment": 1,
+        "where": "生图工具「图片生成」页的输入框",
+        "line": "把下面这段提示词原样贴进去，别改",
+        "expect": "出现 4 张 3:4 的封面草图"
+      },
+      "fields": { "prompt": "一张 3:4 的中文视频封面，白底，大字标题「三分钟做封面」，右下角一只举着画笔的猫" }
+    }
+  ]
+}

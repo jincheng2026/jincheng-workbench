@@ -1,0 +1,25 @@
+{
+ "code": 200,
+ "request_id": "test-request",
+ "message": "Request successful. This request will incur a charge.",
+ "message_zh": "请求成功，本次请求将被计费。",
+ "router": "/api/v1/xiaohongshu/app_v2/get_user_info",
+ "params": {},
+ "data": {
+  "code": 0,
+  "success": true,
+  "msg": "成功",
+  "data": {
+   "nickname": "虚构的小红书博主阿青",
+   "userid": "5f0000000000000000000001",
+   "red_id": "fake_red_01",
+   "desc": "分享 AI 办公小技巧（测试用虚构账号）",
+   "fans": "3.2万",
+   "follows": 18,
+   "liked": 120000,
+   "collected": 30000,
+   "ip_location": "上海",
+   "images": "{{BASE}}/img/xhs_avatar.jpeg"
+  }
+ }
+}

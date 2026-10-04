@@ -1,0 +1,179 @@
+{
+ "code": 200,
+ "request_id": "test-request",
+ "message": "Request successful. This request will incur a charge.",
+ "message_zh": "请求成功，本次请求将被计费。",
+ "router": "/api/v1/xiaohongshu/app_v2/get_user_posted_notes",
+ "params": {},
+ "data": {
+  "code": 0,
+  "success": true,
+  "msg": "success",
+  "data": {
+   "notes": [
+    {
+     "note_id": "660000000000000000000001",
+     "display_title": "虚构笔记 1：让 AI 帮你改简历",
+     "type": "video",
+     "likes": 350,
+     "collected_count": 90,
+     "comments_count": 13,
+     "share_count": 6,
+     "create_time": 1790596800000,
+     "cursor": "cursor-1",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover1.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    },
+    {
+     "note_id": "660000000000000000000002",
+     "display_title": "虚构笔记 2：AI 一键做会议纪要",
+     "type": "normal",
+     "likes": 400,
+     "collected_count": 100,
+     "comments_count": 14,
+     "share_count": 7,
+     "create_time": 1790424000000,
+     "cursor": "cursor-2",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover2.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    },
+    {
+     "note_id": "660000000000000000000003",
+     "display_title": "虚构笔记 3：手机上就能用的 AI 修图",
+     "type": "video",
+     "likes": 450,
+     "collected_count": 110,
+     "comments_count": 15,
+     "share_count": 8,
+     "create_time": 1790251200000,
+     "cursor": "cursor-3",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover3.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    },
+    {
+     "note_id": "660000000000000000000004",
+     "display_title": "虚构笔记 4：AI 写小红书标题的三个句式",
+     "type": "normal",
+     "likes": 500,
+     "collected_count": 120,
+     "comments_count": 16,
+     "share_count": 9,
+     "create_time": 1790078400000,
+     "cursor": "cursor-4",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover4.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    },
+    {
+     "note_id": "660000000000000000000005",
+     "display_title": "虚构笔记 5：用 AI 读一本书的笔记",
+     "type": "video",
+     "likes": 550,
+     "collected_count": 130,
+     "comments_count": 17,
+     "share_count": 10,
+     "create_time": 1789905600000,
+     "cursor": "cursor-5",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover5.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    },
+    {
+     "note_id": "660000000000000000000006",
+     "display_title": "虚构笔记 6：AI 帮你做旅行攻略",
+     "type": "normal",
+     "likes": 600,
+     "collected_count": 140,
+     "comments_count": 18,
+     "share_count": 11,
+     "create_time": 1789732800000,
+     "cursor": "cursor-6",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover6.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    },
+    {
+     "note_id": "660000000000000000000007",
+     "display_title": "虚构笔记 7：三个免费 AI 工具推荐",
+     "type": "video",
+     "likes": 650,
+     "collected_count": 150,
+     "comments_count": 19,
+     "share_count": 12,
+     "create_time": 1789560000000,
+     "cursor": "cursor-7",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover7.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    },
+    {
+     "note_id": "660000000000000000000008",
+     "display_title": "虚构笔记 8：用 AI 三分钟写周报",
+     "type": "normal",
+     "likes": 700,
+     "collected_count": 160,
+     "comments_count": 20,
+     "share_count": 13,
+     "create_time": 1789387200000,
+     "cursor": "cursor-8",
+     "images_list": [
+      {
+       "url": "{{BASE}}/img/xhs_cover8.jpeg"
+      }
+     ],
+     "user": {
+      "nickname": "虚构的小红书博主阿青",
+      "userid": "5f0000000000000000000001"
+     }
+    }
+   ],
+   "tags": [],
+   "has_more": false
+  }
+ }
+}

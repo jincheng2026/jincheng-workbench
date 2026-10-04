@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>{{TITLE}}</title>
+<!--jc-style:start--><style>
+{{STYLE}}
+</style><!--jc-style:end-->
+</head>
+<body>
+<!-- 外壳只放 #app、jc-doc 和三段用首尾标记包住的模板代码（样式、kit、界面脚本）。界面元素一律由界面脚本从 jc-doc 画出来：
+     保存服务提供页面时会换上当前的样式和脚本，外壳本身不换，所以别在这里加界面元素。 -->
+<div id="app">
+  <div class="static-note">
+    <h1>{{TITLE}}</h1>
+    <p>页面没有正常显示。创作页的内容需要页面程序运行后才会出现，看到这段文字说明程序没有运行，例如有些应用的预览只显示静态快照。</p>
+    <p>稿子和批注都保存在这个文件里，不会丢失。要查看和修改，请用页面链接打开（地址格式：<code>http://127.0.0.1:端口/p/页面标识</code>），或者在 Chrome 里直接打开这个文件。</p>
+  </div>
+</div>
+<script id="jc-doc" type="application/json">{{DOC}}</script>
+<!--jc-kit:start--><script>
+{{KIT}}
+</script><!--jc-kit:end-->
+<!--jc-app:start--><script>
+{{APP}}
+</script><!--jc-app:end-->
+</body>
+</html>

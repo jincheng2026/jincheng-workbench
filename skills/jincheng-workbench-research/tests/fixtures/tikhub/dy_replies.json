@@ -1,0 +1,64 @@
+{
+ "code": 200,
+ "request_id": "test-request",
+ "message": "Request successful. This request will incur a charge.",
+ "message_zh": "请求成功，本次请求将被计费。",
+ "router": "/api/v1/douyin/app/v3/fetch_video_comment_replies",
+ "params": {},
+ "data": {
+  "status_code": 0,
+  "comments": [
+   {
+    "cid": "7300000000000000101",
+    "text": "上课录音也能这样整理吗（第 101 条）",
+    "digg_count": 197,
+    "create_time": 1790319600,
+    "ip_label": "广东",
+    "reply_comment_total": 0,
+    "reply_id": "7300000000000000001",
+    "aweme_id": "7400000000000000103",
+    "user": {
+     "nickname": "虚构用户101",
+     "uid": "u101"
+    },
+    "image_list": null,
+    "label_text": ""
+   },
+   {
+    "cid": "7300000000000000102",
+    "text": "试了一下，真的三分钟就出来了（第 102 条）",
+    "digg_count": 294,
+    "create_time": 1790748000,
+    "ip_label": "四川",
+    "reply_comment_total": 0,
+    "reply_id": "7300000000000000001",
+    "aweme_id": "7400000000000000103",
+    "user": {
+     "nickname": "虚构用户102",
+     "uid": "u102"
+    },
+    "image_list": null,
+    "label_text": "作者"
+   },
+   {
+    "cid": "7300000000000000103",
+    "text": "有错别字怎么办，专有名词老是识别错（第 103 条）",
+    "digg_count": 91,
+    "create_time": 1790658000,
+    "ip_label": "北京",
+    "reply_comment_total": 0,
+    "reply_id": "7300000000000000001",
+    "aweme_id": "7400000000000000103",
+    "user": {
+     "nickname": "虚构用户103",
+     "uid": "u103"
+    },
+    "image_list": null,
+    "label_text": ""
+   }
+  ],
+  "cursor": 3,
+  "has_more": 0,
+  "total": 3
+ }
+}

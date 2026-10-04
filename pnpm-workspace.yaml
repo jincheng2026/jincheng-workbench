@@ -1,0 +1,6 @@
+packages:
+  - ui
+
+# 依赖包自带的安装脚本一律不跑：界面用不到 sharp 的图片压缩，也不需要别的原生编译。
+allowBuilds:
+  sharp: false

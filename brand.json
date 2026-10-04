@@ -1,0 +1,9 @@
+{
+  "id": "jincheng-workbench",
+  "name": "锦成工作台",
+  "packageName": "jincheng-workbench",
+  "tagline": "选题、草稿和提示词放在一起",
+  "copyrightHolder": "锦成",
+  "copyrightYear": "2026",
+  "repository": "https://github.com/jincheng2026/jincheng-workbench"
+}

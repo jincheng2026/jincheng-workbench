@@ -1,0 +1,40 @@
+{
+ "code": 200,
+ "request_id": "test-request",
+ "message": "Request successful. This request will incur a charge.",
+ "message_zh": "请求成功，本次请求将被计费。",
+ "router": "/api/v1/xiaohongshu/app_v2/get_image_note_detail",
+ "params": {},
+ "data": {
+  "code": 0,
+  "success": true,
+  "msg": "成功",
+  "data": [
+   {
+    "note_list": [
+     {
+      "id": "660000000000000000000001",
+      "title": "虚构笔记：AI 做会议纪要的三个坑",
+      "desc": "第一个坑是录音太长……（虚构内容）",
+      "type": "normal",
+      "time": 1790510400,
+      "liked_count": 1200,
+      "collected_count": 640,
+      "comments_count": 88,
+      "shared_count": 40,
+      "images_list": [
+       {
+        "url": "{{BASE}}/img/xhs_cover1.jpeg"
+       }
+      ]
+     }
+    ],
+    "user": {
+     "nickname": "虚构的小红书博主阿青",
+     "userid": "5f0000000000000000000001"
+    },
+    "model_type": "note"
+   }
+  ]
+ }
+}

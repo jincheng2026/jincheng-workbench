@@ -1,0 +1,25 @@
+# 依赖
+node_modules
+
+# 界面编译产物（ui/.next，还有 .next 开头的其他编译目录）
+.next*
+*.tsbuildinfo
+next-env.d.ts
+
+# 系统与编辑器
+.DS_Store
+.idea/
+.vscode/
+
+# 密钥与环境变量
+.env
+.env.*
+*.pem
+
+# 日志和临时文件
+*.log
+.trash/
+
+# Python 运行时产生的缓存
+__pycache__/
+*.pyc

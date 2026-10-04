@@ -1,0 +1,1614 @@
+@import 'tailwindcss';
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+   --font-sans:
+      -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', system-ui, sans-serif;
+   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, 'PingFang SC', monospace;
+}
+
+:root {
+   /* macOS 风格的浅色视觉：系统字体、浅灰白、蓝色操作、少量磨砂导航。 */
+   /* 中性 */
+   --jc-ink: #23252b; /* 主文字 */
+   --jc-body: #424753; /* 正文 */
+   --jc-muted: #656a74; /* 次级文字 */
+   --jc-faint: #6d7480; /* 说明 */
+   --jc-ghost: #79818d; /* 时间戳 */
+   --jc-canvas: #fafbfc; /* 页面背景 */
+   --jc-surface: #ffffff; /* 卡片 */
+   --jc-border: #e7e9ee;
+   --jc-soft: #f0f2f6;
+   --jc-softer: #f6f8fa;
+   --jc-accent: #0068db;
+   --jc-accent-hover: #005dc4;
+   --jc-accent-bg: #edf4fd;
+   --jc-accent-bd: #dae8fa;
+   --jc-focus-ring: rgba(0, 104, 219, 0.23);
+   --jc-sidebar-bg: rgba(238, 240, 244, 0.9);
+   --jc-toolbar-bg: rgba(250, 251, 252, 0.84);
+   --jc-control-border: #dce0e7;
+   --jc-card-shadow: 0 2px 8px rgba(39, 56, 86, 0.025);
+   /* 语义（浅底上永远配深色同系文字） */
+   --jc-ok: #167b49;
+   --jc-ok-bg: #e8f3ec;
+   --jc-ok-bd: #cde4d5;
+   --jc-warn: #b25000;
+   --jc-warn-bg: #fdf1e3;
+   --jc-warn-bd: #f0dfc9;
+   --jc-err: #b42318;
+   --jc-err-bg: #fbeae7;
+   --jc-err-bd: #eed4d0;
+
+   /* ── shadcn/tailwind 变量桥接（残留组件兼容，值全部来自上方令牌）── */
+   --background: var(--jc-canvas);
+   --foreground: var(--jc-ink);
+   --card: var(--jc-surface);
+   --card-foreground: var(--jc-ink);
+   --popover: var(--jc-surface);
+   --popover-foreground: var(--jc-ink);
+   --primary: var(--jc-accent);
+   --primary-foreground: #ffffff;
+   --secondary: var(--jc-soft);
+   --secondary-foreground: var(--jc-body);
+   --muted: var(--jc-soft);
+   --muted-foreground: var(--jc-muted);
+   --accent: var(--jc-accent-bg);
+   --accent-foreground: var(--jc-accent);
+   --destructive: var(--jc-err);
+   --destructive-foreground: var(--jc-err);
+   --border: var(--jc-border);
+   --input: var(--jc-border);
+   --ring: var(--jc-focus-ring);
+   --chart-1: var(--jc-ok);
+   --chart-2: #0e7090;
+   --chart-3: var(--jc-warn);
+   --chart-4: var(--jc-err);
+   --chart-5: var(--jc-accent);
+   --radius: 0.875rem; /* 卡片 14px */
+   --sidebar: var(--jc-sidebar-bg);
+   --sidebar-foreground: var(--jc-ink);
+   --sidebar-primary: var(--jc-ink);
+   --sidebar-primary-foreground: #ffffff;
+   --sidebar-accent: var(--jc-soft);
+   --sidebar-accent-foreground: var(--jc-body);
+   --sidebar-border: var(--jc-border);
+   --sidebar-ring: var(--jc-focus-ring);
+   --container: var(--jc-surface);
+   --tertiary: var(--jc-muted);
+   --sem-green: var(--jc-ok);
+   --sem-amber: var(--jc-warn);
+   --sem-red: var(--jc-err);
+   --sem-cyan: #0e7090;
+}
+
+@theme inline {
+   --color-background: var(--background);
+   --color-foreground: var(--foreground);
+   --color-card: var(--card);
+   --color-card-foreground: var(--card-foreground);
+   --color-popover: var(--popover);
+   --color-popover-foreground: var(--popover-foreground);
+   --color-primary: var(--primary);
+   --color-primary-foreground: var(--primary-foreground);
+   --color-secondary: var(--secondary);
+   --color-secondary-foreground: var(--secondary-foreground);
+   --color-muted: var(--muted);
+   --color-muted-foreground: var(--muted-foreground);
+   --color-accent: var(--accent);
+   --color-accent-foreground: var(--accent-foreground);
+   --color-destructive: var(--destructive);
+   --color-destructive-foreground: var(--destructive-foreground);
+   --color-border: var(--border);
+   --color-input: var(--input);
+   --color-ring: var(--ring);
+   --color-chart-1: var(--chart-1);
+   --color-chart-2: var(--chart-2);
+   --color-chart-3: var(--chart-3);
+   --color-chart-4: var(--chart-4);
+   --color-chart-5: var(--chart-5);
+   --radius-sm: 0.625rem;
+   --radius-md: var(--radius);
+   --radius-lg: var(--radius);
+   --radius-xl: 1rem;
+   --color-sidebar: var(--sidebar);
+   --color-sidebar-foreground: var(--sidebar-foreground);
+   --color-sidebar-primary: var(--sidebar-primary);
+   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+   --color-sidebar-accent: var(--sidebar-accent);
+   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+   --color-sidebar-border: var(--sidebar-border);
+   --color-sidebar-ring: var(--sidebar-ring);
+   --color-container: var(--container);
+   --color-tertiary: var(--tertiary);
+   --color-sem-green: var(--sem-green);
+   --color-sem-amber: var(--sem-amber);
+   --color-sem-red: var(--sem-red);
+   --color-sem-cyan: var(--sem-cyan);
+}
+
+@layer base {
+   * {
+      @apply border-border outline-ring/50;
+   }
+
+   body {
+      background: var(--jc-canvas);
+      color: var(--jc-ink);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      font-optical-sizing: auto;
+   }
+
+   a {
+      color: var(--jc-accent);
+      text-decoration: none;
+   }
+   a:hover {
+      text-decoration: underline;
+      text-underline-offset: 2px;
+   }
+
+   /* 全部按钮不因中文换行裁切（已知坑） */
+   button {
+      font: inherit;
+      white-space: nowrap;
+   }
+   input {
+      font: inherit;
+   }
+   button,
+   a,
+   summary {
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+   }
+   button:enabled {
+      cursor: pointer;
+   }
+   summary {
+      cursor: pointer;
+   }
+}
+
+:where(a, button, summary, [role='button']):focus-visible {
+   outline: 3px solid var(--jc-focus-ring);
+   outline-offset: 3px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+   outline: 2px solid var(--jc-focus-ring);
+   outline-offset: 1px;
+}
+
+/* 共享组件：保留每页自身的信息与操作，只统一外观。 */
+.jc-page-header {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: flex-end;
+   justify-content: space-between;
+   gap: 18px;
+   margin-bottom: 28px;
+}
+.jc-page-header h1 {
+   font-size: 32px;
+   font-weight: 700;
+   line-height: 1.18;
+   letter-spacing: -0.035em;
+}
+.jc-page-eyebrow {
+   margin-bottom: 9px;
+   color: var(--jc-faint);
+   font-size: 12px;
+   line-height: 1.5;
+}
+.jc-page-description {
+   margin-top: 11px;
+   color: var(--jc-muted);
+   font-size: 13px;
+   line-height: 1.75;
+   max-width: 760px;
+}
+.jc-page-actions {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 8px;
+}
+/* 栏目页头：栏目名、一排页签（每个页签是一个地址）、当前页签的一句说明和操作 */
+.jc-page-header.jc-column-header {
+   margin-bottom: 14px;
+}
+.jc-column-tabs {
+   display: flex;
+   gap: 24px;
+   overflow-x: auto;
+   border-bottom: 1px solid var(--jc-border);
+   scrollbar-width: none;
+}
+.jc-column-tabs a {
+   flex-shrink: 0;
+   margin-bottom: -1px;
+   border-bottom: 2px solid transparent;
+   padding: 8px 1px 9px;
+   color: var(--jc-muted);
+   font-size: 14px;
+   font-weight: 500;
+   white-space: nowrap;
+   text-decoration: none;
+}
+.jc-column-tabs a:hover {
+   color: var(--jc-ink);
+   text-decoration: none;
+}
+.jc-column-tabs a[aria-current='page'] {
+   border-bottom-color: var(--jc-accent);
+   color: var(--jc-ink);
+   font-weight: 600;
+}
+.jc-column-tabs a {
+   position: relative;
+   z-index: 1;
+   transition: color 180ms ease;
+}
+/* 蓝线：脚本量好位置后（data-slide=on）由这根线代替页签自己的下边框，从上一个页签滑过来 */
+.jc-column-tabs {
+   position: relative;
+}
+.jc-column-tabs-line {
+   position: absolute;
+   top: 0;
+   left: 0;
+   z-index: 2;
+   display: none;
+   pointer-events: none;
+   transition:
+      transform 360ms cubic-bezier(0.22, 1, 0.36, 1),
+      width 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.jc-column-tabs-line::after {
+   content: '';
+   position: absolute;
+   right: 0;
+   bottom: -1px;
+   left: 0;
+   height: 2px;
+   border-radius: 2px;
+   background: var(--jc-accent);
+}
+.jc-column-tabs[data-slide='on'] .jc-column-tabs-line {
+   display: block;
+}
+.jc-column-tabs[data-slide='on'] a[aria-current='page'] {
+   border-bottom-color: transparent;
+}
+/* 页签下面的内容：淡入并上浮 8px，后面的块晚一点点出来。只在播放时带位移，播完不留 transform，免得全屏层定位出错 */
+@keyframes jcrise {
+   from {
+      opacity: 0;
+      transform: translateY(8px);
+   }
+   to {
+      opacity: 1;
+      transform: none;
+   }
+}
+.jc-intro-enter > .jc-column-intro,
+.jc-content-enter > .jc-column-intro ~ * {
+   animation: jcrise 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.jc-content-enter > .jc-column-intro ~ * {
+   animation-delay: 40ms;
+}
+.jc-content-enter > .jc-column-intro ~ * ~ * {
+   animation-delay: 80ms;
+}
+/* 数据没到齐：内容的位置放一行「正在读取……」。晚 0.3 秒才浮出来，数据来得快就看不到它，不会一闪 */
+.jc-loading {
+   display: flex;
+   min-height: 240px;
+   align-items: flex-start;
+   gap: 9px;
+   padding-top: 2px;
+   color: var(--jc-muted);
+   font-size: 13px;
+   line-height: 18px;
+   animation: jcrise 380ms cubic-bezier(0.22, 1, 0.36, 1) 300ms backwards;
+}
+.jc-loading > span {
+   margin-top: 2px;
+}
+/* 搜索框：聚焦时整个框亮一圈，里面的输入框不再单独画一个方框 */
+.jc-search {
+   transition:
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+}
+.jc-search:focus-within {
+   border-color: var(--jc-accent) !important;
+   box-shadow: 0 0 0 3px rgba(0, 104, 219, 0.14);
+}
+.jc-search input:focus-visible {
+   outline: none;
+}
+/* 左边菜单：选中底色是一块单独的底板，换栏时滑过去 */
+.jc-nav-area {
+   position: relative;
+}
+.jc-nav-area .jc-nav-link {
+   position: relative;
+   z-index: 1;
+}
+.jc-nav-pill {
+   position: absolute;
+   top: 0;
+   left: 0;
+   display: none;
+   border-radius: 9px;
+   background: rgba(255, 255, 255, 0.9);
+   box-shadow:
+      0 1px 4px rgba(16, 27, 51, 0.06),
+      0 0 1px rgba(16, 27, 51, 0.16);
+   pointer-events: none;
+   transition:
+      transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+      height 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.jc-nav-area[data-slide='on'] .jc-nav-pill {
+   display: block;
+}
+.jc-nav-area[data-slide='on'] .jc-nav-link[aria-current='page'] {
+   background: transparent;
+   box-shadow: none;
+}
+.jc-nav-link svg {
+   transition: color 200ms ease;
+}
+.jc-column-intro {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   justify-content: space-between;
+   gap: 10px 18px;
+   margin: 14px 0 22px;
+}
+.jc-column-intro .jc-page-description {
+   margin-top: 0;
+}
+.jc-card {
+   min-width: 0;
+   background: var(--jc-surface);
+   border: 1px solid var(--jc-border);
+   border-radius: 14px;
+   box-shadow: var(--jc-card-shadow);
+}
+.jc-card-large {
+   border-radius: 16px;
+}
+.jc-content-card {
+   transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease;
+}
+.jc-content-card:hover,
+.jc-content-card:focus-visible {
+   border-color: var(--jc-accent-bd);
+   box-shadow: 0 5px 20px rgba(39, 56, 86, 0.07);
+}
+[role='link']:focus-visible {
+   outline: 3px solid var(--jc-focus-ring);
+   outline-offset: 3px;
+}
+[data-slot='dialog-overlay'] {
+   background: rgba(20, 27, 40, 0.28);
+}
+.jc-button {
+   cursor: pointer;
+   border-radius: 9px;
+   white-space: nowrap;
+   transition:
+      background 140ms ease,
+      box-shadow 140ms ease,
+      transform 100ms ease;
+}
+.jc-button:enabled:active {
+   transform: scale(0.97);
+}
+.jc-button-primary {
+   background: var(--jc-accent);
+   border: 1px solid transparent;
+   color: white;
+   box-shadow: 0 1px 2px rgba(0, 77, 158, 0.12);
+}
+.jc-button-primary:enabled:hover {
+   background: var(--jc-accent-hover);
+}
+.jc-button-secondary {
+   background: var(--jc-surface);
+   border: 1px solid var(--jc-control-border);
+   color: var(--jc-body);
+   box-shadow: 0 1px 2px rgba(39, 56, 86, 0.035);
+}
+.jc-button-secondary:enabled:hover {
+   background: var(--jc-softer);
+}
+.jc-button-danger {
+   background: var(--jc-surface);
+   border: 1px solid var(--jc-err-bd);
+   color: var(--jc-err);
+}
+.jc-button-danger:enabled:hover {
+   background: var(--jc-err-bg);
+}
+/* 长得像按钮的链接（LinkButton）：链接没有 :enabled，悬停和按下单独写 */
+a.jc-button:active {
+   transform: scale(0.97);
+}
+a.jc-button-primary:hover {
+   background: var(--jc-accent-hover);
+}
+a.jc-button-secondary:hover {
+   background: var(--jc-softer);
+}
+.jc-input {
+   border: 1px solid var(--jc-control-border);
+   border-radius: 9px;
+   background: var(--jc-surface);
+   color: var(--jc-ink);
+   transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease;
+}
+.jc-input:focus {
+   border-color: var(--jc-accent);
+   outline: none;
+   box-shadow: 0 0 0 3px var(--jc-focus-ring);
+}
+.jc-input::placeholder {
+   color: var(--jc-ghost);
+}
+.jc-empty-state {
+   padding: 40px 20px;
+   text-align: center;
+}
+/* 交给 AI 的那句话（详情页）：整句显示出来，点一下复制 */
+.jc-ask {
+   display: flex;
+   width: fit-content;
+   max-width: 100%;
+   align-items: center;
+   gap: 14px;
+   border: 1px solid var(--jc-accent-bd);
+   border-radius: 10px;
+   padding: 9px 12px 9px 14px;
+   background: var(--jc-surface);
+   color: var(--jc-ink);
+   font-size: 13.5px;
+   line-height: 1.6;
+   text-align: left;
+   white-space: normal;
+   transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease,
+      transform 100ms ease;
+}
+.jc-ask:hover {
+   border-color: var(--jc-accent);
+   box-shadow: 0 2px 10px rgba(0, 104, 219, 0.08);
+}
+.jc-ask:active {
+   transform: scale(0.99);
+}
+.jc-ask-text {
+   min-width: 0;
+   font-weight: 500;
+   /* 话里带着仓库地址：一长串字母中间也能断行，窄屏不撑出横向滚动 */
+   overflow-wrap: anywhere;
+}
+.jc-ask-copy {
+   display: inline-flex;
+   flex-shrink: 0;
+   align-items: center;
+   gap: 5px;
+   color: var(--jc-accent);
+   font-size: 12.5px;
+   font-weight: 600;
+}
+
+/* ── 动画 ─────────────────────────────────── */
+@keyframes jcspin {
+   to {
+      transform: rotate(360deg);
+   }
+}
+@keyframes jcfade {
+   from {
+      opacity: 0;
+   }
+   to {
+      opacity: 1;
+   }
+}
+.jc-fade {
+   animation: jcfade 0.16s ease-out;
+}
+
+/* ── 外框：电脑 >1100 / 平板 721–1100 / 手机 ≤720 ── */
+.jc-shell {
+   min-height: 100vh;
+   background: var(--jc-canvas);
+   color: var(--jc-ink);
+}
+
+.jc-sidebar {
+   position: fixed;
+   left: 0;
+   top: 0;
+   bottom: 0;
+   width: 232px;
+   z-index: 40;
+   display: flex;
+   flex-direction: column;
+   gap: 0;
+   padding: 29px 14px 20px;
+   border-right: 1px solid rgba(120, 125, 135, 0.1);
+   background: var(--jc-sidebar-bg);
+   backdrop-filter: blur(24px) saturate(150%);
+   -webkit-backdrop-filter: blur(24px) saturate(150%);
+   box-sizing: border-box;
+}
+
+.jc-main {
+   margin-left: 232px;
+   padding: 98px 48px 80px;
+   box-sizing: border-box;
+   min-height: 100vh;
+}
+.jc-main > .jc-main-inner {
+   max-width: 1240px;
+   margin: 0 auto;
+}
+
+.jc-brand {
+   display: flex;
+   align-items: center;
+   gap: 11px;
+   padding: 0 9px 31px;
+}
+.jc-brand-name {
+   display: block;
+   font-size: 15px;
+   line-height: 1.4;
+   font-weight: 650;
+   letter-spacing: -0.02em;
+}
+.jc-brand-note {
+   display: block;
+   margin-top: 2px;
+   font-size: 10px;
+   color: var(--jc-muted);
+}
+.jc-brand-mark {
+   display: inline-grid;
+   flex-shrink: 0;
+   place-items: center;
+   border-radius: 9px;
+   color: #fff;
+   background: linear-gradient(145deg, #2b86f0, #0057c2);
+   box-shadow: 0 1px 3px rgba(0, 77, 158, 0.25);
+}
+.jc-brand-mark svg {
+   display: block;
+}
+.jc-nav-group {
+   margin-bottom: 23px;
+}
+.jc-nav-label {
+   padding: 0 13px 8px;
+   color: var(--jc-faint);
+   font-size: 11px;
+   font-weight: 600;
+}
+.jc-nav-links {
+   display: grid;
+   gap: 4px;
+}
+.jc-nav-link {
+   display: flex;
+   min-height: 41px;
+   align-items: center;
+   gap: 12px;
+   padding: 10px 13px;
+   border-radius: 9px;
+   font-size: 13px;
+   color: var(--jc-body);
+   text-decoration: none;
+   transition:
+      background 140ms ease,
+      box-shadow 140ms ease;
+}
+.jc-nav-link svg {
+   width: 18px;
+   height: 18px;
+   flex-shrink: 0;
+   stroke-width: 1.65;
+   color: #677182;
+}
+.jc-nav-link:hover {
+   background: rgba(255, 255, 255, 0.55);
+   text-decoration: none;
+}
+.jc-nav-link[aria-current='page'] {
+   color: var(--jc-ink);
+   font-weight: 600;
+   background: rgba(255, 255, 255, 0.9);
+   box-shadow:
+      0 1px 4px rgba(16, 27, 51, 0.06),
+      0 0 1px rgba(16, 27, 51, 0.16);
+}
+.jc-nav-link[aria-current='page'] svg {
+   color: var(--jc-accent);
+}
+.jc-workfolder {
+   margin-top: auto;
+   display: grid;
+   gap: 8px;
+   justify-items: start;
+   border-top: 1px solid #dde0e7;
+   padding: 17px 0 0;
+}
+.jc-workfolder .jc-nav-label {
+   padding-bottom: 0;
+}
+.jc-workfolder-path,
+.jc-workfolder-note {
+   max-width: 100%;
+   padding: 0 13px;
+   overflow-wrap: break-word;
+   color: var(--jc-muted);
+   font-size: 11.5px;
+   line-height: 1.6;
+}
+.jc-workfolder > button {
+   margin-left: 9px;
+}
+.jc-toolbar {
+   position: fixed;
+   top: 0;
+   left: 232px;
+   right: 0;
+   z-index: 35;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 16px;
+   height: 66px;
+   padding: 0 36px;
+   background: var(--jc-toolbar-bg);
+   backdrop-filter: blur(20px);
+   -webkit-backdrop-filter: blur(20px);
+}
+.jc-toolbar-location {
+   display: flex;
+   min-width: 0;
+   align-items: center;
+   gap: 10px;
+   color: var(--jc-body);
+   font-size: 12px;
+}
+.jc-toolbar-location > svg {
+   width: 16px;
+   height: 16px;
+   color: var(--jc-ghost);
+   stroke-width: 1.65;
+}
+.jc-toolbar-location a {
+   color: var(--jc-body);
+}
+.jc-toolbar-location span {
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+.jc-toolbar-updated {
+   flex-shrink: 0;
+   color: var(--jc-faint);
+   font-size: 11px;
+   font-variant-numeric: tabular-nums;
+}
+
+.jc-topbar,
+.jc-bottomnav {
+   display: none;
+}
+
+/* 平板 */
+@media (max-width: 1100px) {
+   .jc-sidebar {
+      width: 200px;
+   }
+   .jc-main {
+      margin-left: 200px;
+      padding: 91px 26px 72px;
+   }
+   .jc-toolbar {
+      left: 200px;
+      padding: 0 26px;
+   }
+}
+
+/* 移动 */
+@media (max-width: 720px) {
+   .jc-sidebar {
+      display: none;
+   }
+   .jc-toolbar {
+      display: none;
+   }
+   .jc-main {
+      margin-left: 0;
+      padding: 79px 19px 118px;
+   }
+   .jc-topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 45;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      padding: 0 19px;
+      background: var(--jc-toolbar-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-sizing: border-box;
+   }
+   .jc-bottomnav {
+      position: fixed;
+      z-index: 50;
+      right: 10px;
+      bottom: max(12px, env(safe-area-inset-bottom));
+      left: 10px;
+      max-width: 390px;
+      height: 64px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      padding: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      border-radius: 25px;
+      background: rgba(237, 240, 245, 0.92);
+      box-shadow:
+         0 5px 24px rgba(28, 42, 72, 0.13),
+         0 0 0 1px rgba(40, 55, 84, 0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-sizing: border-box;
+   }
+   .jc-page-header {
+      margin-bottom: 23px;
+      gap: 14px;
+   }
+   .jc-page-header h1 {
+      font-size: 29px;
+   }
+   .jc-page-description {
+      font-size: 12px;
+      line-height: 1.8;
+   }
+   .jc-page-actions {
+      width: 100%;
+   }
+   .jc-page-header.jc-column-header {
+      margin-bottom: 10px;
+   }
+   .jc-column-tabs {
+      gap: 20px;
+   }
+   .jc-input,
+   .jc-main textarea,
+   .jc-main select {
+      font-size: 16px !important;
+   }
+}
+
+.jc-bottomnav button {
+   display: flex;
+   min-width: 0;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   gap: 3px;
+   border: 0;
+   border-radius: 19px;
+   padding: 3px 2px;
+   color: var(--jc-muted);
+   font-size: 10px;
+   font-weight: 500;
+   background: transparent;
+}
+.jc-bottomnav button svg {
+   width: 20px;
+   height: 20px;
+   stroke-width: 1.7;
+}
+.jc-bottomnav button[aria-current='page'],
+.jc-bottomnav button[aria-expanded='true'] {
+   color: var(--jc-accent);
+   background: var(--jc-surface);
+   box-shadow: 0 1px 4px rgba(39, 56, 86, 0.1);
+}
+.jc-main [id] {
+   scroll-margin-top: 92px;
+}
+
+/* 左边菜单「市场调研」旁的「还差 2 步」；手机底栏上是一个小圆点 */
+.jc-nav-badge {
+   margin-left: auto;
+   flex-shrink: 0;
+   border-radius: 999px;
+   padding: 1px 7px;
+   background: var(--jc-warn-bg);
+   color: var(--jc-warn);
+   font-size: 10.5px;
+   font-weight: 600;
+   line-height: 1.6;
+   white-space: nowrap;
+}
+.jc-nav-dot {
+   position: absolute;
+   top: -2px;
+   right: -5px;
+   width: 7px;
+   height: 7px;
+   border-radius: 999px;
+   background: var(--jc-warn);
+   box-shadow: 0 0 0 2px rgba(237, 240, 245, 0.95);
+}
+@media (max-width: 1100px) {
+   .jc-nav-badge-long {
+      display: none;
+   }
+}
+
+/* 市场调研：一步步带的步骤、拖文件进来的框、点「去接 TikHub」时卡片闪一下 */
+.jc-steps {
+   display: grid;
+   gap: 14px;
+   margin: 0;
+   padding: 0;
+   list-style: none;
+}
+.jc-step {
+   display: grid;
+   grid-template-columns: 22px minmax(0, 1fr);
+   gap: 10px;
+   align-items: start;
+}
+.jc-step-num {
+   display: inline-grid;
+   width: 22px;
+   height: 22px;
+   place-items: center;
+   border-radius: 999px;
+   background: var(--jc-accent-bg);
+   color: var(--jc-accent);
+   font-size: 11.5px;
+   font-weight: 700;
+   font-variant-numeric: tabular-nums;
+}
+.jc-step-title {
+   color: var(--jc-ink);
+   font-size: 13.5px;
+   font-weight: 600;
+   line-height: 22px;
+}
+.jc-step-note {
+   margin-top: 3px;
+   color: var(--jc-muted);
+   font-size: 12.5px;
+   line-height: 1.7;
+}
+.jc-dropzone {
+   display: grid;
+   place-items: center;
+   gap: 8px;
+   border: 1.5px dashed var(--jc-control-border);
+   border-radius: 12px;
+   padding: 18px 14px;
+   background: var(--jc-softer);
+   color: var(--jc-muted);
+   font-size: 12.5px;
+   text-align: center;
+   transition:
+      border-color 140ms ease,
+      background 140ms ease;
+}
+.jc-dropzone[data-over='true'] {
+   border-color: var(--jc-accent);
+   background: var(--jc-accent-bg);
+   color: var(--jc-accent);
+}
+.jc-flash {
+   animation: jcflash 1.4s ease-out;
+}
+@keyframes jcflash {
+   0% {
+      box-shadow: 0 0 0 0 rgba(0, 104, 219, 0.35);
+   }
+   40% {
+      box-shadow: 0 0 0 6px rgba(0, 104, 219, 0.18);
+   }
+   100% {
+      box-shadow: var(--jc-card-shadow);
+   }
+}
+
+/* 区块标题和后面的数量 */
+.jc-section-heading {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   justify-content: space-between;
+   gap: 10px;
+   margin-bottom: 12px;
+}
+.jc-section-heading h2 {
+   font-size: 16px;
+   font-weight: 650;
+   letter-spacing: -0.02em;
+}
+.jc-section-heading > a {
+   font-size: 12px;
+   white-space: nowrap;
+}
+.jc-section-count {
+   margin-left: 8px;
+   color: var(--jc-ghost);
+   font-size: 12px;
+   font-weight: 400;
+   font-variant-numeric: tabular-nums;
+}
+
+/* ── Sonner Toast：白底 + 语义色左边框，右上角，可叠放 ── */
+[data-sonner-toaster] {
+   font-family: var(--font-sans);
+}
+[data-sonner-toast] {
+   background: var(--jc-surface) !important;
+   color: var(--jc-ink) !important;
+   border: 1px solid var(--jc-border) !important;
+   border-left: 3px solid var(--jc-ghost) !important;
+   border-radius: 10px !important;
+   box-shadow: 0 8px 24px rgba(12, 12, 15, 0.12) !important;
+   font-size: 13px !important;
+}
+[data-sonner-toast][data-type='success'] {
+   border-left-color: var(--jc-ok) !important;
+}
+[data-sonner-toast][data-type='error'] {
+   border-left-color: var(--jc-err) !important;
+}
+[data-sonner-toast][data-type='warning'] {
+   border-left-color: var(--jc-warn) !important;
+}
+[data-sonner-toast][data-type='loading'],
+[data-sonner-toast][data-type='info'] {
+   border-left-color: var(--jc-accent) !important;
+}
+
+/* ── 新手指引（components/jc/tour.tsx）──────────────────────────
+   暗层和亮框由 driver.js 画（driver.js/dist/driver.css），这里把气泡改成工作台卡片的样子；
+   开场卡、顶上细栏、完成反馈、提示框是工作台自己画的，用同一套颜色、圆角和动效。 */
+.driver-popover.jc-tour {
+   width: max-content;
+   min-width: 228px;
+   max-width: min(330px, calc(100vw - 32px));
+   padding: 12px 16px 14px;
+   border-radius: 14px;
+   background: var(--jc-surface);
+   color: var(--jc-ink);
+   font-family: var(--font-sans);
+   box-shadow:
+      0 18px 48px rgba(8, 15, 30, 0.28),
+      0 0 0 1px rgba(16, 27, 51, 0.06);
+}
+.driver-popover.jc-tour .driver-popover-description {
+   margin: 0;
+   color: var(--jc-ink);
+   font-family: var(--font-sans);
+   font-size: 14px;
+   font-weight: 500;
+   line-height: 1.7;
+}
+.driver-popover.jc-tour .driver-popover-arrow {
+   border-width: 6px;
+}
+.jc-tour-top {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 18px;
+   margin-bottom: 5px;
+}
+.jc-tour-count {
+   color: var(--jc-accent);
+   font-size: 11.5px;
+   font-weight: 600;
+   font-variant-numeric: tabular-nums;
+   letter-spacing: 0.02em;
+}
+.jc-tour-skip,
+.jc-tour-bar-skip,
+.jc-tour-hint-off {
+   border: 0;
+   border-radius: 7px;
+   background: transparent;
+   color: var(--jc-muted);
+   font-size: 12px;
+   cursor: pointer;
+   transition:
+      background 140ms ease,
+      color 140ms ease;
+}
+.jc-tour-skip {
+   margin: -4px -8px -4px 0;
+   padding: 4px 8px;
+}
+.jc-tour-skip:hover,
+.jc-tour-bar-skip:hover,
+.jc-tour-hint-off:hover {
+   background: var(--jc-soft);
+   color: var(--jc-ink);
+}
+/* 气泡出来：朝亮着的按钮方向浮过去一点；点暗处时轻轻晃一下，提醒点亮着的那个 */
+@keyframes jctourpop {
+   from {
+      opacity: 0;
+      transform: translate(var(--jc-tour-dx, 0px), var(--jc-tour-dy, 6px)) scale(0.97);
+   }
+   to {
+      opacity: 1;
+      transform: none;
+   }
+}
+.driver-fade .driver-popover.jc-tour {
+   animation: jctourpop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.driver-popover.jc-tour.driver-popover-side-top {
+   --jc-tour-dy: -6px;
+}
+.driver-popover.jc-tour.driver-popover-side-left {
+   --jc-tour-dx: -6px;
+   --jc-tour-dy: 0px;
+}
+.driver-popover.jc-tour.driver-popover-side-right {
+   --jc-tour-dx: 6px;
+   --jc-tour-dy: 0px;
+}
+.driver-popover.jc-tour.driver-popover-side-over {
+   --jc-tour-dy: 10px;
+}
+@keyframes jctournudge {
+   0%,
+   100% {
+      transform: none;
+   }
+   25% {
+      transform: translateX(-5px);
+   }
+   75% {
+      transform: translateX(5px);
+   }
+}
+.driver-fade .driver-popover.jc-tour.jc-tour-nudge,
+.driver-popover.jc-tour.jc-tour-nudge {
+   animation: jctournudge 340ms ease-in-out;
+}
+@keyframes jctourin {
+   from {
+      opacity: 0;
+      transform: translateY(12px);
+   }
+   to {
+      opacity: 1;
+      transform: none;
+   }
+}
+@keyframes jctourdrop {
+   from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+   }
+   to {
+      opacity: 1;
+      transform: none;
+   }
+}
+/* 「内容」页顶部那张卡：嵌在页面里，不压暗。作者的口吻一句话，一张清单随真实进度打勾 */
+.jc-tour-card {
+   margin-bottom: 18px;
+   padding: 16px 18px 14px;
+   border: 1px solid var(--jc-accent-bd);
+   border-radius: 16px;
+   background: linear-gradient(180deg, #f3f8fe, var(--jc-surface) 70%);
+   box-shadow: var(--jc-card-shadow);
+}
+.jc-tour-card-head {
+   display: flex;
+   align-items: flex-start;
+   gap: 12px;
+}
+.jc-tour-avatar {
+   width: 34px;
+   height: 34px;
+   margin-top: 1px;
+}
+.jc-tour-card-title {
+   color: var(--jc-ink);
+   font-size: 15.5px;
+   font-weight: 650;
+   letter-spacing: -0.015em;
+   line-height: 1.45;
+}
+.jc-tour-card-body {
+   margin-top: 3px;
+   color: var(--jc-body);
+   font-size: 13.5px;
+   line-height: 1.7;
+}
+.jc-tour-card-count {
+   flex-shrink: 0;
+   border-radius: 999px;
+   padding: 2px 9px;
+   background: var(--jc-accent-bg);
+   color: var(--jc-accent);
+   font-size: 12px;
+   font-weight: 650;
+   font-variant-numeric: tabular-nums;
+}
+.jc-tour-checklist {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 8px 18px;
+   margin: 13px 0 0 46px;
+   padding: 0;
+   list-style: none;
+}
+.jc-tour-checklist li {
+   display: inline-flex;
+   align-items: center;
+   gap: 7px;
+   color: var(--jc-muted);
+   font-size: 12.5px;
+   line-height: 1.5;
+}
+.jc-tour-checklist li[data-done] {
+   color: var(--jc-ink);
+}
+.jc-tour-check {
+   display: inline-grid;
+   flex-shrink: 0;
+   place-items: center;
+   width: 16px;
+   height: 16px;
+   border: 1.5px solid var(--jc-control-border);
+   border-radius: 999px;
+   background: var(--jc-surface);
+   color: #fff;
+   transition:
+      background 200ms ease,
+      border-color 200ms ease;
+}
+.jc-tour-checklist li[data-done] .jc-tour-check {
+   border-color: var(--jc-ok);
+   background: var(--jc-ok);
+}
+.jc-tour-card-actions {
+   display: flex;
+   align-items: center;
+   justify-content: flex-end;
+   gap: 6px;
+   margin-top: 12px;
+}
+.jc-tour-card-later {
+   height: 34px;
+   border: 0;
+   border-radius: 8px;
+   padding: 0 12px;
+   background: transparent;
+   color: var(--jc-muted);
+   font-size: 13px;
+   transition:
+      background 140ms ease,
+      color 140ms ease;
+}
+.jc-tour-card-later:hover {
+   background: var(--jc-soft);
+   color: var(--jc-ink);
+}
+/* 收起以后的一行：「新手指引 1/4」「重看引导 4/4」 */
+.jc-tour-entry {
+   display: inline-flex;
+   align-items: center;
+   gap: 7px;
+   margin-bottom: 16px;
+   border: 1px solid var(--jc-border);
+   border-radius: 999px;
+   padding: 5px 10px 5px 12px;
+   background: var(--jc-surface);
+   color: var(--jc-body);
+   font-size: 12.5px;
+   font-weight: 500;
+   transition:
+      border-color 140ms ease,
+      color 140ms ease;
+}
+.jc-tour-entry svg {
+   color: var(--jc-accent);
+}
+.jc-tour-entry:hover {
+   border-color: var(--jc-accent-bd);
+   color: var(--jc-ink);
+}
+.jc-tour-entry-count {
+   color: var(--jc-ghost);
+   font-variant-numeric: tabular-nums;
+}
+/* 不压暗的那一步：气泡贴在按钮下面（放不下放上面），小三角指着按钮，页面照常能用 */
+.jc-tour-float {
+   position: fixed;
+   z-index: 70;
+   width: max-content;
+   min-width: 228px;
+   max-width: min(330px, calc(100vw - 24px));
+   padding: 12px 16px 14px;
+   border-radius: 14px;
+   background: var(--jc-surface);
+   color: var(--jc-ink);
+   box-shadow:
+      0 14px 40px rgba(16, 27, 51, 0.2),
+      0 0 0 1px rgba(16, 27, 51, 0.07);
+   animation: jctourpop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.jc-tour-float::before {
+   content: '';
+   position: absolute;
+   top: -6px;
+   left: calc(var(--jc-arrow, 24px) - 6px);
+   width: 12px;
+   height: 12px;
+   transform: rotate(45deg);
+   border-radius: 2px;
+   background: var(--jc-surface);
+   box-shadow: -1px -1px 0 rgba(16, 27, 51, 0.07);
+}
+.jc-tour-float.is-above::before {
+   top: auto;
+   bottom: -6px;
+   box-shadow: 1px 1px 0 rgba(16, 27, 51, 0.07);
+}
+/* 压在按钮上面的时候不画小三角（指不到按钮了） */
+.jc-tour-float.is-over::before {
+   display: none;
+}
+.jc-tour-float-text {
+   position: relative;
+   font-size: 14px;
+   font-weight: 500;
+   line-height: 1.7;
+}
+/* 等 AI 那一步的气泡：加粗的第一行，下面能放一键打开 Codex、Claude Code 的按钮，比别的气泡宽一点 */
+.jc-tour-float.has-links {
+   width: min(360px, calc(100vw - 24px));
+   max-width: min(360px, calc(100vw - 24px));
+}
+.jc-tour-float-title {
+   position: relative;
+   font-size: 14.5px;
+   font-weight: 650;
+   line-height: 1.6;
+}
+.jc-tour-float-title + .jc-tour-float-text {
+   color: var(--jc-body);
+   font-size: 13.5px;
+   line-height: 1.65;
+}
+.jc-tour-links {
+   position: relative;
+   display: grid;
+   gap: 7px;
+   margin-top: 10px;
+   border-top: 1px solid var(--jc-border);
+   padding-top: 10px;
+}
+.jc-tour-links-caption {
+   color: var(--jc-muted);
+   font-size: 12.5px;
+}
+.jc-tour-links-actions {
+   display: flex;
+   flex-wrap: wrap;
+   gap: 6px;
+}
+.jc-tour-mini {
+   display: inline-flex;
+   height: 30px;
+   flex-shrink: 0;
+   align-items: center;
+   gap: 5px;
+   padding: 0 11px;
+   font-size: 12.5px;
+   font-weight: 500;
+   white-space: nowrap;
+}
+a.jc-tour-mini,
+a.jc-tour-mini:hover {
+   color: #fff;
+   text-decoration: none;
+}
+/* 顶上细栏：等 AI 写完、接着走。排在内容最上面，往下翻时贴在工具栏下面 */
+.jc-tour-bar {
+   position: sticky;
+   top: 74px;
+   z-index: 30;
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 8px 12px;
+   margin: -8px 0 20px;
+   padding: 8px 8px 8px 14px;
+   border: 1px solid var(--jc-accent-bd);
+   border-radius: 12px;
+   background: rgba(237, 244, 253, 0.94);
+   box-shadow: 0 4px 18px rgba(0, 66, 140, 0.07);
+   backdrop-filter: blur(16px);
+   -webkit-backdrop-filter: blur(16px);
+   color: var(--jc-ink);
+   font-size: 13px;
+   line-height: 1.5;
+   animation: jctourdrop 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.jc-tour-bar-icon {
+   display: inline-flex;
+   flex-shrink: 0;
+   color: var(--jc-accent);
+}
+.jc-tour-bar-text {
+   display: flex;
+   min-width: 0;
+   flex: 1 1 260px;
+   flex-wrap: wrap;
+   align-items: baseline;
+   gap: 2px 10px;
+}
+.jc-tour-bar-text b {
+   font-weight: 600;
+}
+.jc-tour-bar-note {
+   color: var(--jc-muted);
+   font-size: 12.5px;
+}
+.jc-tour-bar-actions {
+   display: flex;
+   flex-shrink: 0;
+   align-items: center;
+   gap: 4px;
+   margin-left: auto;
+}
+.jc-tour-bar-skip {
+   height: 30px;
+   padding: 0 10px;
+}
+/* 完成反馈：浮在主区域下方正中（顶上留给细栏），比暗层和气泡都高 */
+.jc-tour-feedback {
+   position: fixed;
+   right: 0;
+   bottom: 28px;
+   left: 232px;
+   z-index: 1000000001;
+   display: flex;
+   width: max-content;
+   max-width: min(540px, calc(100% - 232px - 48px));
+   align-items: flex-start;
+   gap: 10px;
+   margin: 0 auto;
+   padding: 10px 16px 10px 12px;
+   border-radius: 12px;
+   background: var(--jc-surface);
+   box-shadow:
+      0 14px 38px rgba(16, 27, 51, 0.18),
+      0 0 0 1px rgba(16, 27, 51, 0.06);
+   color: var(--jc-ink);
+   font-size: 13.5px;
+   font-weight: 500;
+   line-height: 1.6;
+   animation: jctourin 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.jc-tour-feedback-icon {
+   display: inline-grid;
+   flex-shrink: 0;
+   place-items: center;
+   width: 20px;
+   height: 20px;
+   margin-top: 1px;
+   border-radius: 999px;
+   background: var(--jc-ok);
+   color: #fff;
+}
+/* 用到时再提示：嵌在页面内容最上面的一行，不压暗、不浮着 */
+.jc-tour-hint {
+   display: flex;
+   flex-wrap: wrap;
+   align-items: center;
+   gap: 6px 10px;
+   margin-bottom: 16px;
+   border: 1px solid var(--jc-warn-bd);
+   border-radius: 12px;
+   padding: 8px 8px 8px 12px;
+   background: #fffaf2;
+   color: var(--jc-ink);
+   font-size: 13px;
+   line-height: 1.6;
+   animation: jcrise 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.jc-tour-hint-icon {
+   flex-shrink: 0;
+   color: var(--jc-warn);
+}
+.jc-tour-hint-text {
+   min-width: 0;
+   flex: 1 1 240px;
+}
+.jc-tour-hint-actions {
+   display: flex;
+   flex-shrink: 0;
+   align-items: center;
+   gap: 4px;
+   margin-left: auto;
+}
+.jc-tour-hint-off {
+   height: 28px;
+   padding: 0 9px;
+}
+/* 「新手指引」：左下角工作文件夹下面、手机顶栏右边的小按钮，图标和上面「在访达中打开」的图标对齐 */
+.jc-tour-replay {
+   display: inline-flex;
+   height: 28px;
+   align-items: center;
+   gap: 7px;
+   border: 0;
+   border-radius: 8px;
+   padding: 0 10px 0 15px;
+   background: transparent;
+   color: var(--jc-muted);
+   font-size: 12px;
+   font-weight: 500;
+   transition:
+      background 140ms ease,
+      color 140ms ease;
+}
+.jc-tour-replay svg {
+   color: var(--jc-ghost);
+   transition: color 140ms ease;
+}
+.jc-tour-replay:hover {
+   background: rgba(255, 255, 255, 0.6);
+   color: var(--jc-ink);
+}
+.jc-tour-replay:hover svg {
+   color: var(--jc-accent);
+}
+.jc-workfolder > .jc-tour-replay {
+   margin-top: -2px;
+}
+.jc-topbar .jc-tour-replay {
+   margin-right: -8px;
+   padding: 0 9px;
+}
+@media (max-width: 1100px) {
+   .jc-tour-feedback {
+      left: 200px;
+      max-width: min(540px, calc(100% - 200px - 40px));
+   }
+}
+@media (max-width: 720px) {
+   .jc-tour-feedback {
+      bottom: calc(max(12px, env(safe-area-inset-bottom)) + 76px);
+      left: 0;
+      max-width: calc(100% - 24px);
+   }
+   .jc-tour-bar {
+      top: 64px;
+      margin-top: -4px;
+   }
+   .jc-tour-card {
+      padding: 14px 14px 12px;
+   }
+   .jc-tour-checklist {
+      flex-direction: column;
+      margin-left: 0;
+   }
+}
+
+/* ── 细滚动条 ── */
+* {
+   scrollbar-width: thin;
+   scrollbar-color: rgba(12, 12, 15, 0.18) transparent;
+}
+*::-webkit-scrollbar {
+   width: 8px;
+   height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+   background: rgba(12, 12, 15, 0.16);
+   border-radius: 999px;
+   border: 2px solid transparent;
+   background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+   background: transparent;
+}
+
+input[type='search'] {
+   font-size: 16px !important;
+}
+
+/* 系统辅助功能设置：保留反馈和信息，减少位移及透明效果。 */
+@media (prefers-reduced-motion: reduce) {
+   *,
+   *::before,
+   *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+   }
+   .jc-button:enabled:active {
+      transform: none;
+   }
+}
+@media (prefers-reduced-transparency: reduce) {
+   .jc-sidebar {
+      background: #eef0f4;
+   }
+   .jc-toolbar,
+   .jc-topbar {
+      background: var(--jc-canvas);
+   }
+   .jc-bottomnav {
+      background: #edf0f5;
+   }
+   .jc-sidebar,
+   .jc-toolbar,
+   .jc-topbar,
+   .jc-bottomnav {
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+   }
+}
+@media (prefers-contrast: more) {
+   :root {
+      --jc-muted: #424753;
+      --jc-faint: #424753;
+      --jc-ghost: #4e5968;
+      --jc-border: #858d9a;
+      --jc-control-border: #7b8593;
+      --jc-sidebar-bg: #edf0f5;
+      --jc-toolbar-bg: #fafbfc;
+   }
+   .jc-bottomnav {
+      border-color: var(--jc-border);
+      background: #edf0f5;
+   }
+   .jc-nav-link[aria-current='page'] {
+      outline: 1px solid var(--jc-control-border);
+   }
+}

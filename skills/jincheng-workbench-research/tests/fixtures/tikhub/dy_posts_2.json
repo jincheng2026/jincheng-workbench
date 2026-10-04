@@ -1,0 +1,471 @@
+{
+ "code": 200,
+ "request_id": "test-request",
+ "message": "Request successful. This request will incur a charge.",
+ "message_zh": "请求成功，本次请求将被计费。",
+ "router": "/api/v1/douyin/app/v3/fetch_user_post_videos",
+ "params": {},
+ "data": {
+  "status_code": 0,
+  "aweme_list": [
+   {
+    "aweme_id": "7400000000000000121",
+    "desc": "虚构作品 21：用 AI 读一本书的笔记 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1789041600,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 977,
+     "comment_count": 31,
+     "collect_count": 123,
+     "share_count": 26,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 66000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover21.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000122",
+    "desc": "虚构作品 22：AI 帮你做旅行攻略 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788955200,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 614,
+     "comment_count": 32,
+     "collect_count": 136,
+     "share_count": 27,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 67000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover22.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000123",
+    "desc": "虚构作品 23：三个免费 AI 工具推荐 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788868800,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 651,
+     "comment_count": 33,
+     "collect_count": 149,
+     "share_count": 28,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 68000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover23.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000124",
+    "desc": "虚构作品 24：用 AI 三分钟写周报 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788782400,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 688,
+     "comment_count": 34,
+     "collect_count": 162,
+     "share_count": 29,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 69000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover24.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000125",
+    "desc": "虚构作品 25：让 AI 帮你改简历 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788696000,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 725,
+     "comment_count": 35,
+     "collect_count": 175,
+     "share_count": 30,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 70000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover25.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000126",
+    "desc": "虚构作品 26：AI 一键做会议纪要 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788609600,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 762,
+     "comment_count": 36,
+     "collect_count": 188,
+     "share_count": 31,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 71000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover26.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000127",
+    "desc": "虚构作品 27：手机上就能用的 AI 修图 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788523200,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 799,
+     "comment_count": 37,
+     "collect_count": 201,
+     "share_count": 32,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 72000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover27.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000128",
+    "desc": "虚构作品 28：AI 写小红书标题的三个句式 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788436800,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 836,
+     "comment_count": 38,
+     "collect_count": 124,
+     "share_count": 33,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 73000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover28.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000129",
+    "desc": "虚构作品 29：用 AI 读一本书的笔记 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788350400,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 873,
+     "comment_count": 39,
+     "collect_count": 137,
+     "share_count": 34,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 74000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover29.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000130",
+    "desc": "虚构作品 30：AI 帮你做旅行攻略 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788264000,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 910,
+     "comment_count": 40,
+     "collect_count": 150,
+     "share_count": 20,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 75000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover30.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000131",
+    "desc": "虚构作品 31：三个免费 AI 工具推荐 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788177600,
+    "is_top": 0,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 947,
+     "comment_count": 41,
+     "collect_count": 163,
+     "share_count": 21,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 76000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover31.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   },
+   {
+    "aweme_id": "7400000000000000132",
+    "desc": "虚构作品 32：用 AI 三分钟写周报 #AI工具 #效率",
+    "item_title": "",
+    "create_time": 1788091200,
+    "is_top": 1,
+    "aweme_type": 0,
+    "statistics": {
+     "digg_count": 984,
+     "comment_count": 42,
+     "collect_count": 176,
+     "share_count": 22,
+     "play_count": 0
+    },
+    "video": {
+     "duration": 77000,
+     "cover": {
+      "url_list": [
+       "{{BASE}}/img/cover32.jpeg"
+      ]
+     }
+    },
+    "text_extra": [
+     {
+      "hashtag_name": "AI工具"
+     },
+     {
+      "hashtag_name": "效率"
+     }
+    ],
+    "author": {
+     "nickname": "示例博主小林",
+     "sec_uid": "MS4wLjABAAAAfakeuser01",
+     "uid": "100000001",
+     "unique_id": "demo_lin",
+     "follower_count": 0
+    }
+   }
+  ],
+  "max_cursor": 1780000000000,
+  "has_more": 0
+ }
+}

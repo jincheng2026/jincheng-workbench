@@ -1,0 +1,52 @@
+{
+ "code": 200,
+ "request_id": "test-request",
+ "message": "Request successful. This request will incur a charge.",
+ "message_zh": "请求成功，本次请求将被计费。",
+ "router": "/api/v1/douyin/app/v3/fetch_one_video",
+ "params": {},
+ "data": {
+  "status_code": 0,
+  "aweme_detail": {
+   "aweme_id": "7400000000000000103",
+   "desc": "虚构作品 3：AI 一键做会议纪要，三步搞定 #AI工具 #会议纪要",
+   "item_title": "AI 一键做会议纪要，三步搞定",
+   "create_time": 1790164800,
+   "is_top": 0,
+   "aweme_type": 0,
+   "statistics": {
+    "digg_count": 5230,
+    "comment_count": 260,
+    "collect_count": 2400,
+    "share_count": 380,
+    "play_count": 0
+   },
+   "video": {
+    "duration": 48000,
+    "cover": {
+     "url_list": [
+      "{{BASE}}/img/cover3.jpeg"
+     ]
+    }
+   },
+   "text_extra": [
+    {
+     "hashtag_name": "AI工具"
+    },
+    {
+     "hashtag_name": "效率"
+    }
+   ],
+   "author": {
+    "nickname": "示例博主小林",
+    "sec_uid": "MS4wLjABAAAAfakeuser01",
+    "uid": "100000001",
+    "unique_id": "demo_lin",
+    "follower_count": 0
+   },
+   "caption": "AI 一键做会议纪要，三步搞定",
+   "share_url": "https://www.iesdouyin.com/share/video/7400000000000000103/",
+   "duration": 52400
+  }
+ }
+}
