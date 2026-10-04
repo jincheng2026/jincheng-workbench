@@ -9,7 +9,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Clapperboard, FolderOpen, PenLine, ScrollText, Telescope, type LucideIcon } from 'lucide-react';
+import { ChevronRight, Clapperboard, FolderOpen, PenLine, ScrollText, Telescope, type LucideIcon } from 'lucide-react';
 import { useAppInfo, useTildify } from '@/components/jc/app-info';
 import { COLUMNS, type ColumnKey, type ColumnTab } from '@/lib/columns';
 import { useActiveTab } from '@/lib/active-tab';
@@ -100,7 +100,7 @@ function WorkFolder() {
 // 左边子菜单哪几组展开着：换页时外框会重新挂载，记在模块变量里，这次打开工作台期间一直记得；没点过的组，当前所在的那一栏展开
 const opened: Partial<Record<ColumnKey, boolean>> = {};
 
-/** 有页签的栏目：栏目名是一个开关，下面是子菜单 */
+/** 有页签的栏目：栏目名是一个开关，下面是子菜单（不放展开收起的小箭头：原作者 10-04 定「不要有这个箭头」） */
 function NavGroup({ n, active, missing, onToggle }: { n: NavItem; active: boolean; missing: number; onToggle: () => void }) {
    const tab = useActiveTab(n.key);
    const [open, setOpen] = useState(() => opened[n.key] ?? active);
@@ -151,7 +151,6 @@ function NavGroup({ n, active, missing, onToggle }: { n: NavItem; active: boolea
             <Icon aria-hidden="true" />
             <span>{n.label}</span>
             {n.key === 'research' && <MissingBadge n={missing} />}
-            <ChevronDown className="jc-nav-chevron" aria-hidden="true" />
          </button>
          <div ref={subRef} className="jc-nav-sub">
             <div className="jc-nav-sub-inner" role="group" aria-label={`${n.label}的子菜单`}>
