@@ -10,6 +10,7 @@ next-env.d.ts
 .DS_Store
 .idea/
 .vscode/
+.claude/worktrees/
 
 # 密钥与环境变量
 .env

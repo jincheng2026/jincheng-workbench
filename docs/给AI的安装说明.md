@@ -1,6 +1,6 @@
 # 给 AI 的安装说明
 
-这份说明写给替用户安装的 AI（Codex、Claude Code 等）。用户把仓库链接交给你，说「照这个帮我装好」，你照下面做。做完的样子：工作台在用户的浏览器里打开了，两个 Skill 装进了这台 Mac 上的 AI 工具，你用几句话告诉用户结果。
+这份说明写给替用户安装的 AI（Codex、Claude Code 等）。用户把仓库链接交给你，说「照这个帮我装好」，你照下面做。做完的样子：工作台在用户的浏览器里打开了，三个 Skill（写稿、调研、封面）装进了这台 Mac 上的 AI 工具，你用几句话告诉用户结果。
 
 这份说明也管更新和重新打开：用户以后再发一次同样的话（电脑重启以后，或者想更新到新版本），你从第 0 步看装到哪一步了，做好的步骤跳过。
 
@@ -29,7 +29,7 @@ git -C ~/jincheng-workbench remote get-url origin 2>/dev/null || echo 没有
   git pull --ff-only
   ```
 
-  - 打印 `Already up to date.`：代码已经是最新的。跳到第 10 步启动，接着做第 11 到 14 步（第 12、13 步会认出装过的 Skill，直接往下走）。
+  - 打印 `Already up to date.`：代码已经是最新的。跳到第 10 步启动，接着做第 11 到 15 步（第 12、13、14 步会认出装过的 Skill，直接往下走）。
   - 拉到了新的提交：先停掉正在运行的旧版本，再从第 6 步往下做（装依赖、跑测试、编译都要重新做）：
 
     ```bash
@@ -77,7 +77,7 @@ git --version
 
 ## 第 3 步：确认有 Python 3
 
-写稿用的「创作页」靠一个小的保存服务把用户在网页上改的字存回文件，它用 Python 3 运行；两个 Skill 的脚本也用 Python 3。都只用 Python 自带的模块，不用另外装别的包。macOS 的「命令行开发者工具」（第 2 步装 Git 时多半已经装了）里就带着 Python 3。
+写稿用的「创作页」靠一个小的保存服务把用户在网页上改的字存回文件，它用 Python 3 运行；三个 Skill 的脚本也用 Python 3。都只用 Python 自带的模块，不用另外装别的包。macOS 的「命令行开发者工具」（第 2 步装 Git 时多半已经装了）里就带着 Python 3。
 
 ```bash
 python3 --version
@@ -307,7 +307,39 @@ python3 ~/.claude/skills/jincheng-workbench-research/scripts/research.py where
 
 **TikHub 不在这一步配**：批量拉博主作品和数据要用 TikHub（按次付费的数据服务，用用户自己的账号和密钥）。用户第一次让 AI 做调研时，AI 会请他去工作台「市场调研」页顶部的「数据来源」里配；不用 TikHub 也能用（评论用社媒助手导出，博主资料手动给）。不要在安装时问用户要密钥，也不要让用户把密钥发进对话。
 
-## 第 14 步：打开给用户看，告诉他结果
+## 第 14 步：装封面 Skill
+
+封面 Skill（`jincheng-workbench-cover`）教 AI 做封面：拆一个对标博主的封面 VI、给一条选题出一批封面、按用户在工作台上写的备注改一张。它在仓库的 `skills/jincheng-workbench-cover/` 里，脚本只用 Python 自带的模块。出图用 Codex 自带的生图；Claude Code 没有自带生图，会把每张的生图提示词写好。装到哪和第 12 步一样（你自己是哪个就装哪个，这台 Mac 上另一个也在就一起装），命令里的 `-n` 同样不能省。
+
+**Codex**：
+
+```bash
+mkdir -p ~/.codex/skills
+ln -sn ~/jincheng-workbench/skills/jincheng-workbench-cover ~/.codex/skills/jincheng-workbench-cover
+```
+
+**Claude Code**：
+
+```bash
+mkdir -p ~/.claude/skills
+ln -sn ~/jincheng-workbench/skills/jincheng-workbench-cover ~/.claude/skills/jincheng-workbench-cover
+```
+
+检查（Claude Code 把 `~/.codex/` 换成 `~/.claude/`）：
+
+```bash
+head -3 ~/.codex/skills/jincheng-workbench-cover/SKILL.md
+python3 ~/jincheng-workbench/skills/jincheng-workbench-cover/scripts/cover.py where
+```
+
+- 算成功：第一条命令的第 2 行是 `name: jincheng-workbench-cover`；第二条打印工作文件夹、封面素材在哪，照片和默认对标这时候多半是「还没设」，正常：用户第一次出封面时，AI 做到那一步会请他放照片、拆一个对标博主。
+- 不对时：`ln` 提示 `File exists`，照第 12 步的办法先看已有的是什么，按那里的三种情况办。
+
+**不能用软链时**：和第 12 步一样改成复制（`cp -R ~/jincheng-workbench/skills/jincheng-workbench-cover ~/.codex/skills/`，Claude Code 换成 `~/.claude/skills/`），以后每次更新完再复制一次。
+
+不要在安装时问用户要照片：出封面时 AI 做到那一步再提醒。
+
+## 第 15 步：打开给用户看，告诉他结果
 
 把下面的 18879 换成第 10 步打印的界面端口：
 
@@ -332,6 +364,7 @@ open http://127.0.0.1:18879
 
 - 写稿 Skill：`~/.codex/skills/jincheng-workbench-write`、`~/.claude/skills/jincheng-workbench-write`（装了哪个删哪个；软链只删链接本身）
 - 调研 Skill：`~/.codex/skills/jincheng-workbench-research`、`~/.claude/skills/jincheng-workbench-research`（同上）
+- 封面 Skill：`~/.codex/skills/jincheng-workbench-cover`、`~/.claude/skills/jincheng-workbench-cover`（同上）
 - 代码：`~/jincheng-workbench`
 - 设置：`~/Library/Application Support/jincheng-workbench`
 - 日志：`~/Library/Logs/jincheng-workbench`
