@@ -317,6 +317,33 @@ class CoverBrowserTests(unittest.TestCase):
         self.assertTrue(any('侧脸.png' in p.name for p in (self.work / '回收站').iterdir()))
         self.assertEqual(page.errors, [])
 
+    def test_7_sidebar_groups(self):
+        """左边菜单（原作者 10-04 定）：有页签的栏目点一下在下面展开子菜单、不换页；点子菜单才换页，标题写子页面名；
+        电脑上页面上方不再放那排页签，手机上还放"""
+        page = self.open('/research?tab=accounts', '.jc-sidebar button[data-nav="research"]')
+        research = page.locator('.jc-sidebar button[data-nav="research"]')
+        content = page.locator('.jc-sidebar button[data-nav="content"]')
+        self.assertEqual(research.get_attribute('aria-expanded'), 'true', '当前所在的那一栏展开着')
+        self.assertEqual(content.get_attribute('aria-expanded'), 'false')
+        page.wait_for_selector('.jc-sidebar [data-nav-tab="research:accounts"][aria-current="page"]', timeout=5000)
+        self.assertEqual(page.inner_text('h1').strip(), '对标账号')
+        self.assertFalse(page.locator('.jc-column-tabs').is_visible(), '电脑上不放那排页签')
+        content.click()
+        self.assertEqual(content.get_attribute('aria-expanded'), 'true')
+        self.assertIn('/research', page.url, '点栏目名只展开，不换页')
+        page.locator('.jc-sidebar [data-nav-tab="content:covers"]').click()
+        page.wait_for_url('**/content?tab=covers', timeout=10000)
+        page.wait_for_selector('.jc-sidebar [data-nav-tab="content:covers"][aria-current="page"]', timeout=5000)
+        self.assertEqual(page.inner_text('h1').strip(), '封面')
+        self.assertEqual(page.locator('.jc-sidebar button[data-nav="research"]').get_attribute('aria-expanded'), 'false', '离开的那一栏没点过，收起来')
+        # 收起当前这一栏：选中落回栏目名上
+        page.locator('.jc-sidebar button[data-nav="content"]').click()
+        page.wait_for_selector('.jc-sidebar button[data-nav="content"][aria-current="page"]', timeout=5000)
+        self.assertEqual(page.errors, [])
+        phone = self.open('/research?tab=reports', '.jc-column-tabs', width=390)
+        self.assertTrue(phone.locator('.jc-column-tabs').is_visible(), '手机上还是页签')
+        self.assertEqual(phone.inner_text('h1').strip(), '市场调研')
+
     def test_6_narrow(self):
         """390 宽：两处页面都不横向滚动"""
         for path, ready in (('/content?tab=covers', '[data-style]'), ('/content/T001', '[data-cover-make]')):

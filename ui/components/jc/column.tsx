@@ -1,11 +1,14 @@
 'use client';
 
-// 栏目页头：栏目名、一排页签（每个页签是一个地址）、当前页签的一句说明和操作。栏目本身登记在 lib/columns.ts。
+// 栏目页头：标题、一排页签（每个页签是一个地址）、当前页签的一句说明和操作。栏目本身登记在 lib/columns.ts。
+// 原作者 2026-10-04 定：电脑上页签挪到左边菜单里，点栏目展开子菜单（jc/shell.tsx），页面上不再放这排页签，
+// 标题直接写现在在哪个子页面（比如「对标账号」）；手机上没有左边菜单，还是栏目名加这排页签。
 // 切页签时：蓝线从上一个页签滑过来，页签下面的内容淡入并微微上浮（栏目名和页签不动）。
 // 页签上的 data-tour="tab-<页签>" 给新手指引找位置用（lib/tour-steps.ts）。
 import Link from 'next/link';
-import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { useSlideIndicator } from '@/components/jc/slide-indicator';
+import { setActiveTab } from '@/lib/active-tab';
 import { LoadingLine } from '@/components/jc/ui';
 import { COLUMNS, type ColumnKey } from '@/lib/columns';
 
@@ -39,7 +42,12 @@ export function ColumnHeader({
    loadingText?: string;
 }) {
    const def = COLUMNS[column];
+   const current = def.tabs.find((t) => t.key === tab) ?? null;
    const tabsRef = useRef<HTMLElement>(null);
+   // 告诉左边菜单现在开着哪个子页面
+   useEffect(() => {
+      if (current) setActiveTab(column, current.key);
+   }, [column, current]);
    const lineRef = useRef<HTMLSpanElement>(null);
    useSlideIndicator(tabsRef, lineRef, `tabs:${column}`, tab);
 
@@ -56,7 +64,14 @@ export function ColumnHeader({
       <>
          <header className="jc-page-header jc-column-header">
             <div className="min-w-0">
-               <h1>{def.title}</h1>
+               {current ? (
+                  <h1>
+                     <span className="jc-title-wide">{current.label}</span>
+                     <span className="jc-title-narrow">{def.title}</span>
+                  </h1>
+               ) : (
+                  <h1>{def.title}</h1>
+               )}
             </div>
          </header>
          <nav ref={tabsRef} className="jc-column-tabs" aria-label={`${def.title}的页签`}>

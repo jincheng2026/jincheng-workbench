@@ -1,15 +1,18 @@
 'use client';
 
 // 工作台外框：电脑上是固定的左边菜单和顶上的磨砂工具栏，手机上是顶栏和底部导航。
-// 左边菜单显示哪几栏由设置文件的 columns 决定（经 /api/app 传过来），栏目定义在 jc/column.tsx。
-// 换栏时左边菜单的选中底色从上一栏滑过来；同一栏里换页签时外框不重新淡入。
+// 左边菜单显示哪几栏由设置文件的 columns 决定（经 /api/app 传过来），栏目定义在 lib/columns.ts。
+// 有页签的栏目（内容、市场调研）在左边菜单里是一组：点一下栏目名在下面展开子菜单、再点收起，点子菜单换页面
+// （原作者 2026-10-04 定，照 WorkBuddy 左边「专家·技能·连接器」那样；页面上方不再放那排页签，手机上还放）。
+// 选中底色落在开着的子菜单上（栏目收起来时落在栏目名上），换页时从上一个位置滑过来；同一栏里换页签时外框不重新淡入。
 // 新手指引（jc/tour.tsx）：每个页面都带着它的细栏和浮层；「新手指引」按钮在左下角工作文件夹下面，手机上在顶栏右边。
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { ChevronRight, Clapperboard, FolderOpen, PenLine, ScrollText, Telescope, type LucideIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, Clapperboard, FolderOpen, PenLine, ScrollText, Telescope, type LucideIcon } from 'lucide-react';
 import { useAppInfo, useTildify } from '@/components/jc/app-info';
-import { COLUMNS, type ColumnKey } from '@/lib/columns';
+import { COLUMNS, type ColumnKey, type ColumnTab } from '@/lib/columns';
+import { useActiveTab } from '@/lib/active-tab';
 import { PlaceButton } from '@/components/jc/place-button';
 import { useSlideIndicator } from '@/components/jc/slide-indicator';
 import { CopyPath, SemBanner } from '@/components/jc/ui';
@@ -39,13 +42,13 @@ function MissingBadge({ n }: { n: number }) {
    );
 }
 
-type NavItem = { key: ColumnKey; label: string; href: string; match: string[]; icon: LucideIcon };
+type NavItem = { key: ColumnKey; label: string; href: string; match: string[]; icon: LucideIcon; tabs: ColumnTab[] };
 
 function useNav(): NavItem[] {
    const { info } = useAppInfo();
    return info.columns
       .filter((key): key is ColumnKey => key in COLUMNS)
-      .map((key) => ({ key, label: COLUMNS[key].title, href: COLUMNS[key].href, match: COLUMNS[key].match, icon: ICONS[key] }));
+      .map((key) => ({ key, label: COLUMNS[key].title, href: COLUMNS[key].href, match: COLUMNS[key].match, icon: ICONS[key], tabs: COLUMNS[key].tabs }));
 }
 
 function isActive(pathname: string, item: NavItem) {
@@ -94,13 +97,92 @@ function WorkFolder() {
    );
 }
 
+// 左边子菜单哪几组展开着：换页时外框会重新挂载，记在模块变量里，这次打开工作台期间一直记得；没点过的组，当前所在的那一栏展开
+const opened: Partial<Record<ColumnKey, boolean>> = {};
+
+/** 有页签的栏目：栏目名是一个开关，下面是子菜单 */
+function NavGroup({ n, active, missing, onToggle }: { n: NavItem; active: boolean; missing: number; onToggle: () => void }) {
+   const tab = useActiveTab(n.key);
+   const [open, setOpen] = useState(() => opened[n.key] ?? active);
+   // 展开的动画播完了没有：播完再把「选中」交给子菜单，选中底色才从栏目名滑到量得准的位置
+   const subRef = useRef<HTMLDivElement>(null);
+   const [shown, setShown] = useState(open);
+   useEffect(() => {
+      if (!open) {
+         setShown(false);
+         return;
+      }
+      const el = subRef.current;
+      if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+         setShown(true);
+         return;
+      }
+      const done = (e: TransitionEvent) => {
+         if (e.target === el) setShown(true);
+      };
+      el.addEventListener('transitionend', done);
+      const timer = window.setTimeout(() => setShown(true), 400); // 没收到动画结束的通知，到时间也算展开好了
+      return () => {
+         el.removeEventListener('transitionend', done);
+         window.clearTimeout(timer);
+      };
+   }, [open]);
+   useEffect(() => {
+      onToggle();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [shown]);
+   const Icon = n.icon;
+   const toggle = () => {
+      opened[n.key] = !open;
+      setOpen(!open);
+      onToggle();
+   };
+   return (
+      <div className="jc-nav-group-item" data-open={open || undefined}>
+         <button
+            type="button"
+            className="jc-nav-link jc-nav-parent"
+            aria-expanded={open}
+            aria-current={active && !(open && shown) ? 'page' : undefined}
+            data-active={active || undefined}
+            data-nav={n.key}
+            onClick={toggle}
+         >
+            <Icon aria-hidden="true" />
+            <span>{n.label}</span>
+            {n.key === 'research' && <MissingBadge n={missing} />}
+            <ChevronDown className="jc-nav-chevron" aria-hidden="true" />
+         </button>
+         <div ref={subRef} className="jc-nav-sub">
+            <div className="jc-nav-sub-inner" role="group" aria-label={`${n.label}的子菜单`}>
+               {n.tabs.map((t) => (
+                  <Link
+                     key={t.key}
+                     href={t.href}
+                     scroll={false}
+                     tabIndex={open ? undefined : -1}
+                     className="jc-nav-link jc-nav-child"
+                     aria-current={active && open && shown && tab === t.key ? 'page' : undefined}
+                     data-nav-tab={`${n.key}:${t.key}`}
+                  >
+                     <span>{t.label}</span>
+                  </Link>
+               ))}
+            </div>
+         </div>
+      </div>
+   );
+}
+
 function DesktopSidebar({ pathname, nav }: { pathname: string; nav: NavItem[] }) {
-   // 选中底色是一块单独的底板，换栏时从上一栏滑过来
+   // 选中底色是一块单独的底板，换页时从上一个位置滑过来
    const navRef = useRef<HTMLDivElement>(null);
    const pillRef = useRef<HTMLSpanElement>(null);
-   const activeHref = nav.find((n) => isActive(pathname, n))?.href ?? null;
+   const activeItem = nav.find((n) => isActive(pathname, n)) ?? null;
+   const activeTab = useActiveTab(activeItem?.key ?? '');
+   const [toggles, setToggles] = useState(0);
    const missing = useMissing();
-   useSlideIndicator(navRef, pillRef, 'sidebar', activeHref);
+   useSlideIndicator(navRef, pillRef, 'sidebar', `${activeItem?.key ?? ''}:${activeTab ?? ''}:${toggles}`);
    return (
       <aside className="jc-sidebar">
          <div className="jc-brand">
@@ -115,12 +197,14 @@ function DesktopSidebar({ pathname, nav }: { pathname: string; nav: NavItem[] })
             <nav className="jc-nav-group" aria-label="栏目">
                <div className="jc-nav-links">
                   {nav.map((n) => {
+                     if (n.tabs.length) {
+                        return <NavGroup key={n.href} n={n} active={activeItem?.key === n.key} missing={missing} onToggle={() => setToggles((x) => x + 1)} />;
+                     }
                      const Icon = n.icon;
                      return (
                         <Link key={n.href} href={n.href} className="jc-nav-link" aria-current={isActive(pathname, n) ? 'page' : undefined} data-nav={n.key}>
                            <Icon aria-hidden="true" />
                            <span>{n.label}</span>
-                           {n.key === 'research' && <MissingBadge n={missing} />}
                         </Link>
                      );
                   })}

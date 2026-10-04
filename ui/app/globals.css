@@ -653,6 +653,91 @@ a.jc-button-secondary:hover {
 .jc-nav-link[aria-current='page'] svg {
    color: var(--jc-accent);
 }
+/* 有页签的栏目在左边菜单里是一组：栏目名是开关（点一下展开、再点收起），下面是子菜单（原作者 2026-10-04 定） */
+.jc-nav-parent {
+   width: 100%;
+   border: 0;
+   background: transparent;
+   font: inherit;
+   text-align: left;
+   cursor: pointer;
+}
+.jc-nav-parent[data-active] {
+   color: var(--jc-ink);
+   font-weight: 600;
+}
+.jc-nav-parent[data-active] svg:first-child {
+   color: var(--jc-accent);
+}
+.jc-nav-chevron {
+   flex-shrink: 0;
+   width: 14px !important;
+   height: 14px !important;
+   margin-left: auto;
+   color: var(--jc-ghost) !important;
+   transform: rotate(-90deg);
+   transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.jc-nav-badge + .jc-nav-chevron {
+   margin-left: 6px;
+}
+.jc-nav-group-item[data-open] > .jc-nav-parent .jc-nav-chevron {
+   transform: none;
+}
+.jc-nav-sub {
+   display: grid;
+   grid-template-rows: 0fr;
+   transition: grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.jc-nav-group-item[data-open] > .jc-nav-sub {
+   grid-template-rows: 1fr;
+}
+.jc-nav-sub-inner {
+   display: grid;
+   gap: 2px;
+   min-height: 0;
+   overflow: hidden;
+   padding-left: 30px;
+}
+.jc-nav-group-item[data-open] > .jc-nav-sub > .jc-nav-sub-inner {
+   padding-top: 2px;
+   padding-bottom: 4px;
+}
+.jc-nav-link.jc-nav-child {
+   min-height: 34px;
+   padding: 7px 13px;
+   color: var(--jc-muted);
+}
+.jc-nav-link.jc-nav-child:hover {
+   color: var(--jc-ink);
+}
+.jc-nav-link.jc-nav-child[aria-current='page'] {
+   color: var(--jc-ink);
+   font-weight: 600;
+}
+@media (prefers-reduced-motion: reduce) {
+   .jc-nav-sub,
+   .jc-nav-chevron {
+      transition: none;
+   }
+}
+/* 电脑和平板上页签在左边菜单里，页面上方不再放那排页签，标题写子页面名；手机上没有左边菜单，还是栏目名加页签 */
+.jc-title-narrow {
+   display: none;
+}
+@media (min-width: 721px) {
+   .jc-column-tabs {
+      display: none;
+   }
+}
+@media (max-width: 720px) {
+   .jc-title-wide {
+      display: none;
+   }
+   .jc-title-narrow {
+      display: inline;
+   }
+}
 .jc-workfolder {
    margin-top: auto;
    display: grid;
