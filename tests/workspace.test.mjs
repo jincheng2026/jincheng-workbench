@@ -42,7 +42,7 @@ test("第一次启动建好整个工作文件夹：选题库带一条示例、�
 
   const agents = readFileSync(path.join(w, "AGENTS.md"), "utf8");
   // 开头先说清这里就是工作文件夹：在 AI 里打开这个文件夹的对话一开始就读到
-  assert.match(agents.split("\n").slice(0, 4).join("\n"), /这里就是「.+」的工作文件夹，写稿、调研都在这里做。/);
+  assert.match(agents.split("\n").slice(0, 4).join("\n"), /这里就是「.+」的工作文件夹，写稿、调研、做封面都在这里做。/);
   assert.match(agents, /「教程」、「科普」、「口播」/);
   assert.match(agents, /`选题库\/00_选题总览\.md`/);
   assert.match(agents, /`内容草稿\/T001_选题名\/`/);

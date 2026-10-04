@@ -99,14 +99,14 @@ export function reportsEmpty(anyReady: boolean) {
 }
 
 export type ResearchCard = {
-   kind: ResearchKind | 'cover-vi'; // cover-vi：封面 VI（1.1 加），复制的话用封面 Skill（ask-ai.ts 的 askCoverViAny）
+   kind: ResearchKind | 'cover-vi'; // cover-vi：封面 VI（1.1 加），拆在「内容」栏的「封面」页做（原作者 10-04 定：封面放进「内容」栏）
    type: string;
    title: string;
    what: string;
    ready: boolean;
    line: string;
-   // 缺东西时旁边的按钮：去接 TikHub、去导出评论；不缺时是「复制给 AI 的话」
-   action: 'copy' | 'tikhub' | 'social';
+   // 缺东西时旁边的按钮：去接 TikHub、去导出评论；不缺时是「复制给 AI 的话」；封面 VI 是「去「封面」拆」
+   action: 'copy' | 'tikhub' | 'social' | 'covers';
    actionLabel: string;
 };
 
@@ -175,18 +175,16 @@ export function researchCards({
          action: tikhubReady ? 'copy' : 'tikhub',
          actionLabel: tikhubReady ? '复制给 AI 的话' : '去接 TikHub',
       },
-      // 封面 VI（1.1 加）：没接 TikHub 也能做，把博主的封面放进一个文件夹贴给 AI 就行，所以一直是能做的样子
+      // 封面 VI（1.1 加）：拆封面在「内容」栏的「封面」页做（对标账号里点一下、贴主页链接、把几张图拖进去都在那里），这里只放个入口
       {
          kind: 'cover-vi',
          type: '封面VI',
          title: '封面 VI',
-         what: '拆一个博主的封面：逐张看他最近 30 张封面，找出能照着做的规律，以后出封面照他的风格来。',
+         what: '拆一个博主的封面：看他最近 20 张封面，找出能照着做的规律，以后出封面照他的风格来。',
          ready: true,
-         line: tikhubReady
-            ? `贴他的主页链接，AI 用 TikHub 拉他最近的封面：${cost.account}。也可以贴一个放着他封面的文件夹，不花钱。`
-            : '把他的封面图放进一个文件夹，把文件夹贴给 AI，不花钱；接好 TikHub 以后贴主页链接就行。',
-         action: 'copy',
-         actionLabel: '复制给 AI 的话',
+         line: '在「内容」栏的「封面」里拆：对标账号里点一下、贴主页链接，或者把几张封面图拖进去（哪个平台的都行，不花钱）。',
+         action: 'covers',
+         actionLabel: '去「封面」拆',
       },
    ];
 }

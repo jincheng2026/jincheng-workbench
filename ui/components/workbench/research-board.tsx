@@ -148,6 +148,13 @@ export default function ResearchBoard() {
       changeOpen(true);
       setFocus((old) => ({ which, n: (old?.n ?? 0) + 1 }));
    };
+   // 从别的页面点「去接 TikHub」过来（地址带 ?connect=tikhub）：一进来就展开数据来源、亮到 TikHub 那一块
+   const connect = params.get('connect');
+   const goRef = useRef(go);
+   goRef.current = go;
+   useEffect(() => {
+      if (connect === 'tikhub' || connect === 'social') goRef.current(connect);
+   }, [connect]);
 
    const viewing = tab === 'reports' && reportId ? (reports?.reports.find((r) => r.id === reportId) ?? null) : null;
    const accountList = accounts?.accounts ?? [];

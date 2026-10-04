@@ -41,12 +41,14 @@ import {
    type WorksResult,
 } from '@/lib/works';
 import { TOUR_WORK } from '@/lib/tour-steps';
+import CoversBoard from '@/components/workbench/covers-board';
 
-type Tab = 'topics' | 'doing';
-const isTab = (v: string | null | undefined): v is Tab => v === 'topics' || v === 'doing';
+type Tab = 'topics' | 'doing' | 'covers';
+const isTab = (v: string | null | undefined): v is Tab => v === 'topics' || v === 'doing' || v === 'covers';
 const TAB_INTRO: Record<Tab, string> = {
    topics: '还没开始写的选题。定了拍摄顺序就按顺序排；暂缓的在最下面，默认收起。',
    doing: '正在写的，和录完还没发的。有创作页的点「打开创作页」接着改；没有的点「接着写」，或者进详情让 AI 生成创作页。',
+   covers: '拆对标博主的封面 VI、管理风格和你的照片；每条内容出过的封面也在这里看。出图、挑和改交给 Codex。',
 };
 const TAB_KEY = 'workbench-content-tab';
 
@@ -358,6 +360,7 @@ export default function WorksBoard() {
    const [savedTab, setSavedTab] = useState<Tab | null>(null);
    const [type, setType] = useState<string>('all');
    const [deferredOpen, setDeferredOpen] = useState(false);
+   const [coverReload, setCoverReload] = useState(0);
    const generation = useRef(0);
 
    // 地址里带 ?tab= 时以地址为准，并记下来；从左边菜单点进来（不带 tab）就打开上次看的那个页签
@@ -468,7 +471,11 @@ export default function WorksBoard() {
                      读取于 {fmtClock(data.generatedAt)}
                   </span>
                )}
-               {tab === 'topics' ? (
+               {tab === 'covers' ? (
+                  <PlaceButton place="coverAssets" title="在访达中打开封面素材文件夹（我的照片、你放进来的几组图都在这里）">
+                     <FolderOpen size={14} /> 封面素材
+                  </PlaceButton>
+               ) : tab === 'topics' ? (
                   // 下面的「下一步」或空白引导里已经有这两个按钮时，这里不再放第二个
                   data &&
                   !showTip &&
@@ -487,7 +494,14 @@ export default function WorksBoard() {
                      </PlaceButton>
                   )
                )}
-               <SecondaryButton size="small" busy={loading} onClick={() => void load()}>
+               <SecondaryButton
+                  size="small"
+                  busy={loading}
+                  onClick={() => {
+                     void load();
+                     setCoverReload((n) => n + 1);
+                  }}
+               >
                   重新读取
                </SecondaryButton>
             </>
@@ -511,6 +525,16 @@ export default function WorksBoard() {
                   </div>
                </SemBanner>
             ) : null /* 还没读到：页头下面那一行「正在读取……」由 ColumnHeader 放 */}
+         </div>
+      );
+   }
+
+   // 「封面」页签：风格、拆一个新风格、我的封面、我的照片（数据它自己读）
+   if (tab === 'covers') {
+      return (
+         <div>
+            {header}
+            <CoversBoard reloadKey={coverReload} />
          </div>
       );
    }

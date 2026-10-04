@@ -75,6 +75,7 @@ export type Place =
    | 'commentImports'
    | 'prompts'
    | 'promptFormat'
+   | 'coverAssets'
    | 'trash';
 
 export function openPlace(place: Place) {

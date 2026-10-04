@@ -13,7 +13,7 @@ import { Card, DangerButton, EmptyState, PrimaryButton, SecondaryButton, SemBadg
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { errorText } from '@/lib/api';
 import { askAddAccount, askCoverVi } from '@/lib/ask-ai';
-import { setDefaultBenchmark } from '@/lib/covers';
+import { setDefaultStyle } from '@/lib/covers';
 import { askInfo } from '@/lib/app-info';
 import { accountsEmpty, followersText, relatedReports } from '@/lib/research-guide';
 import {
@@ -254,7 +254,7 @@ function ViLine({ a, onChanged }: { a: Account; onChanged: () => void }) {
    const makeDefault = async () => {
       setBusy(true);
       try {
-         toast.success((await setDefaultBenchmark(a.name)).message);
+         toast.success((await setDefaultStyle(a.name)).message);
          onChanged();
       } catch (err) {
          toast.error(errorText(err));

@@ -1,5 +1,5 @@
 // 栏目登记处：左边菜单一栏对应这里的一项，有页签的栏目页头下面是一排页签。
-// 现在三栏：内容（选题、在做）、市场调研（对标账号、调研报告）和提示词。设置文件里的 columns 决定显示哪几栏、按什么先后。
+// 现在三栏：内容（选题、在做、封面）、市场调研（对标账号、调研报告）和提示词。设置文件里的 columns 决定显示哪几栏、按什么先后。
 // 加新栏目或新页签：在这里登记（页签就是一个地址），左边菜单的图标在 components/jc/shell.tsx 的 ICONS 里配。
 // 这个文件不带 'use client'，服务端的页面（比如首页跳转）也能用。
 
@@ -14,6 +14,8 @@ export const COLUMNS: Record<'content' | 'research' | 'prompts', ColumnDef> = {
       tabs: [
          { key: 'topics', label: '选题', href: '/content?tab=topics' },
          { key: 'doing', label: '在做', href: '/content?tab=doing' },
+         // 封面（1.1 加，原作者 2026-10-04 定放进「内容」栏）：风格、拆一个新风格、我的封面、我的照片
+         { key: 'covers', label: '封面', href: '/content?tab=covers' },
          // 以后加页签写在这里，例如 { key: 'published', label: '已发布', href: '/content?tab=published' }。
          // 创作页不是页签：每条内容一个，从详情页和「在做」的卡片上打开
       ],

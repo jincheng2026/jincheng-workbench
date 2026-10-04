@@ -7,9 +7,8 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowLeft, Copy, ExternalLink } from 'lucide-react';
 import { useAppInfo } from '@/components/jc/app-info';
-import { OpenInAi } from '@/components/jc/open-in-ai';
 import { Card, EmptyState, SecondaryButton, SemBadge, SemBanner, copyText } from '@/components/jc/ui';
-import { askCoverViAny, askResearch, type ResearchKind } from '@/lib/ask-ai';
+import { askResearch, type ResearchKind } from '@/lib/ask-ai';
 import { askInfo } from '@/lib/app-info';
 import { REPORT_TYPES, relatedReports, reportsEmpty, researchCards, type CostEstimate, type ResearchCard } from '@/lib/research-guide';
 import { reportFileUrl, reportViewHref, type Account, type Report } from '@/lib/research';
@@ -51,8 +50,10 @@ function ResearchCards({
                      {card.line}
                   </p>
                   <div className="mt-auto pt-1">
-                     {card.kind === 'cover-vi' ? (
-                        <OpenInAi text={askCoverViAny(askInfo(info, 'cover'))} action="拆封面 VI" what="拆封面 VI 的话" />
+                     {card.action === 'covers' ? (
+                        <Link href="/content?tab=covers" className="jc-button jc-button-secondary inline-flex h-[33px] items-center justify-center gap-2 px-3.5 text-[12.5px] font-medium no-underline hover:no-underline" style={{ color: 'var(--jc-body)' }}>
+                           {card.actionLabel}
+                        </Link>
                      ) : card.action === 'copy' ? (
                         <SecondaryButton
                            size="small"

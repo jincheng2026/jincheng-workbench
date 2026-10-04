@@ -32,9 +32,9 @@ test("什么都没配：几种调研都显示；缺东西的变灰，写清缺�
     ["评论洞察", false, "social", "去导出评论"],
     ["视频拆解", false, "tikhub", "去接 TikHub"],
     ["账号研究", false, "tikhub", "去接 TikHub"],
-    ["封面 VI", true, "copy", "复制给 AI 的话"],
+    ["封面 VI", true, "covers", "去「封面」拆"],
   ]);
-  assert.match(cards[3].line, /放进一个文件夹.*不花钱/);
+  assert.match(cards[3].line, /「内容」栏的「封面」里拆.*拖进去（哪个平台的都行，不花钱）/);
   assert.match(cards[0].line, /社媒助手.*约 10 分钟，不花钱.*TikHub（约 5 分钟，抖音 200 条评论约 0\.07 到 0\.39 元/);
   assert.equal(cards[1].line, "还缺 TikHub：接好约 5 分钟，拆一条抖音视频不到 1 分钱。");
   assert.equal(cards[2].line, "还缺 TikHub：接好约 5 分钟，拉一个抖音博主 100 条作品约 0.04 元，带上播放量约 0.39 元。");
@@ -42,7 +42,8 @@ test("什么都没配：几种调研都显示；缺东西的变灰，写清缺�
 
 test("接好 TikHub：三种都能做；只导入了评论表：评论洞察能做，另外两种还缺 TikHub", () => {
   const all = researchCards({ tikhubReady: true, importedComments: 0, cost });
-  assert.ok(all.every((c) => c.ready && c.action === "copy" && c.actionLabel === "复制给 AI 的话"));
+  assert.ok(all.slice(0, 3).every((c) => c.ready && c.action === "copy" && c.actionLabel === "复制给 AI 的话"));
+  assert.equal(all[3].action, "covers");
   assert.match(all[0].line, /用 TikHub 采少量评论.*要完整的评论区，用社媒助手导出/);
   const onlyComments = researchCards({ tikhubReady: false, importedComments: 1280, cost });
   assert.deepEqual(onlyComments.map((c) => c.ready), [true, false, false, true]);

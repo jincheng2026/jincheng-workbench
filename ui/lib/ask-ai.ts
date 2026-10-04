@@ -1,4 +1,4 @@
-// 交给 AI 的话：页面上「复制给 AI」的那几段（写稿、加选题、三种调研、加对标账号、封面的拆 VI 出一批按备注改），全在这里。
+// 交给 AI 的话：页面上「复制给 AI」的那几段（写稿、加选题、三种调研、加对标账号、封面的拆 VI 和出一批），全在这里。
 // 只放纯函数（不引别的模块），页面和测试（tests/ask-ai.test.mjs）都直接用。
 //
 // 每段都照「提示词标准」写（原作者 2026-10-03 定，全文在仓库根目录 AGENTS.md「交给 AI 的话怎么写」）：
@@ -63,38 +63,55 @@ export function askCommentReport(info: AskInfo, files: string[]): string {
 }
 
 // —— 封面（1.1 加，封面 Skill）——
+// 原作者 2026-10-04 定：拆一个博主看他最近 20 张封面；一批默认 5 张；挑一张、改一张在 Codex 桌面版里做（看图、评论改图是它自带的），
+// 所以没有「按备注改」这类复制的话。风格编号：对标账号是账号文件夹名，你放进来的图是「风格/<文件夹名>」（和封面 Skill 约好的）。
 const COVER_HUMAN = '要我放照片、接 TikHub、放封面图或者点允许的时候，停下来告诉我怎么做。';
-const VI_GOAL =
-   '看他最近 30 张封面，写成 VI 拆解放进工作台的「市场调研」，起好风格名；我还没有默认对标的话，就把他设成默认。做完告诉我他的封面最值得学的几条规律。';
+const VI_DONE = '写成 VI 拆解放进工作台，起好风格名；我还没有默认风格的话，就把它设成默认。';
+const VI_LEARN = '做完告诉我他的封面最值得学的几条规律。';
 
-/** 对标账号卡片上的「复制给 AI：拆封面 VI」：账号已知，不用贴东西 */
-export function askCoverVi(account: { name: string; accountName: string; platform: string | null }, info: AskInfo): string {
-   const who = `对标账号「${account.accountName}」${account.platform ? `（${account.platform}）` : ''}`;
-   return `用${info.name}的封面 Skill（${info.skill}），拆${who}的封面 VI：${VI_GOAL}${tail(info, COVER_HUMAN)}`;
+type CoverAccount = { accountName: string; platform?: string | null };
+const accountText = (a: CoverAccount) => `「${a.accountName}」${a.platform ? `（${a.platform}）` : ''}`;
+
+/** 对标账号卡片、「封面」页风格卡片上的「拆封面 VI」：账号已知，不用贴东西 */
+export function askCoverVi(account: CoverAccount, info: AskInfo): string {
+   return `用${info.name}的封面 Skill（${info.skill}），拆对标账号${accountText(account)}的封面 VI：看他最近 20 张封面，${VI_DONE}${VI_LEARN}${tail(info, COVER_HUMAN)}`;
 }
 
-/** 调研页「封面 VI」卡片上的那一句：博主还没加进对标账号也行，最后贴主页链接或者封面所在的文件夹 */
-export function askCoverViAny(info: AskInfo): string {
-   return `用${info.name}的封面 Skill（${info.skill}），拆一个博主的封面 VI：${VI_GOAL}${tail(info, COVER_HUMAN)}博主的主页链接或者他的封面所在的文件夹${PASTE_HERE}`;
+/** 「封面」页的「一次全拆」：还没拆封面 VI 的几个对标账号一起交给 AI，一个一个拆 */
+export function askCoverViBatch(accounts: CoverAccount[], info: AskInfo): string {
+   return `用${info.name}的封面 Skill（${info.skill}），把我还没拆封面 VI 的 ${accounts.length} 个对标账号都拆了：${accounts.map(accountText).join('、')}。每个看他最近 20 张封面，写成 VI 拆解放进工作台，起好风格名；我还没有默认风格的话，把第一个拆完的设成默认。做完告诉我每个的风格名和最值得学的几条规律。${tail(info, COVER_HUMAN)}`;
 }
 
-/** 详情页的「复制给 AI：出一批封面」：张数、构图参考（收藏里挑的）照页面上选的 */
-export function askMakeCovers(id: string, info: AskInfo, { count = 10, refs = [] as string[] } = {}): string {
-   const ref = refs.length ? `构图参考我收藏的 ${refs.join('、')}。` : '';
-   return `用${info.name}的封面 Skill（${info.skill}），给选题 ${id} 出一批封面（${count} 张），照片和对标用我在工作台里设好的，放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题。${ref}${tail(info, COVER_HUMAN)}`;
+/** 「封面」页拖完图以后的「拆这组图」：不是同一个博主的几张图，拆成一个风格（不是一种就分开拆） */
+export function askCoverViImages(style: { id: string; covers: number }, info: AskInfo): string {
+   return `用${info.name}的封面 Skill（${info.skill}），拆我放进工作台「封面」里的那组图（${style.id}，${style.covers} 张）：一张张看，写成 VI 拆解放进工作台，起好风格名；不是同一种风格就分开拆、各起名字；我还没有默认风格的话，就把它设成默认。做完告诉我最值得学的几条规律。${tail(info, COVER_HUMAN)}`;
 }
 
-/** 详情页批注弹窗的「复制给 AI：按备注改」：备注逐条写进话里，批注图写成这条内容草稿文件夹里的相对位置 */
-export function askReviseCover(
-   id: string,
-   no: string,
-   info: AskInfo,
-   { notes = [] as string[], overall = '', markPath = '' } = {}
-): string {
-   const list = notes.map((text, i) => `${i + 1}. ${text}`).join(' ');
-   const asks = [list, overall ? `整体：${overall}` : ''].filter(Boolean).join('；');
-   const mark = markPath ? `标了编号的图在这条内容的 ${markPath}，` : '';
-   return `用${info.name}的封面 Skill（${info.skill}），按我的备注改选题 ${id} 的封面-${no}，存成新的一张，做完告诉我新图的编号。备注：${asks}。${mark}只改备注说到的地方，其余照旧。${tail(info, WRITE_HUMAN)}`;
+/** 「封面」页的「贴主页链接」：页面上贴了链接就直接带上，没贴就照提示词标准写成「…贴在这句后面：」放在最后 */
+export function askCoverViLink(info: AskInfo, link = ''): string {
+   const url = link.trim();
+   return `用${info.name}的封面 Skill（${info.skill}），拆一个博主的封面 VI：看他最近 20 张封面，${VI_DONE}${VI_LEARN}${tail(info, COVER_HUMAN)}${url ? `博主的主页链接：${url}` : `博主的主页链接${PASTE_HERE}`}`;
+}
+
+export type MakeCoversOptions = {
+   count?: number;
+   size?: string;
+   /** 照哪个风格出：没有就写「照我设的默认风格出」 */
+   style?: { id: string; kind: 'account' | 'images'; name: string | null } | null;
+   /** 参考这个风格的哪几张构图（K 编号） */
+   compositions?: string[];
+   /** 封面上的字：没填就让 AI 用创作页里定好的，没定就用选题名 */
+   text?: string | null;
+};
+
+/** 选题页面的「出一批封面」：张数、尺寸、风格、参考构图、封面上的字都照页面上选的写进去 */
+export function askMakeCovers(id: string, info: AskInfo, { count = 5, size = '竖版 3:4', style = null, compositions = [], text = null }: MakeCoversOptions = {}): string {
+   const where = style ? (style.kind === 'account' ? `对标账号「${style.id}」` : `我放进来的图「${style.id}」`) : '';
+   const styleText = style
+      ? `照风格「${style.name ?? style.id}」（${where}）出${compositions.length ? `，构图参考它的 ${compositions.join('、')}` : ''}；`
+      : '照我设的默认风格出；';
+   const words = text?.trim() ? `封面上的字用「${text.trim()}」；` : '封面上的字用创作页里定好的，没定就用选题名；';
+   return `用${info.name}的封面 Skill（${info.skill}），给选题 ${id} 出一批封面：${count} 张，${size}；${styleText}${words}照片用我在工作台「封面」里放的。放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题。${tail(info, COVER_HUMAN)}`;
 }
 
 /** 对标账号页的「复制给 AI 的话」：把一个博主加进对标账号 */
