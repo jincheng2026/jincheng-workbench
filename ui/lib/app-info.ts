@@ -34,7 +34,7 @@ export type AppInfo = {
    aiLinks: { codex: boolean; 'claude-desktop'?: boolean; claude: boolean };
 };
 
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || '锦成工作台';
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || '创作工作台';
 export const APP_TAGLINE = process.env.NEXT_PUBLIC_APP_TAGLINE || '';
 /** 署名（brand.json 的 copyrightHolder）：新手指引开场卡「我是{作者}」用 */
 export const APP_AUTHOR = process.env.NEXT_PUBLIC_APP_AUTHOR || '';

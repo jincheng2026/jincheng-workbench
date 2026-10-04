@@ -14,7 +14,7 @@ export const COLUMNS: Record<'content' | 'research' | 'prompts', ColumnDef> = {
       tabs: [
          { key: 'topics', label: '选题', href: '/content?tab=topics' },
          { key: 'doing', label: '在做', href: '/content?tab=doing' },
-         // 封面（1.1 加，原作者 2026-10-04 定放进「内容」栏）：风格、拆一个新风格、我的封面、我的照片
+         // 封面（1.1 加，原作者 2026-10-04 定放进「内容」栏）：风格、拆一个新风格、我的封面、人物参考图片
          { key: 'covers', label: '封面', href: '/content?tab=covers' },
          // 以后加页签写在这里，例如 { key: 'published', label: '已发布', href: '/content?tab=published' }。
          // 创作页不是页签：每条内容一个，从详情页和「在做」的卡片上打开

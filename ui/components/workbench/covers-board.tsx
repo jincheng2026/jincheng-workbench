@@ -5,7 +5,7 @@
 //   拆一个新风格：对标账号里点一下、贴主页链接（抖音、小红书用 TikHub 拉最近 20 张）、把几张图拖进来（同一种风格 3 张以上，10 张左右最好）；
 //     还没拆的对标账号能一次全拆。拆都交给 Codex 桌面版（一键打开，话已经填好），用别的 AI 工具的复制去发。
 //   我的封面：每条内容一组，只放 AI 给它出的封面（收来参考的别人的封面不算）；也能按风格看；能筛只看视频或只看文章的。
-//   我的照片：角上一块，换成你的脸用；不分组，放一张或几张，出封面时都用上。
+//   人物参考图片：角上一块，AI 照着它把封面上的人换成你；不分组，放一张或几张，一张封面最多参考排在前面的 3 张。
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ImagePlus, Images, Trash2, Upload, X } from 'lucide-react';
@@ -110,15 +110,15 @@ export default function CoversBoard({ reloadKey = 0 }: { reloadKey?: number }) {
                            todoAccounts.map((s) => ({ accountName: s.accountName ?? s.folder, platform: s.platform ?? null })),
                            cover
                         )}
-                        action={`把还没拆的 ${todoAccounts.length} 个对标都拆了`}
-                        what="一次全拆的话"
+                        action={`拆还没拆的 ${todoAccounts.length} 个对标账号`}
+                        what="拆对标账号的话"
                         variant="link"
                      />
                   )}
                </div>
                {info.styles.length === 0 ? (
                   <Card className="p-4 text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
-                     还没有风格。在下面「拆一个新风格」里拆一个：拆好的风格会列在这里，出封面时照它的样子来。
+                     还没有风格。在下面拆一个，拆好的风格会列在这里，出封面时照着它做。
                   </Card>
                ) : (
                   <div className="jc-style-grid">
@@ -145,7 +145,7 @@ export default function CoversBoard({ reloadKey = 0 }: { reloadKey?: number }) {
             <MyCovers groups={library} styles={info.styles} />
          </div>
 
-         {/* 我的照片：角上一块 */}
+         {/* 人物参考图片：角上一块 */}
          <aside className="min-w-0">
             <MyPhotos info={info} onChanged={() => void load()} />
          </aside>
@@ -202,7 +202,7 @@ function StyleCard({ style, onChanged, setInfo }: { style: Style; onChanged: () 
             {!style.images.length && (
                <span className="jc-style-empty">
                   <Images size={18} />
-                  {style.kind === 'account' ? 'AI 拆的时候去拉封面' : '还没有图'}
+                  {style.kind === 'account' ? 'AI 拆的时候会去拉他的封面' : '还没有图'}
                </span>
             )}
          </button>
@@ -217,22 +217,22 @@ function StyleCard({ style, onChanged, setInfo }: { style: Style; onChanged: () 
             {style.done ? (
                <>
                   <p className="mt-1.5 text-[12px]" style={{ color: 'var(--jc-muted)' }}>
-                     原图 {style.covers} 张 · 默认参考构图 {comps.length} 张
+                     原图 {style.covers} 张 · 默认参考 {comps.length} 张
                      {kIds(style.images).length > 0 && (
                         <button type="button" className="ml-1.5 font-medium" style={{ color: 'var(--jc-accent)' }} onClick={() => setPicking(true)}>
-                           改
+                           换参考构图
                         </button>
                      )}
                   </p>
                   <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
                      {style.report && (
                         <Link href={reportViewHref(style.report.id, style.report.page)} className="font-medium">
-                           看拆解
+                           看拆解报告
                         </Link>
                      )}
                      {!style.isDefault && (
                         <button type="button" className="font-medium" style={{ color: 'var(--jc-accent)' }} disabled={busy === 'default'} onClick={() => void run('default', () => setDefaultStyle(style.id))}>
-                           {busy === 'default' ? '正在设……' : '设为默认'}
+                           {busy === 'default' ? '正在设成默认……' : '设为默认风格'}
                         </button>
                      )}
                   </p>
@@ -260,7 +260,7 @@ function StyleCard({ style, onChanged, setInfo }: { style: Style; onChanged: () 
                <DialogContent className="max-w-[440px] rounded-2xl p-5" style={{ background: 'var(--jc-surface)' }}>
                   <DialogTitle className="text-[16px] font-bold">拿掉「{styleName(style)}」这组图？</DialogTitle>
                   <DialogDescription className="text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
-                     整组图和拆出来的东西一起挪进工作文件夹的回收站，不会永久删除。已经照它出过的封面不受影响。
+                     整组图和拆出来的封面 VI 一起挪进工作文件夹的回收站，不会永久删除。照这个风格出过的封面不受影响。
                   </DialogDescription>
                   <div className="mt-2 flex justify-end gap-2">
                      <SecondaryButton size="small" onClick={() => setTrashing(false)}>
@@ -298,19 +298,19 @@ function FromAccount({ info }: { info: CoverInfo }) {
    const [pick, setPick] = useState<string>('');
    const chosen = todo.find((s) => s.id === pick) ?? todo[0] ?? null;
    return (
-      <WayCard no={1} title="对标账号里的博主">
+      <WayCard no={1} title="选一个对标账号">
          {!info.research ? (
-            <p style={{ color: 'var(--jc-muted)' }}>「市场调研」这一栏关着，用不了对标账号。用旁边两种办法也能拆。</p>
+            <p style={{ color: 'var(--jc-muted)' }}>「市场调研」这一栏关着，用不了对标账号。用旁边两种办法也能拆封面 VI。</p>
          ) : !accounts.length ? (
             <p style={{ color: 'var(--jc-muted)' }}>
                还没有对标账号。
                <Link href="/research?tab=accounts" className="font-medium">
-                  去「市场调研」加一个
+                  加对标账号
                </Link>
-               ，或者直接用旁边贴主页链接。
+               ，或者用旁边的办法贴主页链接。
             </p>
          ) : !chosen ? (
-            <p style={{ color: 'var(--jc-muted)' }}>对标账号都拆过了，拆好的都在上面「风格」里。</p>
+            <p style={{ color: 'var(--jc-muted)' }}>对标账号都拆过了，拆好的风格在上面。</p>
          ) : (
             <>
                <select aria-label="拆哪个对标账号" className="jc-input h-9 w-full px-2.5 text-[13px]" value={chosen.id} onChange={(e) => setPick(e.target.value)}>
@@ -334,12 +334,21 @@ function FromLink({ research, tikhub }: { research: boolean; tikhub: boolean | n
    return (
       <WayCard no={2} title="贴博主的主页链接">
          <input aria-label="博主的主页链接" className="jc-input h-9 w-full px-2.5 text-[13px]" placeholder="https://www.douyin.com/user/…" value={link} onChange={(e) => setLink(e.target.value)} />
-         <p style={{ color: 'var(--jc-muted)' }}>抖音、小红书的主页，AI 用 TikHub 拉他最近 20 张封面：抖音拉一次约 1 到 2 分钱；小红书每次请求约 0.07 元，会先问你。</p>
+         <details className="jc-how" style={{ color: 'var(--jc-muted)' }}>
+            <summary>
+               AI 用 TikHub 拉这个博主最近 20 张封面，花钱前先问你。
+               <span className="jc-how-toggle">
+                  <span className="jc-how-more">看要多少钱</span>
+                  <span className="jc-how-less">收起</span>
+               </span>
+            </summary>
+            <p>抖音、小红书的主页都行。抖音拉一次约 1 到 2 分钱；小红书每次请求约 0.07 元。</p>
+         </details>
          {research && tikhub === false && (
             <p style={{ color: 'var(--jc-warn)' }}>
                还没接 TikHub。
                <Link href="/research?tab=accounts&connect=tikhub" className="font-medium">
-                  去接 TikHub
+                  接 TikHub
                </Link>
                （约 5 分钟），或者用旁边拖图的办法。
             </p>
@@ -359,7 +368,7 @@ function FromImages({ onDone }: { onDone: () => void }) {
          toast.error('只收 PNG、JPEG、WebP 的图（HEIC 先导出成 JPEG）。');
          return;
       }
-      setBusy(`正在放 0/${list.length}……`);
+      setBusy(`正在放图 0/${list.length}……`);
       try {
          const created = await createImageStyle(list.length);
          let ok = 0;
@@ -367,12 +376,12 @@ function FromImages({ onDone }: { onDone: () => void }) {
             try {
                await uploadStyleImage(created.id, file);
                ok += 1;
-               setBusy(`正在放 ${ok}/${list.length}……`);
+               setBusy(`正在放图 ${ok}/${list.length}……`);
             } catch (err) {
                toast.error(`${file.name}：${errorText(err)}`);
             }
          }
-         toast.success(`放好了 ${ok} 张，在上面「风格」里点「在 Codex 里拆这组图」。`);
+         toast.success(`放好了 ${ok} 张图，去上面「风格」里把这组图交给 AI 拆。`);
          onDone();
       } catch (err) {
          toast.error(errorText(err));
@@ -401,10 +410,10 @@ function FromImages({ onDone }: { onDone: () => void }) {
             }}
          >
             <Upload size={18} />
-            <span>{busy ?? '拖进来，或者点这里选图'}</span>
+            <span>{busy ?? '把封面图拖到这里，或者点这里选图'}</span>
          </button>
          <input ref={input} type="file" multiple accept={IMAGE_TYPES} className="hidden" aria-label="选几张封面图" onChange={(e) => void upload([...(e.target.files ?? [])])} />
-         <p style={{ color: 'var(--jc-muted)' }}>同一种风格的封面放 3 张以上，10 张左右最好；哪个平台的都行，不花钱。不是同一个博主的也行，AI 看出是两种风格会分开拆。</p>
+         <p style={{ color: 'var(--jc-muted)' }}>同一种风格的封面放 3 张以上，10 张左右最好。不花钱，哪个平台的都行；混了两种风格，AI 会分开拆。</p>
       </WayCard>
    );
 }
@@ -453,7 +462,7 @@ function MyCovers({ groups, styles }: { groups: LibraryGroup[]; styles: Style[] 
          </div>
          {shown.length === 0 ? (
             <Card className="p-4 text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
-               {groups.length ? `还没有${form}的封面。` : '还没有出过封面。在一条选题的页面里点「在 Codex 里出一批封面」，出好的会在这里按内容排好。'}
+               {groups.length ? `还没有${form}的封面。` : '还没有出过封面。在选题的详情页里交给 AI 出一批，出好的封面会按内容排在这里。'}
             </Card>
          ) : by === 'content' ? (
             <div className="grid gap-3">
@@ -525,7 +534,7 @@ function MyCovers({ groups, styles }: { groups: LibraryGroup[]; styles: Style[] 
    );
 }
 
-// —— 我的照片 ——————————————————————————————
+// —— 人物参考图片 ——————————————————————————————
 
 function MyPhotos({ info, onChanged }: { info: CoverInfo; onChanged: () => void }) {
    const input = useRef<HTMLInputElement>(null);
@@ -533,7 +542,7 @@ function MyPhotos({ info, onChanged }: { info: CoverInfo; onChanged: () => void 
    const upload = async (files: File[]) => {
       const list = files.filter(isImage);
       if (!list.length) {
-         toast.error('照片要是 PNG、JPEG 或 WebP（iPhone 的 HEIC 照片先在「照片」App 里导出成 JPEG）。');
+         toast.error('人物参考图片要是 PNG、JPEG 或 WebP（iPhone 的 HEIC 照片先在「照片」App 里导出成 JPEG）。');
          return;
       }
       setBusy('upload');
@@ -562,9 +571,9 @@ function MyPhotos({ info, onChanged }: { info: CoverInfo; onChanged: () => void 
    };
    return (
       <Card className="jc-photos-card px-4 py-3.5" id="my-photos">
-         <p className="text-[13.5px] font-semibold">我的照片</p>
+         <p className="text-[13.5px] font-semibold">人物参考图片</p>
          <p className="mt-0.5 text-[12px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
-            AI 照着它把封面上的人换成你。放一张或几张都行，出封面时都用上。
+            AI 照着这些图片把封面上的人换成你。一张封面最多参考排在前面的 3 张。
          </p>
          {info.photos.length > 0 && (
             <div className="jc-photo-grid mt-2.5">
@@ -585,9 +594,9 @@ function MyPhotos({ info, onChanged }: { info: CoverInfo; onChanged: () => void 
             </div>
          )}
          <SecondaryButton size="small" className="mt-2.5" busy={busy === 'upload'} onClick={() => input.current?.click()}>
-            <ImagePlus size={14} /> {info.photos.length ? '再放几张' : '放照片'}
+            <ImagePlus size={14} /> {info.photos.length ? '再放几张图片' : '放图片'}
          </SecondaryButton>
-         <input ref={input} type="file" multiple accept={IMAGE_TYPES} className="hidden" aria-label="选几张你的照片" onChange={(e) => void upload([...(e.target.files ?? [])])} />
+         <input ref={input} type="file" multiple accept={IMAGE_TYPES} className="hidden" aria-label="选几张人物参考图片" onChange={(e) => void upload([...(e.target.files ?? [])])} />
       </Card>
    );
 }

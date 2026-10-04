@@ -4,7 +4,7 @@
   "license": "MIT",
   "private": true,
   "type": "module",
-  "description": "本机运行的锦成工作台：选题、草稿和提示词放在一个地方，数据只存在自己的电脑上",
+  "description": "本机运行的创作工作台：选题、草稿和提示词放在一个地方，数据只存在自己的电脑上",
   "engines": {
     "node": ">=24"
   },

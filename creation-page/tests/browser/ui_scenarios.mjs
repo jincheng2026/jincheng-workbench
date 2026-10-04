@@ -825,7 +825,8 @@ S.refnote = async (c) => {
     await p.click(`document.querySelectorAll('#seg-${s1} .fam-row')[1]`);
     c.ok(await p.ev(`(function(){var b=document.querySelectorAll('#seg-${s1} .fam-body');return b[0].hidden && !b[1].hidden;})()`), '点第二家：展开这一家');
     // 中译中：照着别家改写的那家，和被照着的那家逐字相同的部分灰掉，剩下的就是他改的地方
-    c.ok(await p.ev(`document.querySelectorAll('#seg-${s1} .fam-row')[1].textContent.includes('灰色字和某教程博主一样')`), '照着改写的那家，那一行写明灰色字和谁一样');
+    // 那一行只写「和某某基本一样」；「展开后灰色字和某某一样，只看黑色的改动」收进鼠标停上去的提示（原作者 10-05 嫌字太长）
+    c.ok(await p.ev(`(() => { const m = document.querySelectorAll('#seg-${s1} .fam-row')[1].querySelector('.fam-merged'); return !!m && m.textContent.includes('和某教程博主基本一样') && (m.getAttribute('title') || '').includes('灰色字和某教程博主一样'); })()`), '照着改写的那家，那一行写明和谁基本一样，鼠标停上去说灰色字和谁一样');
     c.ok(await p.ev(`[...document.querySelectorAll('#seg-${s1} .fam-body:not([hidden]) .dup')].map(x=>x.textContent).join('') === '提示词原样贴进去'`), '和被照着的那家逐字相同的部分灰掉，改过的地方不灰', await p.ev(`[...document.querySelectorAll('#seg-${s1} .fam-body:not([hidden]) .dup')].map(x=>x.textContent).join('|')`));
     // 和我的版本连续 8 字相同的地方另有下划线，会把一句切成几小段：同色的几段拼起来比
     c.ok(await p.ev(`(function(){var t=function(c){return [...document.querySelectorAll('#seg-${s1} .fam-body:not([hidden]) .pm.'+c)].map(x=>x.textContent).join('');};return t('pc0')==='然后把提示词原样贴进去' && t('pc1')==='我一般会先把尺寸调成 3:4';})()`), '展开的原文里，关键句按讲法点的颜色标出');
@@ -1085,7 +1086,7 @@ S.guide = async (c) => {
     await p.click(`document.querySelector('.card[data-sug=${q(g.sug)}] .yes')`);
     c.ok(await waitFor(() => decisionOf(g.sug) === '采纳', 6000), '点「采纳」：决定存回文件');
     c.ok(await waitFor(() => p.ev(`!!document.querySelector('.jc-guide-pop.is-done')`), 4000), '弹完成反馈');
-    c.ok((await p.ev(`document.querySelector('.jc-guide-pop').textContent`)).includes('漂亮，这条已经存回你的稿子。'), '完成反馈的字', await p.ev(`document.querySelector('.jc-guide-pop').textContent`));
+    c.ok((await p.ev(`document.querySelector('.jc-guide-pop').textContent`)).includes('漂亮，这条建议已经存回你的稿子。'), '完成反馈的字', await p.ev(`document.querySelector('.jc-guide-pop').textContent`));
     c.ok((await store()).first.status === 'done', '记下已完成', await store());
     c.ok(!(await p.ev(`document.body.classList.contains('jc-guiding')`)), '暗层撤掉，页面又能点了');
     await p.click(`document.querySelector('.jc-guide-ok')`);

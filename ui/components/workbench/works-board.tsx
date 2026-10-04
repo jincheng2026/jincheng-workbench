@@ -47,8 +47,8 @@ type Tab = 'topics' | 'doing' | 'covers';
 const isTab = (v: string | null | undefined): v is Tab => v === 'topics' || v === 'doing' || v === 'covers';
 const TAB_INTRO: Record<Tab, string> = {
    topics: '还没开始写的选题。定了拍摄顺序就按顺序排；暂缓的在最下面，默认收起。',
-   doing: '正在写的，和录完还没发的。有创作页的点「打开创作页」接着改；没有的点「接着写」，或者进详情让 AI 生成创作页。',
-   covers: '拆对标博主的封面 VI、管理风格和你的照片；每条内容出过的封面也在这里看。出图、挑和改交给 Codex。',
+   doing: '正在写的选题，和录完还没发的。点卡片上的按钮接着改。',
+   covers: '拆对标博主的封面 VI，管理风格和人物参考图片，看每条选题出过的封面。',
 };
 const TAB_KEY = 'workbench-content-tab';
 
@@ -125,7 +125,7 @@ function OrderBadge({ order, extra }: { order?: number | null; extra?: string | 
    if (!order) return null;
    return (
       <SemBadge tone="accent">
-         接下来第 {order} 条拍{extra ? ` · ${extra}` : ''}
+         接下来第 {order} 条拍{extra ? ` · ${extra}安排` : ''}
       </SemBadge>
    );
 }
@@ -200,11 +200,11 @@ function WritingCard({ work, now }: { work: Work; now: number }) {
             {work.draftDir && (
                <SecondaryButton size="small" busy={open.busy === 'folder'} onClick={() => void open.folder()}>
                   <FolderOpen size={14} />
-                  草稿文件夹
+                  打开草稿文件夹
                </SecondaryButton>
             )}
             <Link href={detailHref(work)} className="ml-auto inline-flex items-center text-[12.5px] font-medium" style={{ color: 'var(--jc-accent)' }}>
-               详情
+               看详情
                <ChevronRight size={14} />
             </Link>
          </div>
@@ -298,7 +298,7 @@ function AddTopicButton({ primary = false }: { primary?: boolean }) {
       <Button
          size="small"
          title="复制一段话，粘贴给 Codex 或 Claude Code，在后面写上你的选题"
-         onClick={() => void copyText(askAddTopic(askInfo(info, 'write')), '加选题的话', { next: '粘贴给 Codex 或 Claude Code，在后面写上你的选题，发出去。' })}
+         onClick={() => void copyText(askAddTopic(askInfo(info, 'write')), '给 AI 的话', { next: '粘贴给 Codex 或 Claude Code，在后面写上你的选题，发出去。' })}
       >
          <Copy size={14} /> 复制给 AI：加选题
       </Button>
@@ -309,7 +309,17 @@ function AddTopicButton({ primary = false }: { primary?: boolean }) {
 function AddTopicTip() {
    return (
       <NextStepBlock className="mb-6">
-         加你自己的选题。点「复制给 AI：加选题」，粘贴给 Codex 或 Claude Code，在后面写上想做的选题发出去，一条或几条都行；AI 会编好号、加进选题总览，切回这里就能看到。也可以自己在选题总览对应类型的「待做」表里加一行，再在选题库里放一张同编号的选题卡。
+         {/* 页面上留一句；别的加法点开才看（原作者 10-05 嫌字太长） */}
+         <details className="jc-how">
+            <summary>
+               加你自己的选题：点「复制给 AI：加选题」，粘贴给 Codex 或 Claude Code，在后面写上想做的选题发出去。
+               <span className="jc-how-toggle">
+                  <span className="jc-how-more">还有别的加法</span>
+                  <span className="jc-how-less">收起</span>
+               </span>
+            </summary>
+            <p>一条或几条都行，AI 会编好号、加进选题总览，切回这里就能看到。也可以自己在选题总览对应类型的「待做」表里加一行，再在选题库里放一张同编号的选题卡。</p>
+         </details>
          <div className="mt-2.5 flex flex-wrap gap-2">
             <AddTopicButton primary />
             <PlaceButton place="overview">打开选题总览</PlaceButton>
@@ -330,7 +340,7 @@ function OverviewMissing({ message, onDone }: { message: string; onDone: () => v
          toast.success((await restoreOverview()).message);
          onDone();
       } catch (error) {
-         toast.error(`没能重新建：${errorText(error)}`);
+         toast.error(`没能重新建选题总览：${errorText(error)}`);
       } finally {
          setBusy(false);
       }
@@ -472,8 +482,8 @@ export default function WorksBoard() {
                   </span>
                )}
                {tab === 'covers' ? (
-                  <PlaceButton place="coverAssets" title="在访达中打开封面素材文件夹（我的照片、你放进来的几组图都在这里）">
-                     <FolderOpen size={14} /> 封面素材
+                  <PlaceButton place="coverAssets" title="在访达中打开封面素材文件夹（人物参考图片、你放进来的几组封面图都在这里）">
+                     <FolderOpen size={14} /> 打开封面素材
                   </PlaceButton>
                ) : tab === 'topics' ? (
                   // 下面的「下一步」或空白引导里已经有这两个按钮时，这里不再放第二个
@@ -490,7 +500,7 @@ export default function WorksBoard() {
                ) : (
                   !emptyDoing && (
                      <PlaceButton place="drafts" title="在访达中打开内容草稿文件夹">
-                        <FolderOpen size={14} /> 内容草稿
+                        <FolderOpen size={14} /> 打开内容草稿
                      </PlaceButton>
                   )
                )}
@@ -529,7 +539,7 @@ export default function WorksBoard() {
       );
    }
 
-   // 「封面」页签：风格、拆一个新风格、我的封面、我的照片（数据它自己读）
+   // 「封面」页签：风格、拆一个新风格、我的封面、人物参考图片（数据它自己读）
    if (tab === 'covers') {
       return (
          <div>
@@ -630,8 +640,8 @@ export default function WorksBoard() {
          ) : shown.length === 0 ? (
             searching || type !== 'all' ? (
                <EmptyState
-                  text={`「${tab === 'topics' ? '选题' : '在做'}」里没有对得上的`}
-                  hint={`也去「${tab === 'topics' ? '在做' : '选题'}」看看，那边也能按编号和选题名搜。`}
+                  text={`「${tab === 'topics' ? '选题' : '在做'}」页里没有对得上的选题`}
+                  hint={`也去「${tab === 'topics' ? '在做' : '选题'}」页看看，那边也能按编号和选题名搜。`}
                   actions={
                      <SecondaryButton
                         size="small"
@@ -649,14 +659,14 @@ export default function WorksBoard() {
                   // 刚开始用（多半是示例 T001 开始写了）：告诉他选题去哪了；怎么加自己的选题由上面的「下一步」说（引导走着时先不说）
                   <EmptyState
                      text="没有还没开始的选题了"
-                     hint="开始写的选题挪到了「在做」，在那边接着写。"
+                     hint="开始写的选题挪到了「在做」页，在那边接着写。"
                      actions={
                         <Link
                            href="/content?tab=doing"
                            className="jc-button jc-button-secondary inline-flex h-[33px] items-center px-4 text-[12.5px] font-medium no-underline hover:no-underline"
                            style={{ color: 'var(--jc-body)' }}
                         >
-                           去「在做」看看
+                           看开始写的选题
                         </Link>
                      }
                   />
@@ -674,8 +684,19 @@ export default function WorksBoard() {
                )
             ) : (
                <EmptyState
-                  text="还没有在写的内容"
-                  hint="去「选题」点开一条，把详情页上那句话复制给 AI，它写好第一版就会出现在这里。自己写也行：在详情页点「建草稿文件夹」，把稿子放进去（文件名带「工作稿」「初稿」或「逐字稿」）。"
+                  text="还没有在写的选题"
+                  hint={
+                     <details className="jc-how">
+                        <summary>
+                           去「选题」页点开一条，复制让 AI 写稿的那句话发给 AI，它写好第一版就会出现在这里。
+                           <span className="jc-how-toggle">
+                              <span className="jc-how-more">自己写也行</span>
+                              <span className="jc-how-less">收起</span>
+                           </span>
+                        </summary>
+                        <p>在详情页点「建草稿文件夹」，把稿子放进去，文件名带「工作稿」「初稿」或「逐字稿」。</p>
+                     </details>
+                  }
                   actions={
                      <>
                         <Link
@@ -683,7 +704,7 @@ export default function WorksBoard() {
                            className="jc-button jc-button-primary inline-flex h-[33px] items-center px-4 text-[12.5px] font-semibold no-underline hover:no-underline"
                            style={{ color: '#fff' }}
                         >
-                           去「选题」挑一条
+                           挑一条选题开始写
                         </Link>
                         <PlaceButton place="drafts">
                            <FolderOpen size={14} /> 在访达中打开内容草稿
@@ -744,7 +765,7 @@ export default function WorksBoard() {
                {finished.length > 0 && (
                   <details className="mb-7" open={searching || undefined}>
                      <summary className="text-[13px]" style={{ color: 'var(--jc-muted)' }}>
-                        做完的 {finished.length} 条（已发布，或者选题总览里放在「已做」）
+                        做完的 {finished.length} 条（已发布，或者选题总览里放在「已做」表）
                      </summary>
                      <Card className="mt-2.5 overflow-hidden">
                         {finished.map((w) => (
@@ -755,7 +776,7 @@ export default function WorksBoard() {
                )}
                {writing.length === 0 && shot.length === 0 && tab === 'doing' && (
                   <p className="mb-7 text-[12.5px]" style={{ color: 'var(--jc-muted)' }}>
-                     现在没有正在写的。去「选题」点开一条，点「建草稿文件夹」就能开始。
+                     现在没有正在写的选题。去「选题」页点开一条，点「建草稿文件夹」就能开始写。
                   </p>
                )}
             </>

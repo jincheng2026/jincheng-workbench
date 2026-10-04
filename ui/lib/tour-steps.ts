@@ -2,7 +2,7 @@
 //
 // 怎么走（2026-10-03 原作者批准的方案）：
 // - 「内容」页顶部嵌一张卡（不是弹窗、不压暗）：作者的口吻说一句，下面一张清单「1/4」，随真实进度打勾；
-//   「带我走一遍」开始，「我自己看」收成一行「新手指引」入口；清单全勾上以后收成一行「重看引导」。
+//   「带我走一遍」开始，「我自己看」收成一行「新手指引」入口；清单全勾上以后收成一行「重看新手指引」。
 // - 第一段在工作台里（TOUR_STEPS），气泡角上「第 N 步，共 3 步」：每一步画面变暗、只亮一个按钮，用户亲手点了才往下走，
 //   点完弹一句完成反馈；「等 AI 写」那一步不压暗，页面照常能用，顶上细栏等 AI 写完自动往下走。
 // - 第二段在创作页里（CREATION_PAGE），创作页是保存服务给的另一个网页，由创作页模板自己亮。
@@ -27,7 +27,7 @@
 //   aiLinks    true：气泡里放一键打开 Codex、Claude Code 的按钮（字在下面的 AI_LINKS），那句话已经填好；
 //              这台 Mac 上没装处理链接的程序就不放。
 //   doneText   用户点完以后弹的一句完成反馈，不写就不弹。
-//   barText    用户不在这一步的页面时，顶上细栏写的那句；不写是「新手指引走到第 N 步，共 M 步」。
+//   barText    用户不在这一步的页面时，顶上细栏写的那句；不写是「新手指引还没走完。」（左边加粗写着第几步）。
 //   uncounted  true：不算在「第 N 步，共 M 步」里，气泡角上只写「新手指引」。
 //   waitFor    kind 为 'wait' 时等什么：{ creation: 'T001', text, button, notYet }。每隔几秒问一下这条内容有没有创作页，
 //              有了就往下走；细栏写 text，按钮 button 是兜底（马上再问一次，还没有就显示 notYet）。
@@ -87,7 +87,7 @@ export const TOUR_CARD = {
    resume: '接着走',
    later: '我自己看',
    collapsed: '新手指引',
-   replay: '重看引导',
+   replay: '重看新手指引',
    checklist: ['装好工作台', '打开示例选题 T001', '把 T001 交给 AI 写第一版', '在创作页采纳一条建议'],
 };
 
@@ -95,12 +95,12 @@ export const TOUR_CARD = {
 export const TOUR_TEXT = {
    count: '第 {n} 步，共 {total} 步',
    uncounted: '新手指引',
-   skip: '跳过',
+   skip: '跳过新手指引',
    skipped: '随时能在左下角「新手指引」重看。',
    skippedNarrow: '随时能在右上角「新手指引」重看。',
-   bar: '新手指引走到第 {n} 步，共 {total} 步。',
+   bar: '新手指引还没走完。',
    resume: '接着走',
-   noExample: '示例选题 T001 不在选题列表里了，新手指引要用它来走一遍。',
+   noExample: '示例选题 T001 不在选题列表里了，没有它，新手指引走不了。',
    hintOk: '知道了',
    hintOff: '不再显示这类提示',
 };
@@ -119,7 +119,7 @@ export const TOUR_STEPS: TourStep[] = [
       target: '[data-tour="ask-ai"]',
       text: '点这里，把这句话复制给 AI。',
       doneText: '已复制。',
-      barText: '回到 T001，把那句话复制给 AI。',
+      barText: '回到 T001，复制要发给 AI 的那句话。',
    },
    {
       // 第 3 步：复制的那句话在哪个对话、哪个文件夹里发都行（写稿 Skill 自己查工作文件夹，没装好先装），
@@ -130,7 +130,7 @@ export const TOUR_STEPS: TourStep[] = [
       page: '/content/T001',
       target: '[data-tour="ask-ai"]',
       title: '粘贴给 Codex 或 Claude Code，发出去',
-      text: '哪个对话都行，写完自动进下一步。',
+      text: '哪个对话都行。',
       aiLinks: true,
       waitFor: {
          creation: 'T001',
@@ -145,7 +145,7 @@ export const TOUR_STEPS: TourStep[] = [
       target: '[data-tour="open-creation"]',
       uncounted: true,
       text: '第一版写好了，点这里打开。',
-      barText: 'T001 的第一版写好了，回去打开看看。',
+      barText: 'T001 的第一版写好了，回去打开创作页看看。',
       openParam: 'guide=first-suggestion',
    },
 ];
@@ -163,9 +163,9 @@ export const AI_LINKS = {
    caption: '也可以一键打开，那句话已经填好：',
    apps: [
       // ChatGPT 桌面版（Codex 2026 年 7 月起并进了它）接这个链接
-      { id: 'codex', name: 'Codex', url: 'codex://threads/new?path={路径}&prompt={话}', label: '在 Codex 里打开', note: '在工作文件夹里新开一个聊天，那句话已经填好，按回车就行。', app: 'desktop' },
+      { id: 'codex', name: 'Codex', url: 'codex://threads/new?path={路径}&prompt={话}', label: '在 Codex 里打开', note: '在工作文件夹里新开一个对话，那句话已经填好，按回车就行。', app: 'desktop' },
       // Claude 桌面版的 Code：新开一个会话。链接带的文件夹，桌面版每次都先请用户点一下确认
-      { id: 'claude-desktop', name: 'Claude Code', url: 'claude://code/new?folder={路径}&q={话}', label: '在 Claude Code 里打开', note: '在 Claude 桌面版里新开一个会话，确认一下文件夹，按回车就行。', app: 'desktop' },
+      { id: 'claude-desktop', name: 'Claude Code', url: 'claude://code/new?folder={路径}&q={话}', label: '在 Claude Code 里打开', note: '在 Claude 桌面版里新开一个对话，确认一下文件夹，按回车就行。', app: 'desktop' },
       // 没装 Claude 桌面版、只用终端里的 Claude Code：开一个终端窗口
       { id: 'claude', name: 'Claude Code', url: 'claude-cli://open?cwd={路径}&q={话}', label: '在 Claude Code 里打开', note: '开一个终端窗口，那句话已经填好，按回车就行。', app: 'terminal' },
    ] as AiLink[],
@@ -178,10 +178,10 @@ export function availableAiLinks(found: Partial<Record<AiLinkId, boolean>> | nul
 
 // 用到时再提示：各一句，只出一次，嵌在页面里（不压暗）；点「不再显示这类提示」一起关掉（点「新手指引」会重新打开）。
 export const TOUR_HINTS: TourHint[] = [
-   { id: 'prompts-page', when: { page: '/prompts' }, text: '常用的提示词放这里，点一下就复制；有要填的空，先填再复制。' },
-   { id: 'doing-tab', when: { page: '/content?tab=doing' }, text: '开始写的选题会来这里。在创作页改完，跟 AI 说「改完了」，它会接着帮你。' },
-   { id: 'open-work-folder', when: { click: '[data-tour="open-work-folder"]' }, text: '所有东西都在这个文件夹。「写稿方法」改成你自己的，AI 就照你的写。' },
-   { id: 'research-page', when: { page: '/research' }, text: '配好 TikHub 和社媒助手，AI 就能替你拉数据、读评论。' },
+   { id: 'prompts-page', when: { page: '/prompts' }, text: '常用的提示词放这里，点卡片上的复制按钮就能复制；有要填的空，先填再复制。' },
+   { id: 'doing-tab', when: { page: '/content?tab=doing' }, text: '开始写的选题会来这里。在创作页改完，跟 AI 说「改完了」，它会接着帮你改稿。' },
+   { id: 'open-work-folder', when: { click: '[data-tour="open-work-folder"]' }, text: '所有东西都在这个文件夹。把里面的「写稿方法」改成你自己的写法，AI 就照你的写。' },
+   { id: 'research-page', when: { page: '/research' }, text: '接好 TikHub、导入评论表，AI 就能替你拉数据、读评论。' },
 ];
 
 // 第二段：在创作页里，气泡角上「第 N 步，共 2 步」。第 1 步亮第一条待确认的建议和它贴着的原句，点「下一步」；
@@ -191,7 +191,7 @@ export const TOUR_HINTS: TourHint[] = [
 export const CREATION_PAGE = {
    steps: ['AI 的建议贴在要改的那句话旁边。', '觉得这样改更好，就点「采纳」。'],
    next: '下一步',
-   done: '漂亮，这条已经存回你的稿子。流程走通了，下一步把你自己的选题交给 AI。',
+   done: '漂亮，这条建议已经存回你的稿子。流程走通了，下一步把你自己的选题交给 AI。',
    ok: '好的',
    skipped: '随时能在工作台左下角「新手指引」重看。',
    noSuggestion: '这一稿还没有待确认的修改建议，AI 提了以后，觉得好就点「采纳」。',

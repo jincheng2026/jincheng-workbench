@@ -395,5 +395,5 @@ def detail_link(origin, cid):
 
 
 def covers_link(origin):
-    """工作台「内容」栏的「封面」页：风格、拆一个新风格、我的封面、我的照片。"""
+    """工作台「内容」栏的「封面」页：风格、拆一个新风格、我的封面、人物参考图片。"""
     return "%s/content?tab=covers" % origin

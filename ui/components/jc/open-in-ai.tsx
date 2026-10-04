@@ -63,7 +63,7 @@ export function OpenInAi({
                title="复制一段话，粘贴给 Codex 或 Claude Code"
                onClick={() => void copyText(text, what, { next: AFTER_COPY })}
             >
-               {link ? '复制给 AI' : `复制给 AI：${action}`}
+               {link ? '复制给 AI 的话' : `复制给 AI：${action}`}
             </button>
          </span>
       );
@@ -93,7 +93,7 @@ export function OpenInAi({
             style={{ height, fontSize }}
          >
             <Copy size={14} aria-hidden="true" />
-            {link ? '复制给 AI' : `复制给 AI：${action}`}
+            {link ? '复制给 AI 的话' : `复制给 AI：${action}`}
          </button>
       </span>
    );

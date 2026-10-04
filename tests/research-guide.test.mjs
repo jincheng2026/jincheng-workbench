@@ -17,11 +17,10 @@ import {
 const cost = costEstimate(FALLBACK_PRICES);
 const links = { keys: "https://user.tikhub.io/dashboard/api", addCredit: "https://user.tikhub.io/dashboard/add-credit" };
 
-test("对标账号空白时：说清两种加法（自己加、让 AI 加），没接 TikHub 时提醒先接", () => {
+test("对标账号空白时：一句话说清两种加法（自己加、让 AI 用 TikHub 拉），没接 TikHub 时提醒先接；怎么点就是正下方的两个按钮，不再讲一遍", () => {
   const off = accountsEmpty(false);
   assert.equal(off.text, "还没有对标账号");
-  assert.match(off.hint, /点「添加对标账号」/);
-  assert.match(off.hint, /点「复制给 AI 的话」粘贴给 AI，在后面贴上主页链接/);
+  assert.equal(off.hint, "两种加法：自己加，或者让 AI 用 TikHub 拉博主的资料和作品（要先在上面接好 TikHub）。");
   assert.match(off.hint, /要先在上面接好 TikHub/);
   assert.doesNotMatch(accountsEmpty(true).hint, /要先/);
 });
@@ -32,12 +31,12 @@ test("什么都没配：几种调研都显示；缺东西的变灰，写清缺�
     ["评论洞察", false, "social", "去导出评论"],
     ["视频拆解", false, "tikhub", "去接 TikHub"],
     ["账号研究", false, "tikhub", "去接 TikHub"],
-    ["封面 VI", true, "covers", "去「封面」拆"],
+    ["封面 VI", true, "covers", "拆封面 VI"],
   ]);
-  assert.match(cards[3].line, /「内容」栏的「封面」里拆.*拖进去（哪个平台的都行，不花钱）/);
+  assert.match(cards[3].line, /「内容」栏的「封面」页里拆.*拖进去（哪个平台的都行，不花钱）/);
   assert.match(cards[0].line, /社媒助手.*约 10 分钟，不花钱.*TikHub（约 5 分钟，抖音 200 条评论约 0\.07 到 0\.39 元/);
-  assert.equal(cards[1].line, "还缺 TikHub：接好约 5 分钟，拆一条抖音视频不到 1 分钱。");
-  assert.equal(cards[2].line, "还缺 TikHub：接好约 5 分钟，拉一个抖音博主 100 条作品约 0.04 元，带上播放量约 0.39 元。");
+  assert.equal(cards[1].line, "接好 TikHub 约 5 分钟，拆一条抖音视频不到 1 分钱。");
+  assert.equal(cards[2].line, "接好 TikHub 约 5 分钟，拉一个抖音博主 100 条作品约 0.04 元，带上播放量约 0.39 元。");
 });
 
 test("接好 TikHub：三种都能做；只导入了评论表：评论洞察能做，另外两种还缺 TikHub", () => {
@@ -57,7 +56,8 @@ test("调研报告空白时：有能做的调研就叫他点卡片上的「复�
   const none = reportsEmpty(false);
   assert.equal(none.copy, true);
   assert.match(none.hint, /先接好上面的数据来源/);
-  for (const hint of [ready.hint, none.hint]) assert.match(hint, /粘贴给 AI，在后面贴上/);
+  // 复制出去的那段话末尾已经写着「…贴在这句后面：」，空白处不再教一遍怎么贴
+  for (const hint of [ready.hint, none.hint]) assert.match(hint, /「复制给 AI 的话」粘贴给 AI。/);
 });
 
 test("数据来源收起来时的一行和「还差几步」", () => {
@@ -68,9 +68,9 @@ test("数据来源收起来时的一行和「还差几步」", () => {
   });
 });
 
-test("检测 key 的结果：出错时旁边放什么按钮（回 TikHub 重新复制、去勾权限、去充值、重试）", () => {
-  assert.deepEqual(checkAdvice({ result: "bad-key" }, links), { tone: "err", action: { label: "回 TikHub 重新复制", href: links.keys } });
-  assert.deepEqual(checkAdvice({ result: "forbidden" }, links), { tone: "warn", action: { label: "去勾权限", href: links.keys } });
+test("检测 key 的结果：出错时旁边放什么按钮（重新复制 key、打开 TikHub 账户、去充值、重试）", () => {
+  assert.deepEqual(checkAdvice({ result: "bad-key" }, links), { tone: "err", action: { label: "重新复制 key", href: links.keys } });
+  assert.deepEqual(checkAdvice({ result: "forbidden" }, links), { tone: "warn", action: { label: "打开 TikHub 账户", href: links.keys } });
   assert.deepEqual(checkAdvice({ result: "no-balance" }, links), { tone: "warn", action: { label: "去充值", href: links.addCredit } });
   assert.deepEqual(checkAdvice({ result: "network" }, links), { tone: "err", action: { label: "重试", href: null } });
   assert.deepEqual(checkAdvice({ result: "ok", balance: 3.2, freeCredit: 0 }, links), { tone: "ok", action: null });

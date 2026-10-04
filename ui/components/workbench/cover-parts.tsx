@@ -88,7 +88,7 @@ export function CompositionPicker({
          <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto rounded-2xl p-5 sm:max-w-[760px] min-[721px]:p-6" style={{ background: 'var(--jc-surface)' }}>
             <DialogTitle className="text-[17px] font-bold">{onUse ? '这一批参考哪几张构图' : '默认参考哪几张构图'}</DialogTitle>
             <DialogDescription className="text-[12.5px]" style={{ color: 'var(--jc-muted)' }}>
-               点一下选上，再点一下取消。出封面时每张照其中一张的构图来，张数比构图多就同一张构图出几种不一样的。
+               点一下选上，再点一下取消。每张封面照其中一张图的构图做；要出的封面比选的构图多，同一张构图会出几种不一样的。
             </DialogDescription>
             {all.length === 0 ? (
                <p className="text-[13px]" style={{ color: 'var(--jc-muted)' }}>
@@ -105,7 +105,7 @@ export function CompositionPicker({
                            {file && <img src={styleImageUrl(style.id, file)} alt={id} loading="lazy" />}
                            <span className="jc-comp-label">
                               {id}
-                              {on && <b className="tabular-nums">第 {picked.indexOf(id) + 1}</b>}
+                              {on && <b className="tabular-nums">第 {picked.indexOf(id) + 1} 张</b>}
                            </span>
                         </button>
                      );
@@ -119,7 +119,7 @@ export function CompositionPicker({
                <span className="flex-1" />
                {onUse && onSaveDefault && (
                   <SecondaryButton size="small" busy={busy} disabled={!picked.length} onClick={() => onSaveDefault(picked)}>
-                     也存成这个风格的默认构图
+                     也存成这个风格的默认参考构图
                   </SecondaryButton>
                )}
                {onUse ? (
@@ -129,7 +129,7 @@ export function CompositionPicker({
                ) : (
                   onSaveDefault && (
                      <PrimaryButton size="small" busy={busy} disabled={!picked.length} onClick={() => onSaveDefault(picked)}>
-                        存成默认构图
+                        存成默认参考构图
                      </PrimaryButton>
                   )
                )}

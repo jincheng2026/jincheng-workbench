@@ -74,7 +74,7 @@ test("写了目的和做完的样子：写成什么、最后告诉用户什么",
   assert.match(askCoverViImages({ id: "风格/2026-10-04_8张", covers: 8 }, cover), /拆我放进工作台「封面」里的那组图（风格\/2026-10-04_8张，8 张）：一张张看，写成 VI 拆解放进工作台，起好风格名；不是同一种风格就分开拆、各起名字；/);
   assert.match(
     askMakeCovers("T002", cover, { count: 5, size: "横版 2.35:1", style: { id: "抖音-某某", kind: "account", name: "暖黄手写风" }, compositions: ["K03", "K07"], text: "十分钟写完周报" }),
-    /给选题 T002 出一批封面：5 张，横版 2\.35:1；照风格「暖黄手写风」（对标账号「抖音-某某」）出，构图参考它的 K03、K07；封面上的字用「十分钟写完周报」；照片用我在工作台「封面」里放的。放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题。/,
+    /给选题 T002 出一批封面：5 张，横版 2\.35:1；照风格「暖黄手写风」（对标账号「抖音-某某」）出，构图参考它的 K03、K07；封面上的字用「十分钟写完周报」；人物参考图片用我在工作台「封面」里放的。放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题。/,
   );
   assert.match(askMakeCovers("T002", cover, { style: { id: "风格/2026-10-04_8张", kind: "images", name: "蓝白大字风" } }), /照风格「蓝白大字风」（我放进来的图「风格\/2026-10-04_8张」）出；/);
   assert.match(askMakeCovers("T002", cover), /出一批封面：5 张，竖版 3:4；照我设的默认风格出；封面上的字用创作页里定好的，没定就用选题名；/);
@@ -103,8 +103,8 @@ test("要人做的事，AI 做到那一步再提醒", () => {
   for (const [name, text, info] of all()) {
     if (info === research) assert.match(text, /要我接 TikHub、导出评论或者同意花钱的时候，停下来告诉我怎么做。/, name);
   }
-  // 封面：放照片、接 TikHub、放封面图这些人做的事到了再提醒
+  // 封面：放人物参考图片、接 TikHub、放封面图这些人做的事到了再提醒
   for (const [name, text, info] of all()) {
-    if (info === cover) assert.match(text, /要我放照片、接 TikHub、放封面图或者点允许的时候，停下来告诉我怎么做。/, name);
+    if (info === cover) assert.match(text, /要我放人物参考图片、接 TikHub、放封面图或者点允许的时候，停下来告诉我怎么做。/, name);
   }
 });

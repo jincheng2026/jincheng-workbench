@@ -28,32 +28,32 @@ class SettingsTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("还没有：主照片、默认风格都没设，一批 5 张", out)
         self.assertIn("主照片：没设", out)
-        self.assertIn("照片：我的照片 里还没有", out)
+        self.assertIn("人物参考图片：还没有", out)
         self.assertIn("默认风格：没设", out)
         self.assertFalse(os.path.exists(self.file))  # 只看不写
 
-    def test_放照片_复制进我的照片_设成默认(self):
+    def test_放照片_复制进人物参考图片_设成默认(self):
         src = write(os.path.join(self.wb.home, "桌面", "我.jpg"), jpeg(30, 40))
         code, out = self.cli("settings", "set-photo", src)
         self.assertEqual(code, 0, out)
-        self.assertIn("主照片设好了：我的照片/我.jpg", out)
+        self.assertIn("主照片设好了：人物参考图片/我.jpg", out)
         self.assertTrue(os.path.isfile(src))  # 原来那张不动
-        self.assertEqual(self.saved(), OrderedDict([("photo", "我的照片/我.jpg"), ("benchmark", None), ("batchSize", 5)]))
+        self.assertEqual(self.saved(), OrderedDict([("photo", "人物参考图片/我.jpg"), ("benchmark", None), ("batchSize", 5)]))
         # 同一张再放一次：不重复复制；同名的另一张：加 -2
         self.cli("settings", "set-photo", src)
         other = write(os.path.join(self.wb.home, "下载", "我.jpg"), jpeg(32, 40))
         code, out = self.cli("settings", "set-photo", other)
         self.assertEqual(code, 0, out)
-        self.assertEqual(sorted(os.listdir(os.path.join(self.wb.assets, "我的照片"))), ["我-2.jpg", "我.jpg"])
-        self.assertEqual(self.saved()["photo"], "我的照片/我-2.jpg")
-        # 已经在「我的照片」里的：直接设
-        code, out = self.cli("settings", "set-photo", os.path.join(self.wb.assets, "我的照片", "我.jpg"))
+        self.assertEqual(sorted(os.listdir(os.path.join(self.wb.assets, "人物参考图片"))), ["我-2.jpg", "我.jpg"])
+        self.assertEqual(self.saved()["photo"], "人物参考图片/我-2.jpg")
+        # 已经在「人物参考图片」里的：直接设
+        code, out = self.cli("settings", "set-photo", os.path.join(self.wb.assets, "人物参考图片", "我.jpg"))
         self.assertEqual(code, 0, out)
-        self.assertEqual(self.saved()["photo"], "我的照片/我.jpg")
+        self.assertEqual(self.saved()["photo"], "人物参考图片/我.jpg")
         heic = write(os.path.join(self.wb.home, "手机.heic"), heic_head())
         code, out = self.cli("settings", "set-photo", heic)
         self.assertEqual(code, 0, out)  # heic 收（生图前 AI 先转成 jpg）
-        self.assertEqual(self.saved()["photo"], "我的照片/手机.heic")
+        self.assertEqual(self.saved()["photo"], "人物参考图片/手机.heic")
 
     def test_不是照片的不收(self):
         txt = write(os.path.join(self.wb.home, "说明.txt"), "hello")
@@ -66,7 +66,7 @@ class SettingsTest(unittest.TestCase):
         self.assertFalse(os.path.exists(self.file))
 
     def test_改一项_别的键和不认识的键原样(self):
-        write(self.file, json.dumps(OrderedDict([("batchSize", 6), ("photo", "我的照片/旧.png"), ("工作台以后加的", {"a": 1}), ("benchmark", None)]), ensure_ascii=False))
+        write(self.file, json.dumps(OrderedDict([("batchSize", 6), ("photo", "人物参考图片/旧.png"), ("工作台以后加的", {"a": 1}), ("benchmark", None)]), ensure_ascii=False))
         account = self.wb.account("小红书-示例博主")
         code, out = self.cli("settings", "set-default", "小红书-示例博主")
         self.assertEqual(code, 2)
@@ -75,7 +75,7 @@ class SettingsTest(unittest.TestCase):
         code, out = self.cli("settings", "set-default", "小红书-示例博主")
         self.assertEqual(code, 0, out)
         self.assertIn("默认风格设好了：小红书-示例博主（风格名：蓝白手账风）", out)
-        self.assertEqual(self.saved(), OrderedDict([("batchSize", 6), ("photo", "我的照片/旧.png"), ("工作台以后加的", {"a": 1}), ("benchmark", "小红书-示例博主")]))
+        self.assertEqual(self.saved(), OrderedDict([("batchSize", 6), ("photo", "人物参考图片/旧.png"), ("工作台以后加的", {"a": 1}), ("benchmark", "小红书-示例博主")]))
         code, out = self.cli("settings", "batch", "12")
         self.assertEqual(code, 0, out)
         self.assertEqual(list(self.saved().items())[0], ("batchSize", 12))
@@ -107,11 +107,11 @@ class SettingsTest(unittest.TestCase):
         self.assertIn("默认风格：风格/2026-10-04_8张（风格名：蓝白大字风）", out)
 
     def test_写坏了就报错_不覆盖(self):
-        write(self.file, '{"photo": "我的照片/a.jpg",}')
+        write(self.file, '{"photo": "人物参考图片/a.jpg",}')
         code, out = self.cli("settings", "batch", "8")
         self.assertEqual(code, 2)
         self.assertIn("封面设置写坏了", out.splitlines()[0])
-        self.assertEqual(read(self.file), '{"photo": "我的照片/a.jpg",}')
+        self.assertEqual(read(self.file), '{"photo": "人物参考图片/a.jpg",}')
         code, out = self.cli("where")
         self.assertEqual(code, 0, out)
         self.assertIn("封面设置写坏了", out)

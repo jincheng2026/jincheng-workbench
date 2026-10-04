@@ -32,12 +32,12 @@ function useMissing() {
    return useResearchMissing(info.research?.missing ?? 0);
 }
 
-/** 「还差 2 步」：窄一点的窗口里写「差 2 步」 */
+/** 「还差 2 样」（TikHub、评论表各算一样，不叫「步」：卡片里本来就有 1、2、3 的步骤）：窄一点的窗口里写「差 2 样」 */
 function MissingBadge({ n }: { n: number }) {
    if (n <= 0) return null;
    return (
-      <span className="jc-nav-badge" title={`市场调研还差 ${n} 步没配好：在页面顶部接好 TikHub、导入评论表`}>
-         <span className="jc-nav-badge-long">还</span>差 {n} 步
+      <span className="jc-nav-badge" title={`市场调研还差 ${n} 样没配好：在市场调研页顶部接好 TikHub、导入评论表`}>
+         <span className="jc-nav-badge-long">还</span>差 {n} 样
       </span>
    );
 }
@@ -70,7 +70,7 @@ function WorkFolder() {
       return (
          <div className="jc-workfolder">
             <p className="jc-nav-label">工作文件夹</p>
-            <p className="jc-workfolder-note">连不上后台，读不到设置。</p>
+            <p className="jc-workfolder-note">连不上后台，读不到工作文件夹在哪。</p>
          </div>
       );
    }
@@ -256,7 +256,7 @@ function MobileChrome({ pathname, nav }: { pathname: string; nav: NavItem[] }) {
                   <button key={n.href} type="button" onClick={() => router.push(n.href)} aria-current={isActive(pathname, n) ? 'page' : undefined} data-nav={n.key}>
                      <span className="relative">
                         <Icon aria-hidden="true" />
-                        {n.key === 'research' && missing > 0 && <span className="jc-nav-dot" aria-label={`还差 ${missing} 步没配好`} />}
+                        {n.key === 'research' && missing > 0 && <span className="jc-nav-dot" aria-label={`市场调研还差 ${missing} 样没配好`} />}
                      </span>
                      {n.label}
                   </button>
@@ -279,7 +279,7 @@ function ConfigIssues() {
             ))}
          </ul>
          <span className="mt-1 inline-flex flex-wrap items-center gap-1">
-            设置文件在 <CopyPath path={info.configFile} />，改完重新运行 pnpm start。
+            设置文件在 <CopyPath path={info.configFile} />，改完先运行 pnpm stop，再运行 pnpm start 才生效。
          </span>
       </SemBanner>
    );

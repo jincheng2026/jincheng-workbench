@@ -33,8 +33,8 @@ const SOURCES_KEY = 'workbench-research-sources';
 const REFRESH_GAP = 15_000;
 const CHECK_GAP = 10 * 60_000; // 余额：10 分钟内查过就不再查
 const TAB_INTRO: Record<Tab, string> = {
-   accounts: '图当脸，扫一眼就认出是谁；点图打开他的主页，做过调研的账号卡上直接看报告。',
-   reports: 'AI 做好的调研报告都在这里，点开在工作台里看。要做新的，从下面三种调研里挑一种。',
+   accounts: '每个账号用一张图当脸，点图打开他的主页；做过调研的，卡片上直接看报告。',
+   reports: 'AI 做好的调研报告都在这里，点开在工作台里看。要做新的，从下面四种调研里挑一种。',
 };
 
 function readLocal(key: string): string | null {
@@ -177,12 +177,12 @@ export default function ResearchBoard() {
                         </PrimaryButton>
                      )}
                      <PlaceButton place="benchmarkAccounts" title="在访达中打开对标账号文件夹">
-                        <FolderOpen size={14} /> 在访达中打开
+                        <FolderOpen size={14} /> 打开对标账号文件夹
                      </PlaceButton>
                   </>
                ) : (
                   <PlaceButton place="researchReports" title="在访达中打开调研报告文件夹">
-                     <FolderOpen size={14} /> 在访达中打开
+                     <FolderOpen size={14} /> 打开调研报告文件夹
                   </PlaceButton>
                )}
                <SecondaryButton size="small" busy={loading} onClick={() => void load()}>
@@ -254,6 +254,7 @@ export default function ResearchBoard() {
                   accountFilter={accountFilter}
                   tikhubReady={tikhubReady}
                   importedComments={sources.social.imports.comments}
+                  importedTables={sources.social.imports.tables.filter((t) => t.ok).map((t) => t.name)}
                   cost={sources.tikhub.cost}
                   onGo={go}
                />

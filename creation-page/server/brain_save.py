@@ -489,7 +489,7 @@ FILE_TYPES = {
 HTML_EXT = ('.html', '.htm')
 FILE_CHUNK = 256 * 1024
 SCRIPT_LIMIT = 5_000_000  # 页面引用的本地脚本最多读这么多字节来判断
-BANNER_BROWSER_ONLY = '这页还没接入同步：你在这里的改动只会存在这个浏览器里，不会存回文件。'
+BANNER_BROWSER_ONLY = '这个页面不能保存到文件：你在这里的改动只会存在这个浏览器里。'
 BANNER_READ_ONLY = '预览模式为只读：你在这里的改动不会保存到文件，只留在这个浏览器里。'
 
 # 「改动只会留在浏览器里」的迹象。工作台 lib/works.mjs 用同一套规则算内容卡上的「只存在浏览器里」，
@@ -537,7 +537,7 @@ def resolve_file(root, rel):
     if not os.path.isfile(target):
         raise PageError('这是一个文件夹，不是文件', 404)
     if os.path.splitext(target)[1].lower() not in FILE_TYPES:
-        raise PageError('这种文件不在只读提供的范围里（只提供网页、图片、样式、脚本、文字、表格、音视频、字体和 PDF）', 403)
+        raise PageError('这种格式的文件不能在这里打开（能打开的是网页、图片、样式、脚本、文字、表格、常见格式的音视频、字体和 PDF）', 403)
     return target
 
 

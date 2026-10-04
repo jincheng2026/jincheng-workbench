@@ -63,7 +63,7 @@ test("子文件夹就是分类，说明文件和空正文不列；分类按 _分
     ["写稿/短视频脚本", "写稿", 0],
   ]);
   assert.deepEqual(library.categories.map((row) => row.name), ["未分类", "写稿"]);
-  assert.deepEqual(library.issues, ["写稿/空的：正文是空的，没有列出来"]);
+  assert.deepEqual(library.issues, ["写稿/空的：正文是空的"]);
   assert.throws(() => readPromptLibrary({ ...f, dir: path.join(f.dir, "没有") }), (error) => error.code === "prompts-missing");
 });
 

@@ -32,7 +32,7 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
       throw new ApiError(
          message ??
             (response.status >= 500
-               ? `后台出错了（HTTP ${response.status}），可以看一下终端里的提示。`
+               ? `后台出错了（HTTP ${response.status}），可以让 AI 看一下运行日志找原因。`
                : `后台没有给出结果（HTTP ${response.status}）。`),
          response.status,
          code

@@ -1,6 +1,6 @@
 'use client';
 
-// 选题页面的「封面」（1.1 加）：上面是出一批的设置（照片、风格、参考构图、封面上的字、尺寸、出几张），设好点「在 Codex 里出一批封面」；
+// 选题页面的「封面」（1.1 加）：上面是出一批的设置（人物参考图片、风格、参考构图、封面上的字、尺寸、出几张），设好点「在 Codex 里出一批封面」；
 // 下面是这条选题出过的封面，只看（选定的排第一，点开放大）。
 // 原作者 2026-10-04 定：挑一张、改一张都在 Codex 桌面版里做（点开图切到 Canvas，用 Comment 标出要改的地方；定了跟它说「就用 03」），
 // 工作台这里不再有写备注、并排对比、收藏、「就用这张」、删除。AI 出图时一张一张存进封面候选：页面每 5 秒问一次，出一张亮一张。
@@ -37,7 +37,7 @@ import {
 const POLL_MS = 5000;
 const COUNTS = [3, 5, 10];
 const SIZES: CoverSize[] = ['竖版 3:4', '横版 2.35:1', '方形 1:1'];
-const SIZE_HINT: Record<CoverSize, string> = { '竖版 3:4': '视频封面、小红书图文', '横版 2.35:1': '公众号头图', '方形 1:1': '公众号次图、朋友圈' };
+const SIZE_HINT: Record<CoverSize, string> = { '竖版 3:4': '适合视频封面、小红书图文', '横版 2.35:1': '适合公众号头图', '方形 1:1': '适合公众号次图、朋友圈' };
 
 function useCovers(id: string) {
    const [covers, setCovers] = useState<TopicCovers | null>(null);
@@ -189,17 +189,17 @@ export function CoverBlock({ id }: { id: string }) {
                {total > 0 && <span className="jc-section-count">{total}</span>}
             </h2>
             <span className="text-[12px]" style={{ color: 'var(--jc-ghost)' }}>
-               {covers.selected ? `用的是${covers.selected.from ? `封面-${covers.selected.from}` : '选定的那张'}` : total ? '还没选定' : ''}
+               {covers.selected ? (covers.selected.from ? `选定了封面-${covers.selected.from}` : '已经选定了一张封面') : total ? '还没选定用哪张' : ''}
             </span>
          </div>
          <Card className="overflow-hidden">
             {/* 出一批的设置 */}
             <div className="border-b px-4 py-4" style={{ borderColor: 'var(--jc-border)' }} data-cover-make>
                <p className="mb-3 text-[13.5px] font-semibold" style={{ color: 'var(--jc-accent)' }}>
-                  {again ? `再出一批（第 ${covers.next.batch} 批）` : '出一批封面'}
+                  {again ? `再出一批封面（第 ${covers.next.batch} 批）` : '出一批封面'}
                </p>
                <div className="jc-make-grid">
-                  <Row label="照片">
+                  <Row label="人物">
                      {photos.length ? (
                         <span className="inline-flex flex-wrap items-center gap-2 text-[12.5px]">
                            <span className="inline-flex -space-x-2">
@@ -210,17 +210,17 @@ export function CoverBlock({ id }: { id: string }) {
                                  ) : null
                               )}
                            </span>
-                           <span>{photos.length} 张，出封面时都用上</span>
-                           <Link href="/content?tab=covers#my-photos" className="text-[12px]">
-                              去「封面」放、换
+                           <span>{photos.length} 张做封面的人物参考图片</span>
+                           <Link href="/content?tab=covers#my-photos" className="text-[12px] font-medium">
+                              换人物参考图片
                            </Link>
                         </span>
                      ) : (
                         <span className="text-[12.5px]" style={{ color: 'var(--jc-warn)' }}>
                            <ImagePlus size={14} className="mr-1 inline align-[-2px]" />
-                           还没放你的照片，AI 要靠它把封面上的人换成你。
+                           还没有做封面的人物参考图片，AI 要照着它把封面上的人换成你。
                            <Link href="/content?tab=covers#my-photos" className="ml-1 font-medium">
-                              去「封面」放
+                              放人物参考图片
                            </Link>
                         </span>
                      )}
@@ -229,7 +229,7 @@ export function CoverBlock({ id }: { id: string }) {
                      {ready.length ? (
                         <span className="flex flex-wrap items-center gap-2 text-[12.5px]">
                            <select
-                              aria-label="照哪个风格出"
+                              aria-label="照哪个风格出封面"
                               className="jc-input h-8 max-w-[260px] px-2 text-[13px]"
                               value={style?.id ?? ''}
                               onChange={(e) => {
@@ -248,9 +248,9 @@ export function CoverBlock({ id }: { id: string }) {
                         </span>
                      ) : (
                         <span className="text-[12.5px]" style={{ color: 'var(--jc-warn)' }}>
-                           还没有拆好的风格：先拆一个，出封面照它的样子来。
+                           还没有拆好的风格，出封面要照着一个风格做。
                            <Link href="/content?tab=covers" className="ml-1 font-medium">
-                              去「封面」拆一个
+                              拆一个风格
                            </Link>
                         </span>
                      )}
@@ -266,11 +266,11 @@ export function CoverBlock({ id }: { id: string }) {
                               ) : null;
                            })}
                            <span className="text-[12px]" style={{ color: 'var(--jc-muted)' }}>
-                              {chosenComps.length} 张{comps ? '（这一批改过）' : style.compositions?.by === '你' ? '（你定的默认）' : '（默认）'}
+                              {comps ? `这一批挑的 ${chosenComps.length} 张` : style.compositions?.by === '你' ? `你定的默认 ${chosenComps.length} 张` : `默认的 ${chosenComps.length} 张`}
                            </span>
                            {kIds(style.images).length > 0 && (
                               <button type="button" className="text-[12px] font-medium" style={{ color: 'var(--jc-accent)' }} onClick={() => setPicking(true)}>
-                                 换几张
+                                 换参考构图
                               </button>
                            )}
                         </span>
@@ -282,14 +282,14 @@ export function CoverBlock({ id }: { id: string }) {
                            aria-label="封面上的字"
                            className="jc-input h-8 w-full max-w-[360px] px-2.5 text-[13px]"
                            value={textNow}
-                           placeholder="不填就用创作页里定好的，没定就用选题名"
+                           placeholder="不填就用创作页里定好的封面文字，没定就用选题名"
                            onChange={(e) => setText(e.target.value)}
                         />
                         <span className="text-[11.5px]" style={{ color: 'var(--jc-ghost)' }}>
                            {text !== null && text !== (covers.defaults.text ?? '')
                               ? '这一批用你刚写的'
                               : covers.defaults.text
-                                ? `创作页里${covers.defaults.textFrom ?? '定好的'}`
+                                ? `用的是创作页里${covers.defaults.textFrom ?? '定好的'}`
                                 : '创作页里还没定'}
                         </span>
                      </span>
@@ -303,34 +303,47 @@ export function CoverBlock({ id }: { id: string }) {
                      </span>
                   </Row>
                   <Row label="出几张">
-                     <Segmented label="这批几张" options={COUNTS} value={batchSize} onChange={setCount} />
+                     <Segmented label="这一批出几张" options={COUNTS} value={batchSize} onChange={setCount} />
                   </Row>
                </div>
                <div className="mt-3.5">
-                  <OpenInAi text={makeText} action={again ? '再出一批' : '出一批封面'} what="出一批封面的话" size="regular" />
+                  <OpenInAi text={makeText} action={again ? '再出一批封面' : '出一批封面'} what="出一批封面的话" size="regular" />
                </div>
-               <p className="mt-2.5 text-[12px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
-                  挑和改在 Codex 里：点开一张图，切到「Canvas」能看到这一批；要改哪张，用「Comment」在图上标出来、写怎么改，发给它；定了用哪张，跟它说「就用 03」。用 Claude Code 的，它只把每张的生图提示词写好。
-               </p>
+               {/* 页面上只留一句；怎么挑、怎么改的几步点开才看（学 WorkBuddy：长的说明收起来，原作者 10-05 嫌字太长） */}
+               <details className="jc-how mt-2.5 text-[12px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
+                  <summary>
+                     挑哪张、改哪张都在 Codex 里做。
+                     <span className="jc-how-toggle">
+                        <span className="jc-how-more">看怎么做</span>
+                        <span className="jc-how-less">收起</span>
+                     </span>
+                  </summary>
+                  <ol>
+                     <li>点开一张图，切到「Canvas」，能看到这一批的全部封面。</li>
+                     <li>想改哪张，用「Comment」在那张图上标出要改的地方，写清怎么改，发给 Codex。</li>
+                     <li>定下用哪张，跟 Codex 说「就用 03」。</li>
+                  </ol>
+                  <p>用 Claude Code 的话，它不能生图，只写好每张封面的生图提示词。</p>
+               </details>
             </div>
 
             {/* 这条选题出过的封面：只看 */}
             <div className="px-4 py-3.5">
                <div className="mb-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <h3 className="text-[13.5px] font-semibold">这条的封面</h3>
+                  <h3 className="text-[13.5px] font-semibold">这条选题的封面</h3>
                   <span className="text-[11.5px]" style={{ color: 'var(--jc-ghost)' }}>
-                     只看；挑和改在 Codex 里
+                     这里只能看
                   </span>
                   <span className="flex-1" />
                   {covers.folder && (
                      <SecondaryButton size="small" busy={busy === 'open'} onClick={() => void openFolder()}>
-                        <FolderOpen size={14} /> 在访达中打开封面候选
+                        <FolderOpen size={14} /> 在访达中打开封面候选文件夹
                      </SecondaryButton>
                   )}
                </div>
                {shown.length === 0 ? (
                   <p className="text-[12.5px]" style={{ color: 'var(--jc-muted)' }}>
-                     还没有封面。设好上面几样，点「在 Codex 里出一批封面」，出好的会一张一张出现在这里。
+                     还没有封面。设好上面几项交给 AI，出好的封面会一张张出现在这里。
                   </p>
                ) : (
                   <>
@@ -343,16 +356,16 @@ export function CoverBlock({ id }: { id: string }) {
                            <div className="text-[12.5px] leading-relaxed">
                               <SemBadge tone="ok">选定</SemBadge>
                               <p className="mt-1">
-                                 用的是封面-{selectedItem.no}，存成了草稿文件夹里的「{covers.selected.name}」，发布时用它。
+                                 选定的是封面-{selectedItem.no}，已经存成草稿文件夹里的「{covers.selected.name}」，发布时用这张。
                               </p>
-                              <p style={{ color: 'var(--jc-muted)' }}>想换一张，在 Codex 里跟它说「就用 05」这样就行。</p>
+                              <p style={{ color: 'var(--jc-muted)' }}>想换一张，在 Codex 里说「就用 05」这样的话就行。</p>
                            </div>
                         </div>
                      )}
                      {batches.map((batch) => (
                         <div key={batch.no ?? 'loose'} className="mt-3 first:mt-0">
                            <p className="mb-2 text-[12px]" style={{ color: 'var(--jc-muted)' }}>
-                              <b style={{ color: 'var(--jc-ink)' }}>{batch.no ? `第 ${batch.no} 批` : '还没登记的'}</b>
+                              <b style={{ color: 'var(--jc-ink)' }}>{batch.no ? `第 ${batch.no} 批` : '没登记批次的封面'}</b>
                               {batch.no ? [batch.styleName, batch.size].filter(Boolean).map((x) => ` · ${x}`).join('') : ' · AI 还在登记，或者是你自己放进来的'}
                            </p>
                            <div className="jc-cover-grid">
@@ -398,11 +411,11 @@ function CoverCard({ id, item, size, onZoom }: { id: string; item: CoverItem; si
                      size="small"
                      onClick={() =>
                         void copyText(item.promptText ?? '', `封面-${item.no} 的生图提示词`, {
-                           next: `粘贴到能生图的工具里；出好的图存成「封面-${item.no}.png」放进封面候选，就会出现在这里。`,
+                           next: `把提示词粘贴到能生图的工具里，出好的图存成「封面-${item.no}.png」，放进封面候选文件夹，就会出现在这里。`,
                         })
                      }
                   >
-                     <Copy size={13} /> 复制提示词
+                     <Copy size={13} /> 复制生图提示词
                   </SecondaryButton>
                )}
             </div>

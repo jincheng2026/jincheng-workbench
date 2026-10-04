@@ -71,7 +71,7 @@
 | locked | `type` | `口播`、`教程`、`科普` 之一。决定页面打开哪些模块 |
 | locked | `stage` | `写稿`、`审稿`、`定稿`、`录制准备` 之一。顶栏阶段条只显示，由 AI 改 |
 | locked | `title` | 标题 |
-| locked | `narrative` | `{ "story": 讲了个什么故事, "audience": 给谁, "problem": 解决什么问题 }` |
+| locked | `narrative` | `{ "story": 讲了个什么故事, "audience": 给谁看, "problem": 解决什么问题 }` |
 | locked | `speech_rate` | 每秒字数，默认 5（写成自己的语速；顶栏全稿字数悬停时显示上下 0.5 个字这个范围对应的时长）。算秒数和通读视图的开头 5 秒线。字数只数汉字、字母、数字（标点和空白不算），秒数四舍五入到整秒；页面和 `brain_page.py read` 用同一算法 |
 | locked.ai_state | `handled_note`、`reply`、`replied_at` | AI 处理「整体意见」时抄下的原文、回复和时间（`brain_page.py reply --item info`） |
 | fields | `overall_note` | 整体意见，用户写给 AI |
@@ -248,7 +248,7 @@ python3 build_page.py <数据.json> [--out <页面.html>] [--root <工作文件�
 ```json
 {
   "content_id": "T001", "type": "口播", "stage": "写稿", "title": "…",
-  "narrative": { "story": "讲了个什么故事", "audience": "给谁", "problem": "解决什么问题" },
+  "narrative": { "story": "讲了个什么故事", "audience": "给谁看", "problem": "解决什么问题" },
   "speech_rate": 5, "service_origin": "http://127.0.0.1:18977",
   "segments": [ { "id": "可选，已有则沿用", "title": "…", "role": "这段起什么作用",
       "refs": [ { "who": "博主甲", "source_type": "口播原话", "time": "0:00 起", "text": "…", "url": "…" } ],

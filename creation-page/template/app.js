@@ -58,6 +58,7 @@
   var VERDICT_TEXT = { '已定要改': '需要修改', '待你定': '建议修改', '等录屏再定': '录屏后再定', '不用改': '无需修改' };
   var DECISION_TEXT = { '采纳': '已采纳', '不采纳': '未采纳' }; // 「部分采纳」原样显示
   var BASIS_TEXT = { '你之前定的': '此前的决定', 'AI 自己的判断': 'AI 自行判断' }; // 「参考口播」「运营」原样
+  var BORROW_TEXT = { '超一步': '多走一步' }; // 借鉴的类型只在显示时换成日常说法，数据里的值不改
   var SOURCE_TEXT = { 'AI': 'AI 建议', '运营': '运营建议' };
   var FIELD_LABEL = { mine: '我的版本', note: '写给 AI 的话', proposed: '改成', decision: '决定', overall_note: '整体意见', approved: '内容已确认', recorded: '录完的定稿',
     our_visual: '我方画面', visual_type: '画面类型', prompt: '要发送的内容', todo_me: '你录', todo_editor: '剪辑做', final: '你定的', text: '候选文字' };
@@ -142,7 +143,7 @@
   var SLOTS = ['标题', '封面文字', '简介'];
   var SLOT_HINT = {
     '标题': '负责让人想点。和封面文字分工，不把同一句写两遍',
-    '封面文字': '负责一眼看懂冲突，一般 6 到 14 个字、一到两行。封面图另外做，这里只定字',
+    '封面文字': '负责让人一眼看懂冲突，一般 6 到 14 个字、一到两行。封面图另外做，这里只定字',
     '简介': '写在视频旁边的话：为什么做这条、放稳一个观点'
   };
   var pubSlot = {}, pubCands = [];
@@ -395,7 +396,7 @@
     if (!(key in typingStart)) return;
     var old = typingStart[key]; delete typingStart[key];
     if (t.classList.contains('jc-kit-locked') || same(old, t.value)) return;
-    undoStack.push({ label: '在' + where(item) + '输入的文字', steps: [{ item: item, field: field, old: old, new: t.value }] });
+    undoStack.push({ label: '在' + where(item) + '的「' + keyLabel(field) + '」里输入的文字', steps: [{ item: item, field: field, old: old, new: t.value }] });
     redoStack = []; saveUndo();
   });
   function where(item) {
@@ -403,7 +404,7 @@
     if (!it) return '这里';
     if (it._kind === 'segment') return '第 ' + it._no + ' 段';
     if (it._kind === 'suggestion') { var s = segOf(it); return (s ? '第 ' + s._no + ' 段' : '') + '建议「' + snippet(it.locked.original, 10) + '」'; }
-    if (it._kind === 'info') return '页面信息';
+    if (it._kind === 'info') return '本页';
     if (it._kind === 'pubslot') return '「' + (it.locked.slot || '') + '」';
     if (it._kind === 'pubcand') return '「' + (it.locked.slot || '') + '」候选「' + snippet(val(it.id, 'text'), 10) + '」';
     var os = byId[it.locked.segment];
@@ -487,7 +488,7 @@
     var stages = CFG.stages.slice(), cur = String(info.locked.stage || '');
     if (cur && stages.indexOf(cur) < 0) stages.push(cur);
     var ci = stages.indexOf(cur);
-    var typeLabel = TYPE ? TYPE + (TYPES[TYPE] ? '' : '（这个类型还没有专门的显示方式，先按通用方式显示）') : '未设置类型';
+    var typeLabel = TYPE ? TYPE + (TYPES[TYPE] ? '' : '（按通用方式显示）') : '未设置类型';
     var title = info.locked.title || document.title || '';
     // 计数：宽屏写「7 条待确认」「3 条待 AI 处理」，窄屏排成「待确认 7」「待 AI 处理 3」（「条」在窄屏藏起来）
     R.counterSug = h('button', { type: 'button', class: 'counter c-sug', onclick: function () { jumpFirstPendingSug(); }, title: '从第一条待确认的建议开始逐条看：采纳或不采纳以后自动跳到下一条' });
@@ -507,7 +508,7 @@
       reading: h('button', { type: 'button', 'aria-pressed': 'false', onclick: function () { setView('reading'); } }, '通读')
     };
     if (has('record')) R.viewBtns.record = h('button', { type: 'button', 'aria-pressed': 'false', title: '整篇排成录屏清单：口播、画面、录屏步骤', onclick: function () { setView('record'); } }, '录制');
-    if (has('publish')) R.viewBtns.publish = h('button', { type: 'button', 'aria-pressed': 'false', class: 'vb-pub', title: '标题、封面文字、简介：逐字稿内容确认后 AI 出候选，你挑、改、定', onclick: function () { setView('publish'); } }, ['标题封面简介', R.pubDot = h('i', { class: 'nav-dot', hidden: true })]);
+    if (has('publish')) R.viewBtns.publish = h('button', { type: 'button', 'aria-pressed': 'false', class: 'vb-pub', title: '标题、封面文字、简介：勾上「内容已确认」后 AI 出候选，你挑、改、定', onclick: function () { setView('publish'); } }, ['标题封面简介', R.pubDot = h('i', { class: 'nav-dot', hidden: true })]);
     R.onlyPending = h('input', { type: 'checkbox', onchange: function () { ST.onlyPending = R.onlyPending.checked; persist(); refreshAll(); } });
     R.onlyPending.checked = ST.onlyPending;
     R.nav = h('nav', { class: 'segnav', 'aria-label': '段落' });
@@ -537,7 +538,7 @@
       h('div', { class: 'ident' }, [
         h('span', { class: 'cid' }, raw.content_id || ''),
         h('h1', { title: title }, title),
-        h('span', { class: 'type-tag' }, typeLabel)
+        h('span', { class: 'type-tag', title: TYPE && !TYPES[TYPE] ? '这个类型还没有专门的显示方式，先按通用方式显示' : null }, typeLabel)
       ]),
       h('ol', { class: 'stages', 'aria-label': '阶段（由 AI 推进）' }, stages.map(function (s, i) {
         return h('li', { class: i === ci ? 'now' : (ci >= 0 && i < ci ? 'done' : ''), 'aria-current': i === ci ? 'step' : null }, s);
@@ -638,7 +639,7 @@
   // ---------- 叙事卡（口播枝干） ----------
   function buildNarrative() {
     var n = info.locked.narrative && typeof info.locked.narrative === 'object' ? info.locked.narrative : {};
-    var rows = [['讲了个什么故事', n.story], ['给谁', n.audience], ['解决什么问题', n.problem]].filter(function (r) { return r[1]; });
+    var rows = [['讲了个什么故事', n.story], ['给谁看', n.audience], ['解决什么问题', n.problem]].filter(function (r) { return r[1]; });
     var body = h('div', { class: 'narr-body', hidden: !ST.narrOpen }, [
       h('div', { class: 'narr-grid' }, rows.map(function (r) { return h('div', { class: 'narr-cell' }, [h('div', { class: 'narr-k' }, r[0]), h('p', null, String(r[1]))]); })),
       CFG.showRole ? h('details', { class: 'narr-roles' }, [
@@ -766,7 +767,7 @@
     ui.mine.addEventListener('input', function () { autoGrow(ui.mine); scheduleSeg(seg); });
     ui.mine.addEventListener('click', function () { onMineClick(seg); });
     // 标题行
-    ui.histBtn = has('history') ? h('button', { type: 'button', class: 'btn ghost small', onclick: function () { toggleHistory(seg); } }, '本段改动记录') : null;
+    ui.histBtn = has('history') ? h('button', { type: 'button', class: 'btn ghost small', onclick: function () { toggleHistory(seg); } }, '查看本段改动记录') : null;
     ui.head = h('div', { class: 'seg-head' }, [
       h('h2', null, [h('span', { class: 'no' }, String(seg._no)), L.title || '（无标题）']),
       CFG.showRole && L.role ? h('span', { class: 'role', title: '这段起什么作用' }, L.role) : null,
@@ -804,7 +805,7 @@
     ui.sugHidden = h('p', { class: 'sug-hidden', hidden: true });
     ui.sugEmpty = h('p', { class: 'muted sug-empty', hidden: true });
     ui.catBar = h('div', { class: 'cat-bar' });
-    ui.walkBtn = h('button', { type: 'button', class: 'btn small walk-btn', title: '从这一段第一条待确认的开始，一条一条看；采纳或不采纳以后自动跳到原文里的下一条', onclick: function () { startWalk(seg); } }, '逐条看');
+    ui.walkBtn = h('button', { type: 'button', class: 'btn small walk-btn', title: '从这一段第一条待确认的建议开始，一条一条看；采纳或不采纳以后自动跳到原文里的下一条', onclick: function () { startWalk(seg); } }, '逐条看');
     ui.walkText = h('span', { class: 'walk-text' });
     ui.walkBar = h('div', { class: 'walk-bar', hidden: true }, [ui.walkText, h('span', { class: 'grow' }),
       h('button', { type: 'button', class: 'btn small ghost', onclick: function () { skipWalk(); } }, '跳过这条'),
@@ -837,7 +838,7 @@
       c.reasonBox = h('div', { class: 'reason-box' }, [c.reason, c.reasonMore]);
     }
     if (basis.type || basis.text) {
-      c.basisText = h('div', { class: 'basis-text', hidden: true }, [basis.type ? h('b', null, (BASIS_TEXT[basis.type] || basis.type) + '：') : null, basis.text || '（暂无说明）']);
+      c.basisText = h('div', { class: 'basis-text', hidden: true }, [basis.type ? h('b', null, (BASIS_TEXT[basis.type] || basis.type) + '：') : null, basis.text || '（没写具体说明）']);
       c.basisTag = h('button', { type: 'button', class: 'basis-tag ' + (BASIS_CLASS[basis.type] || 'b-other'), 'aria-expanded': 'false', title: '查看依据说明', onclick: function () {
         c.basisText.hidden = !c.basisText.hidden; c.basisTag.setAttribute('aria-expanded', c.basisText.hidden ? 'false' : 'true');
       } }, ['依据：' + (BASIS_TEXT[basis.type] || basis.type || '说明'), h('i', { class: 'caret', 'aria-hidden': 'true' })]);
@@ -979,7 +980,7 @@
       var r = sp.getClientRects()[0] || sp.getBoundingClientRect(), top = Math.round(r.top - wr.top + r.height / 2 - 10);
       if (top < last + 21) top = last + 21; // 同一行有两条：往下错开
       last = top;
-      ui.gut.appendChild(h('button', { type: 'button', class: 'sm-no' + (m.del ? ' del' : '') + (m.on ? ' on' : ''), style: 'top:' + top + 'px', title: '第 ' + m.no + ' 条修改建议，点一下看这张卡',
+      ui.gut.appendChild(h('button', { type: 'button', class: 'sm-no' + (m.del ? ' del' : '') + (m.on ? ' on' : ''), style: 'top:' + top + 'px', title: '点一下看第 ' + m.no + ' 条修改建议',
         'aria-label': '第 ' + m.no + ' 条修改建议', onclick: function () { activateSug(g, { card: true, force: true }); } }, String(m.no)));
     });
   }
@@ -1107,10 +1108,10 @@
     });
     if (!next) {
       var left = sugs.filter(function (g) { return isUndecided(g) && segOf(g); }).length;
-      return stopWalk(left ? '后面没有待确认的了。前面还有 ' + left + ' 条跳过的，点顶上的「' + left + ' 条待确认」从头再看' : '修改建议都看完了');
+      return stopWalk(left ? '后面没有待确认的建议了。前面还有 ' + left + ' 条跳过的，点顶上的「' + left + ' 条待确认」从头再看' : '修改建议都看完了');
     }
     var a = segOf(from), b = segOf(next);
-    if (a && b && a !== b) toast('第 ' + a._no + ' 段的看完了，接着看第 ' + b._no + ' 段');
+    if (a && b && a !== b) toast('第 ' + a._no + ' 段的建议看完了，接着看第 ' + b._no + ' 段');
     focusCard(next, true);
   }
   function skipWalk() { var s = ST.activeSug && byId[ST.activeSug]; if (s && ST.walk) walkNext(s); else stopWalk(); }
@@ -1120,7 +1121,7 @@
     var left = pendingInOrder(seg).length;
     ui.walkBtn.hidden = ST.walk || !left;
     ui.walkBar.hidden = !ST.walk;
-    if (ST.walk) ui.walkText.textContent = left ? '逐条看：这一段还有 ' + left + ' 条待确认' : '逐条看：这一段的都看完了';
+    if (ST.walk) ui.walkText.textContent = left ? '逐条看：这一段还有 ' + left + ' 条待确认' : '逐条看：这一段的建议都看完了';
   }
 
   // ---------- 参考分析（主干，编导的功课）：这一段参考怎么讲 ----------
@@ -1129,7 +1130,7 @@
   function coverText(p, famCount) {
     var who = Array.isArray(p.who) ? p.who : [];
     if (p.cover === '共性') return who.length >= famCount && famCount > 1 ? famCount + ' 家都这么讲' : who.join('、') + ' 都这么讲';
-    if (p.cover === '多做') return (who[0] || '') + ' 在 ' + (p.over || '') + ' 的基础上多做';
+    if (p.cover === '多做') return (who[0] || '') + ' 在 ' + (p.over || '') + ' 的基础上多做了这一点';
     return '只有 ' + (who[0] || '');
   }
   function srcLink(seg, q) { // 原句或画面的出处：谁 几分几秒；有本地原片就点了从这一秒播
@@ -1156,7 +1157,7 @@
       bw.length ? h('div', { class: 'ana-bw' }, [h('div', { class: 'bw-head' }, '可以借的')].concat(bw.map(function (b) {
         var g = b.sug && byId[b.sug] && byId[b.sug]._kind === 'suggestion' ? byId[b.sug] : null;
         return h('div', { class: 'bw' }, [
-          h('span', { class: 'bw-type' + (b.type === '超一步' ? ' up' : '') }, String(b.type || '')),
+          h('span', { class: 'bw-type' + (b.type === '超一步' ? ' up' : '') }, String(BORROW_TEXT[b.type] || b.type || '')),
           h('span', null, String(b.text || '')),
           g ? h('button', { type: 'button', class: 'link bw-go', onclick: function () { focusCard(g); } }, '看对应的修改建议') : null
         ]);
@@ -1170,7 +1171,7 @@
     var merged = Array.isArray(note.locked.merged) ? note.locked.merged : [];
     ui.fam = {};
     ui.famAll = h('button', { type: 'button', class: 'link fams-all', onclick: function () { toggleAllFams(seg); } }, '全部展开');
-    var list = h('div', { class: 'fams' }, [h('div', { class: 'fams-head' }, [h('span', null, '原文（点一家展开，可以同时展开几家；关键句按上面讲法点的颜色标出）'), h('span', { class: 'grow' }), ui.famAll])]);
+    var list = h('div', { class: 'fams' }, [h('div', { class: 'fams-head' }, [h('span', null, '原文（点一家展开，可以同时展开几家；关键句按上面那几条讲法的颜色标出）'), h('span', { class: 'grow' }), ui.famAll])]);
     whos.forEach(function (who) {
       var rs = refs.filter(function (r) { return r && !isExplain(r) && (r.who || '参考') === who; });
       var spans = rs.map(function (r) { return cd_range(r.time); }).filter(Boolean);
@@ -1181,7 +1182,7 @@
         h('b', null, who),
         rs[0] && rs[0].role ? h('span', { class: 'role-tag ' + (REF_ROLE_CLASS[rs[0].role] || 'r-other') }, rs[0].role) : null,
         h('span', { class: 'muted' }, '本段 ' + rs.length + ' 条原文' + (span ? ' · ' + span : '')),
-        mg ? h('span', { class: 'fam-merged' }, '≈' + mg.base + (typeof mg.ratio === 'number' ? '，本段 ' + Math.round(mg.ratio * 100) + '% 逐字相同' : '') + '，展开后灰色字和' + mg.base + '一样，只看黑色的改动') : null,
+        mg ? h('span', { class: 'fam-merged', title: '展开后灰色字和' + mg.base + '一样，只看黑色的改动' }, '和' + mg.base + '基本一样' + (typeof mg.ratio === 'number' ? '，本段 ' + Math.round(mg.ratio * 100) + '% 逐字相同' : '')) : null,
         h('span', { class: 'grow' }), act
       ]);
       var body = h('div', { class: 'fam-body', hidden: true });
@@ -1328,7 +1329,7 @@
     var ui = segUi[seg.id], list = stepsOf(seg);
     if (!list.length) return null;
     ui.stepsBox = h('details', { class: 'steps-box', open: STAGE === CFG.recordStage }, [
-      h('summary', null, [h('b', null, '录屏步骤'), h('span', { class: 'muted' }, list.length + ' 步，提示词可以直接修改，点「复制」后到工具里发送')])
+      h('summary', null, [h('b', null, '录屏步骤'), h('span', { class: 'muted' }, list.length + ' 步，要发送的内容可以直接修改，点「复制」后到工具里发送')])
     ]);
     list.forEach(function (st) { ui.stepsBox.appendChild(buildStep(st)); });
     ui.stepsBox.addEventListener('toggle', function () { // 收着时量不了高度，展开时再把提示词框撑开
@@ -1366,7 +1367,7 @@
     var list = Array.isArray(info.locked.spare_refs) ? info.locked.spare_refs.filter(function (r) { return r && typeof r === 'object' && r.text; }) : [];
     if (!list.length) return null;
     return h('details', { class: 'spare wrap' }, [
-      h('summary', null, [h('b', null, '参考里有、这一稿没用上的'), h('span', { class: 'muted' }, list.length + ' 段，想借用哪段，写给 AI 即可')]),
+      h('summary', null, [h('b', null, '参考里有、这一稿没用上的'), h('span', { class: 'muted' }, list.length + ' 段，想借用哪段，写进最下面的「整体意见」')]),
       list.map(function (r) {
         return h('article', { class: 'ref spare-ref' }, [
           refHead(r),
@@ -1388,7 +1389,7 @@
       h('div', { class: 'rh-top' }, [h('b', null, '录制清单'), R.recStat, h('span', { class: 'grow' }),
         h('button', { type: 'button', class: 'btn', onclick: copyVisualScript, title: '每段一行：口播和画面，贴进在线表格或文档就是一张表，可以直接发给剪辑' }, '复制画面脚本')]),
       R.recWho = h('div', { class: 'rec-who', hidden: true }),
-      h('p', { class: 'rh-tip' }, '录屏时屏幕上打出来的字，要和观众在口播里听到的一致：口播没说的工具名、数字不要出现在提示词里。')
+      h('p', { class: 'rh-tip' }, '录屏时屏幕上打出来的字，要和观众在口播里听到的一致：口播没说的工具名、数字不要出现在要发送的内容里。')
     ]);
     return R.recordHead;
   }
@@ -1426,9 +1427,9 @@
     add(R.recWho, [
       h('div', { class: 'rw-col rw-me' }, [h('div', { class: 'rw-head' }, [h('b', null, '你要录的'), h('span', null, me.length + ' 段必录' + (opt.length ? '，' + opt.length + ' 段可选' : '')), h('span', { class: 'grow' }),
         h('label', { class: 'rw-only' }, [chk, ' 只看我要录的'])]),
-        mineList.length ? h('ul', null, mineList) : h('p', { class: 'muted' }, '这条不用你录屏')]),
+        mineList.length ? h('ul', null, mineList) : h('p', { class: 'muted' }, '这条视频不用你录屏')]),
       h('div', { class: 'rw-col rw-ed' }, [h('div', { class: 'rw-head' }, [h('b', null, '剪辑做的'), h('span', null, ed.length + ' 段')]),
-        ed.length ? h('ul', null, ed.map(function (s) { return item(s, 'editor', val(s.id, 'todo_editor')); })) : h('p', { class: 'muted' }, '没有写剪辑要做的')])
+        ed.length ? h('ul', null, ed.map(function (s) { return item(s, 'editor', val(s.id, 'todo_editor')); })) : h('p', { class: 'muted' }, '每段都还没写剪辑要做什么')])
     ]);
   }
   function visualScript() { // 给剪辑的画面脚本：每段一行，口播（我的版本）和画面（类型加我方画面）；有分工两格时改成「剪辑做、你录的素材」
@@ -1475,7 +1476,7 @@
     ui.noteStatus = h('span', { class: 'note-status' });
     ui.reply = h('div', { class: 'ai-reply', hidden: true });
     ui.draft = h('div', { class: 'draft-hint', hidden: true }, [
-      h('span', null, '这段像稿子，要挪进我的版本吗？'),
+      h('span', null, '这段话像稿子，要挪进我的版本吗？'),
       h('button', { type: 'button', class: 'btn small', onclick: function () { moveNoteToMine(seg); } }, '挪进我的版本'),
       h('button', { type: 'button', class: 'btn small ghost', onclick: function () { ST.draftDismissed[seg.id] = draftBody(ui.note.value); ui.draft.hidden = true; } }, '不用，就是写给 AI 的')
     ]);
@@ -1492,7 +1493,7 @@
     R.publish = h('section', { class: 'publish wrap', hidden: true });
     R.pubEmpty = h('div', { class: 'pub-empty' }, [
       h('b', null, '还没有标题、封面文字和简介的候选'),
-      h('p', null, '逐字稿改好以后，在顶上勾「内容已确认」，回聊天说一声，AI 会在这里一次出齐三样候选：标题、封面文字、简介，每样都附参考视频是怎么写的。你点「用这个」或者直接改，最后用哪个你定。封面图不在这里做。')
+      h('p', { title: 'AI 一次出齐三样候选，每样都附参考视频是怎么写的；你点「用这个」或者直接改，最后用哪个你定。封面图不在这里做。' }, '逐字稿改好以后，在顶上勾「内容已确认」，再回聊天说一声，AI 就在这里出候选。')
     ]);
     R.publish.appendChild(R.pubEmpty);
     pubSlots().forEach(function (p) { R.publish.appendChild(buildPubSlot(p)); });
@@ -1515,7 +1516,7 @@
     return h('article', { class: 'pub-slot', 'data-slot': slot }, [
       h('div', { class: 'pub-head' }, [h('h3', null, slot), h('span', { class: 'muted' }, SLOT_HINT[slot] || '')]),
       u.final ? h('div', { class: 'pub-final-box jc-field' }, [h('div', { class: 'lbl' }, [h('b', null, '你定的'), u.count, h('span', { class: 'grow' }), u.copy]), u.final]) : null,
-      cands.length ? h('div', { class: 'lbl pub-cands-lbl' }, 'AI 的候选（' + cands.length + ' 个，文字可以直接改）') : h('p', { class: 'muted' }, 'AI 还没出这一样的候选'),
+      cands.length ? h('div', { class: 'lbl pub-cands-lbl' }, 'AI 的候选（' + cands.length + ' 个，文字可以直接改）') : h('p', { class: 'muted' }, 'AI 还没出候选'),
       u.cands,
       refs.length ? h('details', { class: 'pub-refs' }, [
         h('summary', null, '参考视频怎么写的（' + refs.length + ' 条）'),
@@ -1537,7 +1538,7 @@
       h('div', { class: 'card-head' }, [
         L.angle ? h('span', { class: 'cat' }, String(L.angle)) : null,
         Number(L.round) > 1 ? h('span', { class: 'muted' }, '第 ' + L.round + ' 轮') : null,
-        b ? h('span', { class: 'basis-tag b-other', title: b.text || '' }, '依据：' + (b.type || '说明')) : null,
+        b ? h('span', { class: 'basis-tag b-other', title: b.text || '' }, '依据：' + (BASIS_TEXT[b.type] || b.type || '说明')) : null,
         h('span', { class: 'grow' }), u.badge
       ]),
       u.text,
@@ -1548,13 +1549,13 @@
   }
   function useCand(c) {
     var slot = c.locked.slot, p = pubSlot[slot];
-    if (!p || !hasField(p, 'final')) return toast('这一样没有「你定的」那一格，请让 AI 检查页面');
+    if (!p || !hasField(p, 'final')) return toast('「' + ((p && p.locked && p.locked.slot) || '这一样') + '」没有「你定的」输入框，让 AI 检查一下页面');
     var text = candUi[c.id] ? candUi[c.id].text.value : val(c.id, 'text'), old = val(p.id, 'final');
     var steps = [{ item: p.id, field: 'final', old: old, new: text }, { item: c.id, field: 'decision', old: val(c.id, 'decision'), new: '选用' }];
     if (candUi[c.id] && !same(text, kit.fileValue(c.id, 'text'))) steps.push({ item: c.id, field: 'text', old: kit.fileValue(c.id, 'text'), new: text, noUndo: true });
     candsOf(slot).forEach(function (o) { if (o.id !== c.id && val(o.id, 'decision') === '选用') steps.push({ item: o.id, field: 'decision', old: '选用', new: '' }); });
     applySteps(steps, '「' + slot + '」用候选「' + snippet(text, 10) + '」').then(function (ok) {
-      if (ok) toast(old.trim() && !same(old, text) ? '已填进「你定的」，原来写的可以按 ⌘Z 撤回' : '已填进「你定的」，可以接着在那一格里改');
+      if (ok) toast(old.trim() && !same(old, text) ? '已填进「你定的」；要换回原来写的，按 ⌘Z 撤销' : '已填进「你定的」，可以接着在里面改');
     });
   }
   function setCand(c, dec) {
@@ -1567,14 +1568,14 @@
     slots.forEach(function (p) {
       var u = pubUi[p.id], f = val(p.id, 'final');
       if (!u) return;
-      if (u.final) { u.count.textContent = f.trim() ? ' ' + Array.from(f.replace(/\s/g, '')).length + ' 个字' + (p.locked.slot === '标题' && Array.from(f.replace(/\s/g, '')).length > 20 ? '（小红书标题最多 20 字，发小红书要再短一版）' : '') : ' 还没定'; autoGrow(u.final); }
+      if (u.final) { u.count.textContent = f.trim() ? ' ' + Array.from(f.replace(/\s/g, '')).length + ' 个字' + (p.locked.slot === '标题' && Array.from(f.replace(/\s/g, '')).length > 20 ? '（小红书标题最多 20 字，发小红书要再改短）' : '') : ' 还没定'; autoGrow(u.final); }
       if (!f.trim()) undecided++;
       if (u.note) {
         var s = aiState(p), pend = notePending(p, 'note'), v = val(p.id, 'note');
         u.noteStatus.className = 'note-status ' + (pend ? 'st-pend' : s.reply && v.trim() ? 'st-done' : 'st-none');
         u.noteStatus.textContent = pend ? '待 AI 处理' : s.reply && v.trim() ? 'AI 已处理' : '';
         clear(u.reply); u.reply.hidden = !s.reply;
-        if (s.reply) add(u.reply, [h('b', null, pend ? 'AI 上次的回复：' : 'AI 已处理：'), h('span', null, s.reply)]);
+        if (s.reply) add(u.reply, [h('b', null, pend ? 'AI 上次的回复：' : 'AI 的回复：'), h('span', null, s.reply)]);
         autoGrow(u.note);
       }
     });
@@ -1681,7 +1682,7 @@
       });
       var pend = sugsOf(seg).filter(isUndecided);
       R.readText.appendChild(h('section', { class: 'r-seg', 'data-seg': seg.id }, [
-        h('div', { class: 'r-label' }, [h('span', { class: 'no' }, String(seg._no)), (seg.locked.title || '') + ' · ' + n + ' 字，约 ' + secs(n) + ' 秒', h('button', { type: 'button', class: 'link', onclick: function () { setView('compare'); goSeg(seg._no - 1, true); } }, '去对照里改')]),
+        h('div', { class: 'r-label' }, [h('span', { class: 'no' }, String(seg._no)), (seg.locked.title || '') + ' · ' + n + ' 字，约 ' + secs(n) + ' 秒', h('button', { type: 'button', class: 'link', onclick: function () { setView('compare'); goSeg(seg._no - 1, true); } }, '改这一段')]),
         body,
         pend.length ? h('button', { type: 'button', class: 'r-flag', onclick: function () { setView('compare'); goSeg(seg._no - 1, true); } },
           '这一段有 ' + pend.length + ' 条' + CFG.sugTitle + '待确认（' + catSummary(pend) + '），点击查看') : null
@@ -1762,7 +1763,7 @@
       ui.noteStatus.textContent = pendingNote ? '待 AI 处理' : (reply && note.trim() && same(note, handled || '') ? 'AI 已处理' : '');
       ui.reply.hidden = !reply;
       clear(ui.reply);
-      if (reply) add(ui.reply, [h('b', null, pendingNote ? 'AI 上次的回复（之后你又修改过，等待 AI 重新查看）：' : 'AI 已处理：'), h('span', null, reply), s.replied_at ? h('span', { class: 'muted' }, '（' + dayTime(Date.parse(s.replied_at) || Date.now()) + '）') : null]);
+      if (reply) add(ui.reply, [h('b', null, pendingNote ? 'AI 上次的回复（之后你又修改过，等待 AI 重新查看）：' : 'AI 的回复：'), h('span', null, reply), s.replied_at ? h('span', { class: 'muted' }, '（' + dayTime(Date.parse(s.replied_at) || Date.now()) + '）') : null]);
       var body = draftBody(note);
       ui.draft.hidden = !body || ST.draftDismissed[seg.id] === body;
     }
@@ -1900,7 +1901,7 @@
     c.yes.disabled = !ready || occ !== 1; c.no.disabled = !ready; if (c.editFirst) c.editFirst.disabled = !ready || occ !== 1;
     c.yes.title = del ? '采纳：从我的版本删掉这句' : '采纳：用这句替换我的版本里的原句';
     c.miss.hidden = dec || occ === 1;
-    c.miss.textContent = occ === 0 ? '这句你已经改过，这条建议对不上了' : occ > 1 ? '这句在我的版本里出现了 ' + occ + ' 次，无法确定替换哪一处，请先在我的版本里改掉多余的，再采纳' : '';
+    c.miss.textContent = occ === 0 ? '这句你已经改过，这条建议对不上了' : occ > 1 ? '这句在我的版本里出现了 ' + occ + ' 次，无法确定替换哪一处。先把多出来的几处改掉，再采纳' : '';
     var warn = L.verdict === '已定要改' && dec === '不采纳' ? '此前已决定要改，这次未采纳' : L.verdict === '不用改' && dec === '采纳' ? '结论是无需修改，这次已采纳' : '';
     c.warn.hidden = !warn; c.warn.textContent = warn;
     // 「改成」输入框：点了「先改再采纳」才出来；已经定了就收起；这一格被 kit 锁住（有冲突）时一直露着
@@ -1929,7 +1930,7 @@
     R.overallStatus.textContent = pend ? '待 AI 处理' : s.reply && v.trim() ? 'AI 已处理' : '';
     R.overallReply.hidden = !s.reply;
     clear(R.overallReply);
-    if (s.reply) add(R.overallReply, [h('b', null, pend ? 'AI 上次的回复：' : 'AI 已处理：'), h('span', null, s.reply)]);
+    if (s.reply) add(R.overallReply, [h('b', null, pend ? 'AI 上次的回复：' : 'AI 的回复：'), h('span', null, s.reply)]);
     autoGrow(R.overall);
   }
   function refreshCounters() {
@@ -1947,7 +1948,7 @@
       // 「内容已确认」是一个勾选按钮：没勾时前面是空框，勾上后变绿、打勾，后面带确认时间（日期写短，宽屏第二行才排得下）
       R.approve.textContent = ap ? '内容已确认（' + (isNaN(Date.parse(ap)) ? ap : shortTime(Date.parse(ap))) + '）' : '内容已确认';
       R.approve.setAttribute('aria-pressed', ap ? 'true' : 'false');
-      R.approve.title = ap ? '你在 ' + (isNaN(Date.parse(ap)) ? ap : dayTime(Date.parse(ap))) + ' 确认了这一稿的内容，AI 可以进入下一步。再点一下取消确认' : '勾选后告诉 AI：这一稿的内容你已确认，可以进入下一步';
+      R.approve.title = ap ? '你在 ' + (isNaN(Date.parse(ap)) ? ap : dayTime(Date.parse(ap))) + ' 确认了这一稿的内容，AI 可以接着出标题、封面文字和简介的候选。再点一下取消确认' : '勾上表示这一稿的内容你确认了；再回聊天说一声，AI 就接着出标题、封面文字和简介的候选';
       R.approve.disabled = !kitReady();
     }
     segs.forEach(function (s) {
@@ -2136,7 +2137,7 @@
     var seg = segOf(sug), L = sug.locked, c = cardUi[sug.id];
     if (!seg) return toast('找不到这条建议对应的段落，请让 AI 检查这条建议');
     if (!kitReady()) return toast('保存功能启动中，请稍后再试');
-    if (val(sug.id, 'decision')) return toast('这条建议' + (DECISION_TEXT[val(sug.id, 'decision')] || '已有决定') + '，如需重新决定，请先点卡片上的「撤销决定」');
+    if (val(sug.id, 'decision')) return toast('这条建议' + (DECISION_TEXT[val(sug.id, 'decision')] || '已有决定') + '。要重新决定，先点卡片上的「撤销决定」');
     var mine = val(seg.id, 'mine'), prop = c && c.proposed ? c.proposed.value : val(sug.id, 'proposed'), occ = countOcc(mine, L.original);
     if (occ === 0) return toast('这句你已经改过，这条建议对不上了');
     if (occ > 1) return toast('这句在我的版本里出现了不止一次，无法确定替换哪一处');
@@ -2153,7 +2154,7 @@
   }
   function reject(sug) {
     var seg = segOf(sug);
-    if (val(sug.id, 'decision')) return toast('这条建议' + (DECISION_TEXT[val(sug.id, 'decision')] || '已有决定') + '，如需重新决定，请先点卡片上的「撤销决定」');
+    if (val(sug.id, 'decision')) return toast('这条建议' + (DECISION_TEXT[val(sug.id, 'decision')] || '已有决定') + '。要重新决定，先点卡片上的「撤销决定」');
     applySteps([{ item: sug.id, field: 'decision', old: val(sug.id, 'decision'), new: '不采纳' }], '不采纳' + (seg ? '第 ' + seg._no + ' 段' : '') + '「' + snippet(sug.locked.original, 10) + '」').then(function (ok) {
       if (ok) hintAfterReject(seg);
       if (ok && seg) afterDecide(sug, seg);
@@ -2205,7 +2206,7 @@
   function toggleApprove() {
     var cur = val(info.id, 'approved');
     applySteps([{ item: info.id, field: 'approved', old: cur, new: cur ? '' : isoNow() }], cur ? '取消「内容已确认」' : '勾选「内容已确认」').then(function (ok) {
-      if (ok) toast(cur ? '已取消「内容已确认」' : '已勾选「内容已确认」，请回到聊天告诉 AI；AI 会接着出标题、封面文字和简介的候选');
+      if (ok) toast(cur ? '已取消「内容已确认」' : '已勾选「内容已确认」。回聊天说一声，AI 就接着出标题、封面文字和简介的候选');
     });
   }
   function moveNoteToMine(seg) {
@@ -2490,7 +2491,7 @@
   }
   function renderHistory(seg, list, err) {
     var ui = segUi[seg.id], box = clear(ui.hist), mine = val(seg.id, 'mine');
-    box.appendChild(h('div', { class: 'hist-head' }, [h('b', null, '第 ' + seg._no + ' 段改动记录'), h('span', { class: 'muted' }, '两分钟内的连续保存合为一个版本；点「恢复此版本」后，恢复本身也会记为一个新版本'),
+    box.appendChild(h('div', { class: 'hist-head' }, [h('b', null, '第 ' + seg._no + ' 段改动记录'), h('span', { class: 'muted', title: '点「恢复此版本」后，恢复本身也会记为一个新版本' }, '两分钟内连续保存算一个版本'),
       h('span', { class: 'grow' }), h('button', { type: 'button', class: 'btn ghost small', onclick: function () { loadHistory(seg); } }, '刷新'), h('button', { type: 'button', class: 'btn ghost small', onclick: function () { toggleHistory(seg); } }, '收起')]));
     if (!list) {
       var why = !err ? '' : (err.name === 'TypeError' || err.name === 'AbortError') ? '保存服务未连接' : err.message;
@@ -2666,8 +2667,8 @@
     count: '第 {n} 步，共 {total} 步',
     steps: ['AI 的建议贴在要改的那句话旁边。', '觉得这样改更好，就点「采纳」。'],
     next: '下一步',
-    done: '漂亮，这条已经存回你的稿子。流程走通了，下一步把你自己的选题交给 AI。',
-    skip: '跳过',
+    done: '漂亮，这条建议已经存回你的稿子。流程走通了，下一步把你自己的选题交给 AI。',
+    skip: '跳过新手指引',
     skipped: '随时能在工作台左下角「新手指引」重看。',
     ok: '好的',
     noSuggestion: '这一稿还没有待确认的修改建议，AI 提了以后，觉得好就点「采纳」。',

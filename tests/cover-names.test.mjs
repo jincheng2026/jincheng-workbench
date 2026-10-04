@@ -18,12 +18,12 @@ test("默认参考构图：用风格里存的（只留还在的图），没有�
 test("风格叫什么、从哪来：拆好了用风格名；还没拆说清是谁、几张；放进来的图写哪天放的", () => {
   const account = { name: null, kind: "account", accountName: "某某", platform: "抖音", folder: "抖音-某某", covers: 0 };
   const images = { name: null, kind: "images", folder: "2026-10-04_8张", covers: 8 };
-  assert.equal(styleName(account), "「某某」还没拆");
+  assert.equal(styleName(account), "「某某」的封面 VI 还没拆");
   assert.equal(styleName(images), "还没拆的 8 张图");
   assert.equal(styleName({ ...images, name: "蓝白大字风" }), "蓝白大字风");
-  assert.equal(styleSource(account), "对标账号「某某」（抖音）");
-  assert.equal(styleSource(images), "你放进来的 8 张图（10 月 4 日放的）");
-  assert.equal(styleSource({ ...images, folder: "别的名字" }), "你放进来的 8 张图");
+  assert.equal(styleSource(account), "来自对标账号「某某」（抖音）");
+  assert.equal(styleSource(images), "来自你 10 月 4 日放进来的 8 张图");
+  assert.equal(styleSource({ ...images, folder: "别的名字" }), "来自你放进来的 8 张图");
 });
 
 test("我的封面按风格分组：同一个风格的放一组、新的在前；不知道照哪个风格出的放最后", () => {

@@ -1,5 +1,5 @@
 // 封面（1.1 加）：页面和后台（lib/covers.mjs）之间的类型和请求。拆 VI、出图、挑和改都交给 AI（Codex 桌面版，复制的话在 ask-ai.ts），
-// 这里只有不用 AI 的事：读风格、照片、每条内容出过的封面，放照片、放图建风格、设默认风格、改默认构图、在访达中打开。
+// 这里只有不用 AI 的事：读风格、人物参考图片、每条内容出过的封面，放人物参考图片、放图建风格、设默认风格、改默认构图、在访达中打开。
 import { postFile, postJson, request } from '@/lib/api';
 
 export type CoverSettings = { photo: string | null; benchmark: string | null; batchSize: number; problem: string | null };

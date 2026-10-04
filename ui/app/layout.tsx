@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
    title: { template: `%s | ${APP_NAME}`, default: APP_NAME },
-   description: APP_TAGLINE || '本机运行的锦成工作台',
+   description: APP_TAGLINE || '本机运行的创作工作台',
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -13,6 +13,11 @@ import { askInfo } from '@/lib/app-info';
 import { REPORT_TYPES, relatedReports, reportsEmpty, researchCards, type CostEstimate, type ResearchCard } from '@/lib/research-guide';
 import { reportFileUrl, reportViewHref, type Account, type Report } from '@/lib/research';
 
+/** 报告类型照 meta.json 原样存（「封面VI」没有空格，封面 Skill 也这么写），显示时和卡片标题「封面 VI」对上 */
+function typeText(type: string): string {
+   return type === '封面VI' ? '封面 VI' : type;
+}
+
 function shortDate(date: string | null): string {
    const m = String(date ?? '').match(/^(\d{4})-(\d{2})-(\d{2})/);
    return m ? `${Number(m[2])} 月 ${Number(m[3])} 日` : '';
@@ -20,9 +25,12 @@ function shortDate(date: string | null): string {
 
 function ResearchCards({
    cards,
+   importedTables,
    onGo,
 }: {
    cards: ResearchCard[];
+   /** 已经导入、认出是评论表的文件名：评论洞察卡写着「可以直接让 AI 做」时，复制的话直接读这几份表，不再要视频链接 */
+   importedTables: string[];
    onGo: (which: 'tikhub' | 'social') => void;
 }) {
    const { info } = useAppInfo();
@@ -58,7 +66,7 @@ function ResearchCards({
                         <SecondaryButton
                            size="small"
                            onClick={() =>
-                              void copyText(askResearch(card.kind as ResearchKind, askInfo(info, 'research')), '给 AI 的话')
+                              void copyText(askResearch(card.kind as ResearchKind, askInfo(info, 'research'), card.kind === 'comments' ? { importedFiles: importedTables } : undefined), '给 AI 的话')
                            }
                            title="复制一段话，粘贴给 Codex 或 Claude Code"
                         >
@@ -83,7 +91,7 @@ function ReportCard({ report }: { report: Report }) {
    return (
       <Card className="flex min-w-0 flex-col gap-2 p-4">
          <div className="flex items-center justify-between gap-3">
-            <SemBadge tone={REPORT_TYPES.includes(report.type as (typeof REPORT_TYPES)[number]) ? 'accent' : 'gray'}>{report.type}</SemBadge>
+            <SemBadge tone={REPORT_TYPES.includes(report.type as (typeof REPORT_TYPES)[number]) ? 'accent' : 'gray'}>{typeText(report.type)}</SemBadge>
             <span className="shrink-0 text-[11.5px] tabular-nums" style={{ color: 'var(--jc-ghost)' }}>
                {shortDate(report.date)}
             </span>
@@ -107,7 +115,7 @@ function ReportCard({ report }: { report: Report }) {
                className="jc-button jc-button-secondary inline-flex h-[33px] items-center px-3 text-[12.5px] font-medium no-underline hover:no-underline"
                style={{ color: 'var(--jc-body)' }}
             >
-               打开{report.pages.length > 1 ? `「${main.title}」` : ''}
+               {report.pages.length > 1 ? `打开「${main.title}」` : '打开报告'}
             </Link>
             {rest.map((page) => (
                <Link key={page.file} href={reportViewHref(report.id, page.file)}>
@@ -141,14 +149,14 @@ export function ReportViewer({ report, file }: { report: Report; file: string })
                className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-medium no-underline hover:no-underline"
                style={{ background: 'var(--jc-surface)', border: '1px solid var(--jc-border)', color: 'var(--jc-body)' }}
             >
-               <ArrowLeft size={14} aria-hidden="true" /> 返回调研报告
+               <ArrowLeft size={14} aria-hidden="true" /> 回到报告列表
             </Link>
             <a href={src} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-[12.5px]">
                在新标签页打开 <ExternalLink size={13} aria-hidden="true" />
             </a>
          </div>
          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <SemBadge tone="accent">{report.type}</SemBadge>
+            <SemBadge tone="accent">{typeText(report.type)}</SemBadge>
             <span className="text-[12px]" style={{ color: 'var(--jc-ghost)' }}>
                {shortDate(report.date)}
             </span>
@@ -195,6 +203,7 @@ export function ResearchReports({
    accountFilter,
    tikhubReady,
    importedComments,
+   importedTables,
    cost,
    onGo,
 }: {
@@ -203,6 +212,7 @@ export function ResearchReports({
    accountFilter: string | null;
    tikhubReady: boolean;
    importedComments: number;
+   importedTables: string[];
    cost: CostEstimate;
    onGo: (which: 'tikhub' | 'social') => void;
 }) {
@@ -216,11 +226,12 @@ export function ResearchReports({
    const shown = type === '全部' ? scoped : scoped.filter((r) => r.type === type);
    const { info } = useAppInfo();
    const cards = researchCards({ tikhubReady, importedComments, cost });
-   const empty = reportsEmpty(cards.some((c) => c.ready));
+   // 封面 VI 那张卡永远算能做，但它的按钮是去「封面」页，不是「复制给 AI 的话」：只看能直接复制的那几种
+   const empty = reportsEmpty(cards.some((c) => c.ready && c.action === 'copy'));
 
    return (
       <div>
-         <ResearchCards cards={cards} onGo={onGo} />
+         <ResearchCards cards={cards} importedTables={importedComments ? importedTables : []} onGo={onGo} />
          <section aria-label="调研报告">
             <div className="mb-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                <h2 className="text-[15px] font-semibold">
@@ -234,7 +245,7 @@ export function ResearchReports({
             {account && (
                <SemBanner tone="accent" className="mb-3">
                   <span className="inline-flex flex-wrap items-center gap-2">
-                     只看和「{account.accountName}」有关的 {scoped.length} 份。
+                     只看和「{account.accountName}」有关的 {scoped.length} 份报告。
                      <Link href="/research?tab=reports">看全部报告</Link>
                   </span>
                </SemBanner>
@@ -269,7 +280,7 @@ export function ResearchReports({
                                  color: active ? 'var(--jc-accent)' : c.n ? 'var(--jc-body)' : 'var(--jc-ghost)',
                               }}
                            >
-                              {c.type}{' '}
+                              {typeText(c.type)}{' '}
                               <span className="tabular-nums" style={{ color: active ? 'var(--jc-accent)' : 'var(--jc-ghost)' }}>
                                  {c.n}
                               </span>
@@ -279,8 +290,8 @@ export function ResearchReports({
                   </div>
                   {shown.length === 0 ? (
                      <EmptyState
-                        text={`还没有「${type}」的报告`}
-                        hint="上面那张同名的卡片里有「复制给 AI 的话」。"
+                        text={`还没有「${typeText(type)}」的报告`}
+                        hint={`从上面「${typeText(type)}」那张卡片开始做。`}
                         actions={
                            <SecondaryButton size="small" onClick={() => setType('全部')}>
                               看全部

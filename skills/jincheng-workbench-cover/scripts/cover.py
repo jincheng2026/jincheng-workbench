@@ -3,7 +3,7 @@
 
 风格编号两种都认：对标账号的文件夹名（抖音-某某），和你放进工作台「封面」的那组图「风格/<文件夹名>」（风格/2026-10-04_8张）。
 
-  python3 cover.py where [T002]                       # 东西都放在哪、能不能读写、照片、全部风格；给了编号再说这条的封面候选和上一批的尺寸
+  python3 cover.py where [T002]                       # 东西都放在哪、能不能读写、人物参考图片、全部风格；给了编号再说这条的封面候选和上一批的尺寸
   python3 cover.py vi prepare <风格编号> [--from 文件夹]  # 补封面（对标账号的作品.json 有封面链接就下载最近 20 张）、改名 K01…、写清单
   python3 cover.py vi inventory <风格编号>              # 查每张能不能打开、有没有重复，写 VI研究/inventory.json
   python3 cover.py vi check <风格编号>                  # 核对 VI研究/study.json（逐图观察、规则、案例）
@@ -229,7 +229,7 @@ def cmd_settings(args):
         if not args.value:
             raise UserError("要给照片的路径：settings set-photo <照片>")
         rel, dest = S.set_photo(p, args.value)
-        say("主照片设好了：%s（%s）。出封面时它排第一，「我的照片」里别的照片也会用上（一张封面最多 %d 张）。" % (rel, dest, S.MAX_PHOTOS))
+        say("主照片设好了：%s（%s）。出封面时它排第一，「人物参考图片」里别的图也会用上（一张封面最多 %d 张）。" % (rel, dest, S.MAX_PHOTOS))
         return 0
     if args.action == "set-default":
         if not args.value:
@@ -251,8 +251,8 @@ def cmd_settings(args):
     if cs["photo"]:
         say("  主照片：%s（%s）" % (cs["photo"], ps["primary_abs"] if ps["primary_ok"] else "找不到这个文件了：%s" % ps["primary_abs"]))
     else:
-        say("  主照片：没设（「我的照片」里的照片按放进来的先后用）")
-    say("  照片：%s" % ("出封面用 %d 张：%s" % (len(ps["used"]), "、".join(ps["used"])) if ps["used"] else "我的照片 里还没有"))
+        say("  主照片：没设（「人物参考图片」里的图按放进来的先后用）")
+    say("  人物参考图片：%s" % ("出封面用 %d 张：%s" % (len(ps["used"]), "、".join(ps["used"])) if ps["used"] else "还没有"))
     if cs["benchmark"]:
         try:
             st = ST.resolve(p, cs["benchmark"])
@@ -342,13 +342,13 @@ def _batch(p, style_id=None, photos=None, app=None, tool=None, size=None, strict
     else:
         ps = S.photo_set(p, cs)
         out["photos"] = ps["used"]
-        out["photo_from"] = "「我的照片」里的，主照片在前，再按放进来的先后"
+        out["photo_from"] = "「人物参考图片」里的，主照片在前，再按放进来的先后"
         if ps["primary_missing"]:
-            out["notes"].append("封面设置里的主照片找不到了（%s），先用「我的照片」里的" % ps["primary_abs"])
+            out["notes"].append("封面设置里的主照片找不到了（%s），先用「人物参考图片」里的" % ps["primary_abs"])
         if len(ps["all"]) > len(ps["used"]):
-            out["notes"].append("「我的照片」里有 %d 张，一张封面最多用 %d 张，这批用前 %d 张" % (len(ps["all"]), S.MAX_PHOTOS, len(ps["used"])))
+            out["notes"].append("「人物参考图片」里有 %d 张，一张封面最多用 %d 张，这批用前 %d 张" % (len(ps["all"]), S.MAX_PHOTOS, len(ps["used"])))
     if strict and not out["photos"]:
-        raise UserError("还没有照片：先停下，请用户放一张或几张自己的照片（工作台「封面」页角上的「我的照片」，或者把照片拖进对话，AI 存成文件再跑 settings set-photo <照片>）。")
+        raise UserError("还没有人物参考图片：先停下，请用户放一张或几张自己的照片（工作台「封面」页角上的「人物参考图片」，或者把照片拖进对话，AI 存成文件再跑 settings set-photo <照片>）。")
     if tool and not app:
         app = "Codex" if tool == "image_gen" else "Claude Code"
     photos_text = "%d 张" % len(out["photos"]) if out["photos"] else "未记录"
@@ -393,7 +393,7 @@ def cmd_record_batch(args):
     say("  生成计划写进：%s" % os.path.join(folder, W.plan_name(n)))
     say("  这批从 封面-%s 开始编号；一批默认 %d 张（用户这次说了几张就按他说的）" % (W.number_text(k["next"]), b["batch_size"]))
     say("  尺寸：%s（%s）。%s；每张存图时写 save … --size %s" % (size.text, why, size.plan(), size.arg))
-    say("  照片（%d 张，%s；按这个顺序当前几张输入图，都是长相参考）：" % (len(b["photos"]), b["photo_from"]))
+    say("  人物参考图片（%d 张，%s；按这个顺序当前几张输入图，都是长相参考）：" % (len(b["photos"]), b["photo_from"]))
     for i, path in enumerate(b["photos"], 1):
         say("    %d. %s%s" % (i, path, "（heic：生图前先用 sips 转成 jpg，转出来的不放进工作文件夹）" if path.lower().endswith(".heic") else ""))
     for note in b["notes"]:
@@ -713,7 +713,7 @@ def build_parser():
     ap = Parser(prog="cover.py", description="封面 Skill 的命令")
     sub = ap.add_subparsers(dest="cmd", parser_class=Parser)
 
-    w = sub.add_parser("where", help="东西都放在哪、能不能读写、照片、全部风格；给了编号再说这条的封面候选和上一批的尺寸")
+    w = sub.add_parser("where", help="东西都放在哪、能不能读写、人物参考图片、全部风格；给了编号再说这条的封面候选和上一批的尺寸")
     w.add_argument("content", nargs="?", help="内容编号，比如 T002")
     w.add_argument("--json", action="store_true", help="输出 JSON")
     w.set_defaults(func=cmd_where)
@@ -759,7 +759,7 @@ def build_parser():
     rb.add_argument("--size", help=SIZE_HELP + "；不写就用这条内容上一批的，没有就按内容类型（文章类横版 2.35:1，其余竖版 3:4）")
     rb.add_argument("--benchmark", help="这批照哪个风格：" + STYLE_HELP + "；不写就用默认风格")
     rb.add_argument("--compositions", help="参考构图：原图编号，比如 K03,K07,K12（不写就用这个风格的默认构图）")
-    rb.add_argument("--photo", action="append", help="这批只用这几张照片（可以写几次，最多 3 张；完整路径或者「我的照片」里的文件名）；不写就用「我的照片」里的")
+    rb.add_argument("--photo", action="append", help="这批只用这几张照片（可以写几次，最多 3 张；完整路径或者「人物参考图片」里的文件名）；不写就用「人物参考图片」里的")
     rb.set_defaults(func=cmd_record_batch)
     ra = rsub.add_parser("add", help="在这批的表里登记一张")
     ra.add_argument("content", help="内容编号，比如 T002")

@@ -358,7 +358,7 @@
       x = list[i];
       if (!x || !isRegistered(x.item, x.field)) return no('unregistered', '这处内容没有登记在页面数据里，无法保存：' + (x ? describe(x.item, x.field) : '空'));
       var r0 = recOf(x.item + '|' + x.field);
-      if (r0 && r0.conflict) return no('conflict', describe(x.item, x.field) + '有冲突还没处理，请先在冲突框里选择「换回我的」或「用文件里的」');
+      if (r0 && r0.conflict) return no('conflict', describe(x.item, x.field) + '有冲突还没处理，先在冲突框里选好要哪一版');
       if (keys[x.item + '|' + x.field]) return no('duplicate', '同一处内容在一次操作里出现了两次');
       keys[x.item + '|' + x.field] = true;
     }
@@ -739,7 +739,7 @@
     }
     function done(ok) {
       if (ok) return flash('已复制 ' + n + ' 处改动，可以直接粘贴给 AI');
-      flash('浏览器不允许自动复制，内容已在下方文本框里选中，请手动复制');
+      flash('浏览器不允许自动复制，下方文本框里的内容已经全选，按 ⌘C 复制');
       var box = mk('div', 'jc-kit-manual'), ta = mk('textarea');
       ta.value = text; box.appendChild(ta); box.appendChild(btn('关闭', function () { box.remove(); }));
       document.body.appendChild(box); ta.focus(); ta.select();

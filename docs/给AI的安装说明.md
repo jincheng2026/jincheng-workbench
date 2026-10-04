@@ -332,7 +332,7 @@ head -3 ~/.codex/skills/jincheng-workbench-cover/SKILL.md
 python3 ~/jincheng-workbench/skills/jincheng-workbench-cover/scripts/cover.py where
 ```
 
-- 算成功：第一条命令的第 2 行是 `name: jincheng-workbench-cover`；第二条打印工作文件夹、封面素材在哪，照片和默认对标这时候多半是「还没设」，正常：用户第一次出封面时，AI 做到那一步会请他放照片、拆一个对标博主。
+- 算成功：第一条命令的第 2 行是 `name: jincheng-workbench-cover`；第二条打印工作文件夹、封面素材在哪，人物参考图片这时候多半是「还没有」、默认风格「还没设」，正常：用户第一次出封面时，AI 做到那一步会请他放自己的照片、拆一个对标博主。
 - 不对时：`ln` 提示 `File exists`，照第 12 步的办法先看已有的是什么，按那里的三种情况办。
 
 **不能用软链时**：和第 12 步一样改成复制（`cp -R ~/jincheng-workbench/skills/jincheng-workbench-cover ~/.codex/skills/`，Claude Code 换成 `~/.claude/skills/`），以后每次更新完再复制一次。

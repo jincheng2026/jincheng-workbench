@@ -1,6 +1,6 @@
 """新手指引和「正在读取……」的浏览器测试：真的起一份工作台（临时家目录，端口从 38878 往后找，不碰正在用的那份），
 用无界面 Chrome 照用户的样子点：「内容」页顶部的卡和清单、「带我走一遍」以后每步要亲手点、刷新和换页面接着走、
-等 AI 那一步不压暗、等到创作页自动往下走、打开创作页接着走第二段并采纳一条、清单四项打满后收成「重看引导」、
+等 AI 那一步不压暗、等到创作页自动往下走、打开创作页接着走第二段并采纳一条、清单四项打满后收成「重看新手指引」、
 「我自己看」和跳过、「新手指引」从第 1 步重走、要亮的按钮不在就跳过那一步、窄屏不出屏、用到时的提示只出一次、
 等 AI 那一步的气泡只说粘贴给 AI、发出去（不摆路径），一键打开的链接开在工作文件夹、填好那句话；
 「选题」页的「加你自己的选题」等开场卡收起再出，「复制给 AI：加选题」复制的那句话对、AI 加完切回来就看到。
@@ -302,7 +302,7 @@ class TourBrowserTests(unittest.TestCase):
 
     def test_6_whole_way(self):
         """从「带我走一遍」走到创作页采纳一条：每步要亲手点（按 → 和点暗处不前进）；刷新、换页面接着走；等 AI 那步不压暗、
-        等到创作页自动往下走；创作页里两步；清单四项打满，卡收成一行「重看引导」"""
+        等到创作页自动往下走；创作页里两步；清单四项打满，卡收成一行「重看新手指引」"""
         ctx, page = self.open()
         requests = []
         ctx.on('request', lambda r: requests.append(r.url))
@@ -369,7 +369,7 @@ class TourBrowserTests(unittest.TestCase):
                 break
             time.sleep(0.15)
         self.assertEqual(self.decisions_in(page_file)[0], '采纳')
-        # 回到工作台：清单 4/4，卡收成一行「重看引导」；不再有亮框和细栏
+        # 回到工作台：清单 4/4，卡收成一行「重看新手指引」；不再有亮框和细栏
         page.bring_to_front()
         page.goto(self.base + '/content')
         state = self.card_state(page)
@@ -387,7 +387,7 @@ class TourBrowserTests(unittest.TestCase):
         page.goto(self.base + '/content?tab=topics')
         state = self.card_state(page)
         if 'entry' in state:
-            page.click('[data-tour="tour-entry"]')  # 清单打满时是「重看引导」那一行：点了从第 1 步重走
+            page.click('[data-tour="tour-entry"]')  # 清单打满时是「重看新手指引」那一行：点了从第 1 步重走
         else:
             page.get_by_role('button', name=self.T['card']['start'], exact=True).click()
         self.assertStep(page, 'open-topic', '/content/T001')
@@ -481,7 +481,7 @@ class TourBrowserTests(unittest.TestCase):
         tip.wait_for(timeout=4000)
         self.assertEqual(page.get_by_role('button', name=BUTTON).count(), 1, '同一屏只放一个「复制给 AI：加选题」')
         page.get_by_role('button', name=BUTTON).click()
-        page.get_by_text('加选题的话已复制').wait_for(timeout=4000)
+        page.get_by_text('给 AI 的话已复制').wait_for(timeout=4000)
         self.assertIn('粘贴给 Codex 或 Claude Code', page.inner_text('[data-sonner-toaster]'))
         self.assertEqual(self.clipboard(page), self.T['askTopic'])
         self.assertNotIn(str(self.work), self.T['askTopic'], '那句话不带这台电脑的路径')

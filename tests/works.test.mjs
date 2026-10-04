@@ -149,7 +149,7 @@ test("一条编号一张卡：做到哪一步、为什么这么判断、要核�
 
   // 直接放在类型文件夹里、总览没写的卡也认
   assert.equal(by.T106.type, "AI教程");
-  assert.deepEqual(by.T106.issues, ["选题总览里没有这一行"]);
+  assert.deepEqual(by.T106.issues, ["选题总览里没有这个编号"]);
 
   assert.equal(result.notices.length, 2);
   assert.match(result.notices[0], /访谈/);

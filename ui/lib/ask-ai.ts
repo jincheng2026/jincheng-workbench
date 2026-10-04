@@ -65,7 +65,7 @@ export function askCommentReport(info: AskInfo, files: string[]): string {
 // —— 封面（1.1 加，封面 Skill）——
 // 原作者 2026-10-04 定：拆一个博主看他最近 20 张封面；一批默认 5 张；挑一张、改一张在 Codex 桌面版里做（看图、评论改图是它自带的），
 // 所以没有「按备注改」这类复制的话。风格编号：对标账号是账号文件夹名，你放进来的图是「风格/<文件夹名>」（和封面 Skill 约好的）。
-const COVER_HUMAN = '要我放照片、接 TikHub、放封面图或者点允许的时候，停下来告诉我怎么做。';
+const COVER_HUMAN = '要我放人物参考图片、接 TikHub、放封面图或者点允许的时候，停下来告诉我怎么做。';
 const VI_DONE = '写成 VI 拆解放进工作台，起好风格名；我还没有默认风格的话，就把它设成默认。';
 const VI_LEARN = '做完告诉我他的封面最值得学的几条规律。';
 
@@ -111,7 +111,7 @@ export function askMakeCovers(id: string, info: AskInfo, { count = 5, size = '�
       ? `照风格「${style.name ?? style.id}」（${where}）出${compositions.length ? `，构图参考它的 ${compositions.join('、')}` : ''}；`
       : '照我设的默认风格出；';
    const words = text?.trim() ? `封面上的字用「${text.trim()}」；` : '封面上的字用创作页里定好的，没定就用选题名；';
-   return `用${info.name}的封面 Skill（${info.skill}），给选题 ${id} 出一批封面：${count} 张，${size}；${styleText}${words}照片用我在工作台「封面」里放的。放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题。${tail(info, COVER_HUMAN)}`;
+   return `用${info.name}的封面 Skill（${info.skill}），给选题 ${id} 出一批封面：${count} 张，${size}；${styleText}${words}人物参考图片用我在工作台「封面」里放的。放进这条内容的封面候选，做完告诉我出了几张、哪几张自检有问题。${tail(info, COVER_HUMAN)}`;
 }
 
 /** 对标账号页的「复制给 AI 的话」：把一个博主加进对标账号 */

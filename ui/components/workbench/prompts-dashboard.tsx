@@ -72,15 +72,15 @@ function daysSince(iso: string | null | undefined, now: number) {
 function signal(prompt: Prompt, now: number): { kind: 'skill' | 'dormant' | null; text: string } {
    if (prompt.useCount30 >= SKILL_THRESHOLD) return { kind: 'skill', text: `30 天用了 ${prompt.useCount30} 次，可考虑做成 Skill` };
    if (daysSince(prompt.lastUsedAt, now) > DORMANT_DAYS && daysSince(prompt.addedAt, now) > DORMANT_DAYS) {
-      return { kind: 'dormant', text: `超过 ${DORMANT_DAYS} 天没用，沉睡中，可考虑删除` };
+      return { kind: 'dormant', text: `超过 ${DORMANT_DAYS} 天没用，可以考虑删掉` };
    }
    return { kind: null, text: '' };
 }
 
 function usageMeta(prompt: Prompt) {
    if (!prompt.useCount) return '还没用过';
-   const recent = prompt.useCount30 ? `30 天 ${prompt.useCount30} 次 · ` : '';
-   return `${recent}共 ${prompt.useCount} 次 · ${fmtDate(prompt.lastUsedAt)}`;
+   const recent = prompt.useCount30 ? `近 30 天用了 ${prompt.useCount30} 次 · 一共 ` : '用了 ';
+   return `${recent}${prompt.useCount} 次 · 上次 ${fmtDate(prompt.lastUsedAt)}`;
 }
 
 type LibraryResult = { library?: Library; prompt?: Prompt; ids?: string[]; deleted?: { id: string }[]; trashDir?: string };
@@ -90,12 +90,12 @@ async function copyAndRecord(prompt: Prompt, text: string, onLibrary: (library: 
    try {
       await navigator.clipboard.writeText(text);
    } catch {
-      toast.error('复制失败，请打开后手动选择复制');
+      toast.error('复制失败，点开这条提示词，选中正文手动复制');
       return false;
    }
    try {
       const result = await postJson<LibraryResult>('/api/prompts/use', { id: prompt.id });
-      if (result.prompt?.id !== prompt.id || !result.library?.prompts) throw new Error('使用记录尚未回读一致');
+      if (result.prompt?.id !== prompt.id || !result.library?.prompts) throw new Error('写进去以后读回来对不上');
       onLibrary(result.library as Library);
       toast.success(`已复制「${prompt.title}」，第 ${result.prompt?.useCount ?? 1} 次使用`);
    } catch (cause) {
@@ -110,7 +110,7 @@ async function setStar(prompt: Prompt, starred: boolean, onLibrary: (library: Li
    try {
       const result = await postJson<LibraryResult>('/api/prompts/star', { id: prompt.id, starred });
       if (result.prompt?.id !== prompt.id || result.prompt?.starred !== starred || !result.library?.prompts) {
-         throw new Error('收藏状态尚未回读一致');
+         throw new Error('写进去以后读回来对不上');
       }
       onLibrary(result.library as Library);
    } catch (cause) {
@@ -458,7 +458,7 @@ function PromptTile({
                   onClick={(event) => void quickCopy(event)}
                   disabled={busy}
                   title={prompt.variables.length ? `要先填 ${prompt.variables.length} 项，点开填写` : '直接复制'}
-                  aria-label={prompt.variables.length ? '填变量并复制' : '复制'}
+                  aria-label={prompt.variables.length ? '填好后复制' : '复制'}
                   className="jc-button jc-button-secondary inline-flex h-7 w-7 items-center justify-center rounded-md p-0 disabled:opacity-60"
                >
                   {busy ? <Spinner size={12} /> : <Copy size={13} />}
@@ -473,7 +473,7 @@ function PromptTile({
                {prompt.category}
             </span>
             <span>{usageMeta(prompt)}</span>
-            {prompt.variables.length > 0 && <span>· 填 {prompt.variables.length} 项</span>}
+            {prompt.variables.length > 0 && <span>· 复制前要填 {prompt.variables.length} 项</span>}
             {sig.kind === 'skill' && (
                <span className="ml-auto inline-flex items-center gap-1 font-medium" style={{ color: 'var(--jc-accent)' }} title={sig.text}>
                   <Sparkles size={12} /> 可做成 Skill
@@ -481,7 +481,7 @@ function PromptTile({
             )}
             {sig.kind === 'dormant' && (
                <span className="ml-auto inline-flex items-center gap-1" style={{ color: 'var(--jc-warn)' }} title={sig.text}>
-                  <Moon size={12} /> 沉睡
+                  <Moon size={12} /> 很久没用
                </span>
             )}
          </div>
@@ -673,14 +673,26 @@ export default function PromptsDashboard() {
    const header = (
       <PageHeader
          title="提示词"
-         description="打开就能输入，↑↓ 选、回车复制；卡片可以拖动，拖完就固定；点星标收藏，右键选中和删除。要加一条或改正文，直接改提示词文件夹里的 md 文件。"
+         description={
+            // 页面上留最要紧的两句，拖动、收藏、删除这些点开才看（原作者 10-05 嫌字太长，学 WorkBuddy 把长说明收起来）
+            <details className="jc-how">
+               <summary>
+                  打开就能打字搜，↑↓ 选、回车复制。要加一条或改正文，直接改提示词文件夹里的 md 文件。
+                  <span className="jc-how-toggle">
+                     <span className="jc-how-more">还能怎么用</span>
+                     <span className="jc-how-less">收起</span>
+                  </span>
+               </summary>
+               <p>卡片可以拖动，拖完就固定；点星标收藏；右键能选中多条、一起删除。</p>
+            </details>
+         }
          right={
             <>
                <PlaceButton place="prompts" title="在访达中打开提示词文件夹">
-                  <FolderOpen size={14} /> 提示词文件夹
+                  <FolderOpen size={14} /> 打开提示词文件夹
                </PlaceButton>
-               <PlaceButton place="promptFormat" title="用默认程序打开格式说明">
-                  怎么写
+               <PlaceButton place="promptFormat" title="用默认程序打开「提示词怎么写」">
+                  提示词怎么写
                </PlaceButton>
             </>
          }
@@ -692,7 +704,7 @@ export default function PromptsDashboard() {
             {header}
             <SemBanner tone={error.code === 'prompts-missing' ? 'warn' : 'err'}>
                {error.code === 'prompts-missing'
-                  ? `${error.text}。可能被移走或删掉了：找回来放回原处，或者在设置文件里把 paths.prompts 改成它现在的位置，再重新运行 pnpm start。`
+                  ? `${error.text}。可能被移走或删掉了：找回来放回原处，或者在设置文件里把 paths.prompts 改成它现在的位置，再运行 pnpm stop 和 pnpm start。`
                   : `提示词暂时读不出来：${error.text}`}
             </SemBanner>
          </div>
@@ -816,7 +828,7 @@ export default function PromptsDashboard() {
                   color: onlyStarred ? 'var(--jc-accent)' : 'var(--jc-body)',
                }}
             >
-               <Star size={12} fill={onlyStarred ? 'currentColor' : 'none'} /> 收藏 {library.totalStarred}
+               <Star size={12} fill={onlyStarred ? 'currentColor' : 'none'} /> 只看收藏 {library.totalStarred}
             </button>
             <span className="text-[12px]" style={{ color: 'var(--jc-ghost)' }}>
                共 {library.totalPrompts} 条 · 累计复制 {library.totalCopies} 次
@@ -901,7 +913,7 @@ export default function PromptsDashboard() {
                         全选当前 {shown.length} 条
                      </SecondaryButton>
                   )}
-                  <SecondaryButton size="small" onClick={() => setSelected(new Set())}>取消</SecondaryButton>
+                  <SecondaryButton size="small" onClick={() => setSelected(new Set())}>清除选择</SecondaryButton>
                   <DangerButton size="small" onClick={() => setDeleting([...selected])}>
                      <Trash2 size={13} /> 删除 {selected.size} 条…
                   </DangerButton>
@@ -930,7 +942,7 @@ export default function PromptsDashboard() {
             ) : (
                <EmptyState
                   text="提示词文件夹里还没有提示词"
-                  hint="一条提示词就是一个 md 文件：放在哪个子文件夹里，就属于哪个分类。开头几行写名字和什么时候用，下面是正文，格式照「怎么写」里的说明。放好以后刷新这个页面。"
+                  hint="一条提示词就是一个 md 文件：放在哪个子文件夹里，就属于哪个分类。开头几行写名字和什么时候用，下面是正文，格式照「提示词怎么写」里的说明。放好以后刷新这个页面。"
                   actions={
                      <>
                         <PlaceButton place="prompts" primary>
@@ -1004,7 +1016,7 @@ export default function PromptsDashboard() {
             提示词文件夹：<CopyPath path={library.dir} /> · 使用记录：<CopyPath path={library.eventsFile} /> · 卡片顺序：<CopyPath path={library.manualOrderFile} /> · 分类顺序：<CopyPath path={library.categoryOrderFile} />
          </p>
          <p className="mt-1 text-[11px]" style={{ color: 'var(--jc-ghost)' }}>
-            想让 AI 帮你挑：把上面的提示词文件夹路径发给 Codex 或 Claude Code，说清你现在的处境就行。
+            想让 AI 帮你挑提示词：把上面的提示词文件夹路径发给 Codex 或 Claude Code，说清你现在的处境就行。
          </p>
       </div>
    );

@@ -176,9 +176,9 @@ function AccountDialog({
                   </span>
                   <span>
                      {files.length
-                        ? `要传的 ${files.length} 张：${files.map((f) => f.name).join('、')}`
+                        ? `要传的 ${files.length} 张图：${files.map((f) => f.name).join('、')}`
                         : account?.images.length
-                          ? `已经有 ${account.images.length} 张，点这里或拖进来再加`
+                          ? `已经有 ${account.images.length} 张图，点这里或拖进来再加`
                           : '点这里选，或者把截图拖进来。以后靠这张图认出他'}
                   </span>
                   <input
@@ -276,10 +276,10 @@ function ViLine({ a, onChanged }: { a: Account; onChanged: () => void }) {
             封面 VI：<b style={{ color: 'var(--jc-ink)' }}>{vi.style ?? '已拆'}</b>
          </span>
          {vi.isDefault ? (
-            <SemBadge tone="ok">默认对标</SemBadge>
+            <SemBadge tone="ok">默认风格</SemBadge>
          ) : (
             <button type="button" className="font-medium" style={{ color: 'var(--jc-accent)' }} disabled={busy} onClick={() => void makeDefault()}>
-               {busy ? '正在设……' : '设为默认'}
+               {busy ? '正在设成默认……' : '设为默认风格'}
             </button>
          )}
          {vi.report && (
@@ -370,12 +370,12 @@ function AccountCard({ a, reports, onEdit, onZoom, onChanged }: { a: Account; re
                         看报告
                      </Link>
                   ) : (
-                     <Link href={`/research?tab=reports&account=${encodeURIComponent(a.name)}`}>报告 {reports.length} 份</Link>
+                     <Link href={`/research?tab=reports&account=${encodeURIComponent(a.name)}`}>看 {reports.length} 份报告</Link>
                   ))}
                {a.images.length > 1 && (
                   <button type="button" onClick={onZoom} className="inline-flex items-center gap-1" style={{ color: 'var(--jc-accent)' }}>
                      <Images size={13} aria-hidden="true" />
-                     看图 {a.images.length}
+                     看 {a.images.length} 张图
                   </button>
                )}
                <button type="button" onClick={onEdit} className="ml-auto" style={{ color: 'var(--jc-muted)' }}>

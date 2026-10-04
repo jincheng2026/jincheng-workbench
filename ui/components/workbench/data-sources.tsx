@@ -173,7 +173,7 @@ function TikhubCard({
          setConfirming(false);
          setSources((s) => ({ ...s, tikhub: { ...s.tikhub, ...answer.status, check: null } }));
       } catch (error) {
-         toast.error(`没删掉：${errorText(error)}`);
+         toast.error(`没删掉 key：${errorText(error)}`);
       } finally {
          setBusy(null);
       }
@@ -235,7 +235,7 @@ function TikhubCard({
       <Card id="tikhub-card" className={`p-5 ${flash ? 'jc-flash' : ''}`}>
          <CardHead
             title="TikHub"
-            what="自动拉博主的资料、作品和数据，也能采少量评论"
+            what="自动拉博主的资料、作品和播放点赞数据，也能快速采少量评论"
             badge={!t.configured ? { tone: 'gray', text: '还没接' } : failed ? { tone: 'warn', text: '要处理' } : { tone: 'ok', text: '已接好' }}
          />
          {t.configured ? (
@@ -280,16 +280,16 @@ function TikhubCard({
          ) : (
             <>
                <p className="mb-4 text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-body)' }}>
-                  付费的数据接口：用你自己的账号和 key，按调用次数扣钱，没有月费。接好以后，AI 能自动拉博主的资料、作品和播放点赞这些数据，也能快速采少量评论；要完整的评论区，用社媒助手导出。
+                  付费的数据接口：用你自己的账号和 key，按调用次数扣钱，没有月费。要完整的评论区，用社媒助手导出。
                </p>
                <ol className="jc-steps">
                   <Step n={1} title="注册 TikHub" action={<OutLink href={t.links.register}>去注册</OutLink>}>
-                     要验证邮箱。新号送 {t.newCredit} 美元，只够试抖音；小红书的接口不能用送的额度，做小红书要先充 {t.minTopUp} 美元。
+                     要验证邮箱。新号送 {t.newCredit} 美元，只够试抖音；小红书的接口不能用送的额度，要先充 {t.minTopUp} 美元。
                   </Step>
                   <Step n={2} title="拿 API key" action={<OutLink href={t.links.keys}>去拿 key</OutLink>}>
                      登录后在「API 密钥」页点「创建」，权限范围全部勾上（不勾会用不了），创建好点「复制」。
                   </Step>
-                  <Step n={3} title="粘贴到这里，检测通过就存好">
+                  <Step n={3} title="把 key 粘贴到这里，检测通过就存好">
                      先用免费的查余额接口试一下，通过了才存进这台 Mac 的钥匙串，不写进任何文件。
                      {pasteRow}
                      {result && <CheckBanner check={result} links={t.links} busy={busy !== null} onRetry={() => void connect()} />}
@@ -308,7 +308,7 @@ function TikhubCard({
                ))}
             </ul>
             <p className="mt-1.5 flex flex-wrap items-center gap-2" style={{ color: 'var(--jc-muted)' }}>
-               {t.cost.note}要做小红书或者拉得多，先充值（最低 {t.minTopUp} 美元）。
+               {t.cost.note}要拉小红书的数据或者拉得多，先充值（最低 {t.minTopUp} 美元）。
                <OutLink href={t.links.addCredit}>去充值</OutLink>
             </p>
          </details>
@@ -388,15 +388,15 @@ function SocialCard({ sources, setSources, flash }: { sources: Sources; setSourc
             title="在这个个人资料里装社媒助手"
             action={
                <>
-                  <OutLink href={social.storeUrl}>去 Chrome 商店装</OutLink>
-                  <OutLink href={social.downloadUrl}>商店打不开：官网下载</OutLink>
+                  <OutLink href={social.storeUrl}>在 Chrome 商店安装</OutLink>
+                  <OutLink href={social.downloadUrl}>商店打不开：从官网下载安装包</OutLink>
                </>
             }
          >
             装好后点浏览器右上角的拼图图标，把社媒助手固定到工具栏。
          </Step>
-         <Step n={3} title="用小号登录小红书、抖音" action={<OutLink href={social.safetyUrl}>官方安全建议</OutLink>}>
-            官方建议：小红书一个号每天不超过 200 篇、每次间隔 30 到 60 秒；连续多天触发风控，账号可能被限流甚至封号。
+         <Step n={3} title="用小号登录小红书、抖音" action={<OutLink href={social.safetyUrl}>看官方原文</OutLink>}>
+            社媒助手官方建议：小红书一个号每天采不超过 200 篇、每次间隔 30 到 60 秒；连续多天触发风控，账号可能被限流甚至封号。
          </Step>
          <Step n={4} title="导出评论">
             打开插件侧边栏的「批量采集」，选「评论」，粘贴笔记或视频链接（一行一个），导出 Excel（CSV、TSV 也行）。
@@ -430,7 +430,7 @@ function SocialCard({ sources, setSources, flash }: { sources: Sources; setSourc
             </SecondaryButton>
          </span>
          <span className="text-[11.5px]">
-            存进{commentsFolder}，认出是评论表才算导入（Excel、CSV、TSV 都行）
+            认出是评论表才导入，存进{commentsFolder}（Excel、CSV、TSV 都行）
          </span>
          <input
             ref={fileRef}
@@ -451,8 +451,8 @@ function SocialCard({ sources, setSources, flash }: { sources: Sources; setSourc
       <Card id="social-card" className={`p-5 ${flash ? 'jc-flash' : ''}`}>
          <CardHead
             title="社媒助手"
-            what="用浏览器插件把评论导出成表，再拖进这里"
-            badge={imports.configured ? { tone: 'ok', text: '已导入' } : { tone: 'gray', text: '还没导入' }}
+            what="用浏览器插件把评论导出成表，拖进这里给 AI 分析"
+            badge={imports.configured ? { tone: 'ok', text: '已导入评论表' } : { tone: 'gray', text: '还没导入评论表' }}
          />
          {imports.configured ? (
             <p className="mb-3 text-[13.5px]" style={{ color: 'var(--jc-ink)' }}>
@@ -460,7 +460,7 @@ function SocialCard({ sources, setSources, flash }: { sources: Sources; setSourc
             </p>
          ) : (
             <p className="mb-4 text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-body)' }}>
-               第三方浏览器插件（{social.maker}出品），用你在浏览器里登录的账号批量采评论，免费版就能导出 Excel。要完整的评论区就用它导出：不花钱，也比 TikHub 拉得全。
+               {social.maker}出品，免费版就能导出 Excel，评论比 TikHub 拉得全。
             </p>
          )}
          {imports.configured ? (
@@ -478,7 +478,7 @@ function SocialCard({ sources, setSources, flash }: { sources: Sources; setSourc
                </span>
             )}
             <div className="min-w-0">
-               {!imports.configured && <p className="jc-step-title mb-2">把导出的表拖进来</p>}
+               {!imports.configured && <p className="jc-step-title mb-2">导入评论表</p>}
                {dropzone}
                {lines.map((line) => (
                   <SemBanner key={`${line.name}:${line.text}`} tone={line.ok ? 'ok' : 'err'} className="mt-2">
@@ -488,10 +488,10 @@ function SocialCard({ sources, setSources, flash }: { sources: Sources; setSourc
                {imports.configured && (
                   <div className="mt-3 flex flex-wrap gap-2">
                      <SecondaryButton size="small" onClick={() => void copyText(askCommentReport(askInfo(info, 'research'), tables), '给 AI 的话')} title="复制一段话，粘贴给 Codex 或 Claude Code">
-                        <Copy size={14} /> 复制给 AI：生成评论报告
+                        <Copy size={14} /> 复制给 AI：做评论洞察
                      </SecondaryButton>
                      <PlaceButton place="commentImports">
-                        <FolderOpen size={14} /> 在访达中打开
+                        <FolderOpen size={14} /> 打开评论导入文件夹
                      </PlaceButton>
                   </div>
                )}
@@ -562,7 +562,7 @@ export function DataSources({
          <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 className="text-[15px] font-semibold">
                数据来源
-               {summary.missing > 0 && <span className="jc-section-count">还差 {summary.missing} 步</span>}
+               {summary.missing > 0 && <span className="jc-section-count">还差 {summary.missing} 样没配</span>}
             </h2>
             <button type="button" className="text-[12.5px] font-medium" style={{ color: 'var(--jc-accent)' }} onClick={() => onOpenChange(false)}>
                {summary.missing > 0 ? '先不配，收起来' : '收起来'}
@@ -570,7 +570,7 @@ export function DataSources({
          </div>
          {summary.missing > 0 && (
             <p className="mb-3 text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
-               两样都没配也能用：手动加对标账号、看报告都不受影响。配好 TikHub 以后，AI 能自动拉博主的作品和数据；导入评论表以后，AI 能分析评论区。
+               两样都没配也能用：手动加对标账号、看报告都不受影响。
             </p>
          )}
          <div className="grid items-start gap-3 min-[1180px]:grid-cols-2">

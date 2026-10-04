@@ -134,7 +134,7 @@ def render_read(page, doc):
          '- 内容已确认：%s' % ('是（%s）' % fi['approved'] if fi.get('approved') else '还没有')]
     nar = lk.get('narrative') or {}
     if any(nar.get(k) for k in ('story', 'audience', 'problem')):
-        L += ['- 叙事：讲了个什么故事：%s；给谁：%s；解决什么问题：%s' % (nar.get('story', ''), nar.get('audience', ''), nar.get('problem', ''))]
+        L += ['- 叙事：讲了个什么故事：%s；给谁看：%s；解决什么问题：%s' % (nar.get('story', ''), nar.get('audience', ''), nar.get('problem', ''))]
     total = sum(cd.text_len((s.get('fields') or {}).get('mine')) for s in segs)
     L += ['- 全稿：%d 段，%d 字（只数汉字、字母、数字，和页面一致），按每秒 %s 字约 %s' % (len(segs), total, rate, cd.fmt_secs(cd.seconds(total, rate)))]
     if fi.get('approved') and not cd.items_of(doc, cd.PUBCAND):

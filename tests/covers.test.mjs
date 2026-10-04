@@ -1,10 +1,10 @@
-// 封面（1.1 加，lib/covers.mjs）：风格（对标账号的、你放进来的几组图）和默认构图、我的照片、封面设置、
+// 封面（1.1 加，lib/covers.mjs）：风格（对标账号的、你放进来的几组图）和默认构图、人物参考图片、封面设置、
 // 一条内容出过的封面和出一批时的默认值（尺寸、封面上的字）、「我的封面」一览；草稿扫描不把封面当稿子；接口走一遍。
 // 原作者 2026-10-04 定：挑和改都在 Codex 桌面版里做，工作台不再有选定、删除、收藏、批注这些按钮和接口。
 // 图片都是测试里现造的几个字节，不放真实图片。文件怎么放是和封面 Skill 一起定的（docs/开发记录.md「封面」一节）。
 import test from "node:test";
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, utimesSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import path from "node:path";
 import { createApp } from "../lib/app.mjs";
@@ -172,24 +172,29 @@ test("给页面看的图：只给封面候选里的封面和选定的那张", ()
 test("封面设置：没有文件按没设算（一批 5 张）；改一项整份写回，不认识的键留着；写坏了说出来", () => {
   const { config } = setup();
   assert.deepEqual(readCoverSettings(config), { raw: {}, photo: null, benchmark: null, batchSize: 5, problem: null });
-  writeCoverSettings(config, { photo: "我的照片/a.jpg", 以后的设置: 1 });
+  writeCoverSettings(config, { photo: "人物参考图片/a.jpg", 以后的设置: 1 });
   const next = writeCoverSettings(config, { batchSize: 8 });
-  assert.deepEqual([next.photo, next.batchSize, next.raw["以后的设置"]], ["我的照片/a.jpg", 8, 1]);
+  assert.deepEqual([next.photo, next.batchSize, next.raw["以后的设置"]], ["人物参考图片/a.jpg", 8, 1]);
   writeFileSync(path.join(config.paths.coverAssets, "封面设置.json"), "{坏了");
   assert.match(readCoverSettings(config).problem, /写坏了/);
 });
 
-test("我的照片：放一张、几张都行；第一张当主照片，后放的不换主照片；拿掉主照片换成剩下最新的；只收 PNG、JPEG、WebP", () => {
+test("人物参考图片：放一张、几张都行；第一张当主照片，后放的不换主照片；其余按放进来的先后排（和封面 Skill 挑图的顺序一样）；拿掉主照片换成剩下排第一的；只收 PNG、JPEG、WebP", () => {
   const { config } = setup();
   savePhoto(config, { filename: "正脸.png", buffer: png("me1") });
   const second = savePhoto(config, { filename: "半身.jpg", buffer: jpg("me2") });
   assert.match(second.message, /现在有 2 张/);
-  assert.equal(readCoverSettings(config).photo, "我的照片/正脸.png");
-  assert.deepEqual(listPhotos(config).map((p) => [p.name, p.main]), [["正脸.png", true], ["半身.jpg", false]]);
+  savePhoto(config, { filename: "侧脸.png", buffer: png("me3") });
+  const dir = path.join(config.paths.coverAssets, "人物参考图片");
+  // 修改时间排先后：半身最早、侧脸最晚（和封面 Skill 一样用文件的修改时间）
+  utimesSync(path.join(dir, "半身.jpg"), new Date("2026-10-01T08:00:00Z"), new Date("2026-10-01T08:00:00Z"));
+  utimesSync(path.join(dir, "侧脸.png"), new Date("2026-10-03T08:00:00Z"), new Date("2026-10-03T08:00:00Z"));
+  assert.equal(readCoverSettings(config).photo, "人物参考图片/正脸.png");
+  assert.deepEqual(listPhotos(config).map((p) => [p.name, p.main]), [["正脸.png", true], ["半身.jpg", false], ["侧脸.png", false]]);
   const removed = trashPhoto(config, "正脸.png");
-  assert.match(removed.trashedAs, /^\d{4}-\d{2}-\d{2}_照片_正脸\.png$/);
+  assert.match(removed.trashedAs, /^\d{4}-\d{2}-\d{2}_人物参考图片_正脸\.png$/);
   assert.ok(existsSync(path.join(config.paths.trash, removed.trashedAs)));
-  assert.equal(readCoverSettings(config).photo, "我的照片/半身.jpg");
+  assert.equal(readCoverSettings(config).photo, "人物参考图片/半身.jpg");
   assert.throws(() => savePhoto(config, { filename: "a.heic", buffer: Buffer.from("ftypheic-not-supported") }), /PNG、JPEG 或 WebP/);
   assert.throws(() => trashPhoto(config, "../封面设置.json"), /文件名不对/);
 });
@@ -211,7 +216,7 @@ test("你放进来的图建一个风格：建「日期_N张」文件夹和 风�
   assert.deepEqual([style.kind, style.done, style.name, style.covers], ["images", false, null, 2]);
   assert.equal(styleImage(config, created.id, "小红书截图.png").mime, "image/png");
   assert.throws(() => createImageStyle(config, { count: 0 }), /1 到 60 张/);
-  assert.throws(() => styleRef(config, "风格/../我的照片"), /风格不对/);
+  assert.throws(() => styleRef(config, "风格/../人物参考图片"), /风格不对/);
   assert.throws(() => styleRef(config, "风格/没有这组"), /找不到这组图/);
 });
 
@@ -261,7 +266,7 @@ test("拿掉一组放进来的图：整个文件夹挪进回收站；是默认�
   const result = trashImageStyle(config, mine.id);
   assert.match(result.trashedAs, /^\d{4}-\d{2}-\d{2}_风格_\d{4}-\d{2}-\d{2}_1张$/);
   assert.equal(readCoverSettings(config).benchmark, null);
-  assert.throws(() => trashImageStyle(config, "抖音-某某"), /对标账号在「市场调研」/);
+  assert.throws(() => trashImageStyle(config, "抖音-某某"), /对标账号要到「市场调研」/);
 });
 
 test("我的封面：每条出过封面的内容一组，只放 AI 给它出的封面；每张带上照哪个风格出的；选定的标出来", () => {
@@ -342,12 +347,12 @@ test("接口：风格、放图建风格、默认风格、默认构图、照片�
     assert.equal(set.json.settings.benchmark, "抖音-某某");
     const picked = await app.call("/api/covers/styles/compositions", { method: "POST", body: { style: "抖音-某某", ids: ["K02", "K01"] } });
     assert.deepEqual(picked.json.compositions, { ids: ["K02", "K01"], by: "你" });
-    // 照片
+    // 人物参考图片
     const photo = await app.call(`/api/covers/photo?filename=${encodeURIComponent("我.png")}`, { method: "POST", binary: png("me") });
     assert.equal(photo.status, 201);
     const covers = await app.call("/api/covers");
     assert.deepEqual(covers.json.sizes, ["竖版 3:4", "横版 2.35:1", "方形 1:1"]);
-    assert.equal(covers.json.settings.photo, "我的照片/我.png");
+    assert.equal(covers.json.settings.photo, "人物参考图片/我.png");
     assert.deepEqual(covers.json.photos.map((p) => p.name), ["我.png"]);
     assert.deepEqual(covers.json.styles.map((s) => [s.id, s.isDefault]), [["抖音-某某", true], [created.json.id, false]]);
     assert.deepEqual(covers.json.styles[0].compositions.ids, ["K02", "K01"]);

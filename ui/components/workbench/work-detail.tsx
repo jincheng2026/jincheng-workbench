@@ -154,7 +154,7 @@ function FileName({ file }: { file: WorkFile }) {
             {file.name}
             {file.latestVersion && (
                <span className="font-normal" style={{ color: 'var(--jc-muted)' }}>
-                  （「版本」里最新的一份）
+                  （「版本」文件夹里最新的一份）
                </span>
             )}
          </p>
@@ -218,7 +218,7 @@ export function WorkDetailPage({ id }: { id: string }) {
          toast.success((await job()).message);
          after?.();
       } catch (err) {
-         toast.error(`没能做到：${errorText(err)}`);
+         toast.error(`没能打开：${errorText(err)}`);
       } finally {
          setBusy(null);
       }
@@ -257,7 +257,7 @@ export function WorkDetailPage({ id }: { id: string }) {
             <BackLink />
             {error ? (
                <SemBanner tone={error.status === 404 ? 'warn' : 'err'} className="mt-4">
-                  {error.status === 404 ? `没有找到 ${id}：可能编号写错了，或者选题总览和选题库里都已经没有它。` : `${id} 暂时读不出来。`}
+                  {error.status === 404 ? `没有找到 ${id}，可能编号写错了。` : `${id} 暂时读不出来。`}
                   原因：{error.text}
                   <div className="mt-2 flex flex-wrap gap-2">
                      <SecondaryButton size="small" busy={loading} onClick={() => void load()}>
@@ -285,7 +285,9 @@ export function WorkDetailPage({ id }: { id: string }) {
       .filter(Boolean)
       .join('，');
    // 没有草稿文件夹时，最近改动只是选题卡的改动时间，容易被读成最近在做，不显示
-   const ago = detail.draftDir ? changedAgo(detail.lastModified) : null;
+   // 草稿多久前改过：标题下面那行已经写着「草稿…有改动」时不再说一遍
+const changed = detail.draftDir && !/^草稿.*有改动$/.test(detail.stageReason) ? changedAgo(detail.lastModified) : null;
+   const ago = changed ? (/^\d/.test(changed) ? `草稿 ${changed}` : `草稿${changed}`) : null;
    const done = detail.stage === 'done';
    const creation = detail.creation;
 
@@ -402,8 +404,19 @@ export function WorkDetailPage({ id }: { id: string }) {
                </p>
             ) : (
                !done && (
-                  <NextStepBlock label="创作页：" className="mt-4">
-                     还没有。把下面这句复制给 Codex 或 Claude Code 发出去，在哪个对话里发都行：AI 会用写稿 Skill 和你写出第一版，做成一个能直接改的网页（左边是参考，右边是你的稿，改的字自动存回文件）。没装好的，AI 会先装好。做好后这里会出现「打开创作页」。
+                  <NextStepBlock label="" className="mt-4">
+                     {/* 页面上留一句；会发生什么点开才看（原作者 10-05 嫌字太长，学 WorkBuddy 把长说明收起来） */}
+                     <details className="jc-how">
+                        <summary>
+                           <b style={{ color: 'var(--jc-accent)' }}>创作页：</b>
+                           还没有。把下面这句发给 Codex 或 Claude Code，AI 会和你写出第一版，做成能直接改的网页。
+                           <span className="jc-how-toggle">
+                              <span className="jc-how-more">看会发生什么</span>
+                              <span className="jc-how-less">收起</span>
+                           </span>
+                        </summary>
+                        <p>在哪个对话里发都行。AI 用写稿 Skill 写，网页左边是参考，右边是你的稿，在网页上改的字自动存回文件。工作台或写稿 Skill 没装好，AI 会先装好。做好后这里会出现「打开创作页」。</p>
+                     </details>
                      <AskAiLine text={askAiText(detail, info.creation.skill)} />
                   </NextStepBlock>
                )
@@ -426,7 +439,7 @@ export function WorkDetailPage({ id }: { id: string }) {
 
          {/* 拿去拍：提词器版和定稿，一键复制全文 */}
          {shoots.length > 0 && (
-            <Block id="shoot" title="拿去拍" count={shoots.length}>
+            <Block id="shoot" title="拿去拍的稿子" count={shoots.length}>
                {shoots.map((file, index) => {
                   const teleprompter = file.kind === 'teleprompter';
                   // 只有排在最前的提词器版用蓝色主按钮，按钮上写清复制的是哪一份
@@ -482,7 +495,7 @@ export function WorkDetailPage({ id }: { id: string }) {
                            className="text-[12px] font-medium"
                            style={{ color: 'var(--jc-accent)' }}
                         >
-                           {showAllOthers ? `收起，只看最近 ${OTHER_PREVIEW} 个` : `展开其余 ${others.length - OTHER_PREVIEW} 个文件`}
+                           {showAllOthers ? `收起，只看最近 ${OTHER_PREVIEW} 个文件` : `展开其余 ${others.length - OTHER_PREVIEW} 个文件`}
                         </button>
                      </div>
                   )}

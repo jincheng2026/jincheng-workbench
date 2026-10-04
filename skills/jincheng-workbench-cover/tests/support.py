@@ -218,9 +218,9 @@ class TempWorkbench(object):
         return folder
 
     def photo(self, name, data, minutes_ago=0):
-        """放一张照片进「我的照片」，修改时间往前拨 minutes_ago 分钟（照片按放进来的先后排，就是按这个时间）。"""
+        """放一张照片进「人物参考图片」，修改时间往前拨 minutes_ago 分钟（照片按放进来的先后排，就是按这个时间）。"""
         import time
-        path = write(os.path.join(self.assets, "我的照片", name), data)
+        path = write(os.path.join(self.assets, "人物参考图片", name), data)
         stamp = time.time() - minutes_ago * 60
         os.utime(path, (stamp, stamp))
         return path

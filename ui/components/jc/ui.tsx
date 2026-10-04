@@ -19,7 +19,8 @@ export function PageHeader({
       <header className="jc-page-header">
          <div className="min-w-0">
             <h1>{title}</h1>
-            <p className="jc-page-description">{description}</p>
+            {/* div 不是 p：说明里可以放点开才看的几句（.jc-how） */}
+            <div className="jc-page-description">{description}</div>
          </div>
          {right && <div className="jc-page-actions">{right}</div>}
       </header>
@@ -185,9 +186,9 @@ export function EmptyState({ text, hint, actions }: { text: string; hint?: React
             {text}
          </p>
          {hint && (
-            <p className="mx-auto mt-1.5 max-w-[520px] text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
+            <div className="mx-auto mt-1.5 max-w-[520px] text-[12.5px] leading-relaxed" style={{ color: 'var(--jc-muted)' }}>
                {hint}
-            </p>
+            </div>
          )}
          {actions && <div className="mt-4 flex flex-wrap items-center justify-center gap-2">{actions}</div>}
       </div>
@@ -276,12 +277,12 @@ export function fmtDateTime(iso: string | null | undefined): string {
    const d = new Date(iso);
    if (Number.isNaN(d.getTime())) return String(iso);
    const p = (n: number) => String(n).padStart(2, '0');
-   return `${d.getMonth() + 1}月${d.getDate()}日 ${p(d.getHours())}:${p(d.getMinutes())}`;
+   return `${d.getMonth() + 1} 月 ${d.getDate()} 日 ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 export function fmtDate(iso: string | null | undefined): string {
    if (!iso) return '—';
    const d = new Date(iso);
    if (Number.isNaN(d.getTime())) return String(iso);
-   return `${d.getMonth() + 1}月${d.getDate()}日`;
+   return `${d.getMonth() + 1} 月 ${d.getDate()} 日`;
 }

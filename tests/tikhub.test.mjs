@@ -232,7 +232,7 @@ test("大概花多少钱：兜底单价算出来的几句；现查到的单价�
   const fallback = costEstimate(FALLBACK_PRICES);
   assert.equal(fallback.live, false);
   assert.equal(fallback.checkedOn, "2026-10-03");
-  assert.match(fallback.lines[0], /拉一个博主 100 条作品约 0\.04 元，带上播放量约 0\.39 元；200 条评论约 0\.07 到 0\.39 元，1000 条约 0\.35 到 2 元/);
+  assert.match(fallback.lines[0], /拉一个博主 100 条作品约 0\.04 元，带上播放量约 0\.39 元；200 条评论约 0\.07 到 0\.39 元，1000 条评论约 0\.35 到 2 元/);
   assert.match(fallback.lines[1], /小红书贵 10 倍左右：200 条评论约 0\.7 到 3\.9 元/);
   assert.equal(fallback.video, "拆一条抖音视频不到 1 分钱");
   assert.equal(yuan(0.05), "0.35");

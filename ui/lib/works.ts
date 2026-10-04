@@ -162,7 +162,7 @@ export function changedAgo(iso: string | null | undefined, now = Date.now()): st
    const days = Math.floor(hours / 24);
    if (days <= 60) return `${days} 天前改过`;
    const d = new Date(time);
-   return `${d.getMonth() + 1}月${d.getDate()}日改过`;
+   return `${d.getMonth() + 1} 月 ${d.getDate()} 日改过`;
 }
 
 /** 「2026-01-05」→「1月5日」；不是标准日期的文字（如「待定」）原样返回。 */
@@ -170,7 +170,7 @@ export function shortDate(value: string | null | undefined): string {
    if (!value) return '';
    const m = value.trim().match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
    if (!m) return value.trim();
-   return `${Number(m[2])}月${Number(m[3])}日`;
+   return `${Number(m[2])} 月 ${Number(m[3])} 日`;
 }
 
 /** 只留第一小句（到第一个「；」或「，」），最多 limit 字；完整原话放在详情页。 */
@@ -196,7 +196,7 @@ export function planIsPast(date: string | null | undefined, now = Date.now()): b
 /** 顺延在列表里只写一句短话：新日期是标准日期写「顺延到1月5日」，待定写「暂缓，日期待定」；原话在详情页。 */
 export function deferredLine(deferred: { text: string; date: string }): string {
    const date = deferred.date?.trim() ?? '';
-   if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(date)) return `顺延到${shortDate(date)}`;
+   if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(date)) return `顺延到 ${shortDate(date)}`;
    if (!date || date.startsWith('待定')) return '暂缓，日期待定';
    return `暂缓，新日期：${firstClause(date, 12)}`;
 }

@@ -4,7 +4,7 @@
 
     ## 第 1 批
 
-    对标：抖音-某某（暖黄手写风）；照片：2 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
+    对标：抖音-某某（暖黄手写风）；人物参考图片：2 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
 
     | 编号 | 本张变化 | 自检 | 文件名 |
     | --- | --- | --- | --- |
@@ -17,7 +17,7 @@
     - 2026-10-05 21:10 按评论改 封面-03 → 封面-12
 
 - 批次小节标题固定「## 第 N 批」；只有一张表、没写小节标题时算第 1 批。
-- 小节里第一行写法固定（第二版约定）：「对标：<风格编号>（<风格名>）；照片：<几张>；日期：YYYY-MM-DD；软件：Codex；生图：image_gen；尺寸：竖版 3:4」。
+- 小节里第一行写法固定（第二版约定）：「对标：<风格编号>（<风格名>）；人物参考图片：<几张>；日期：YYYY-MM-DD；软件：Codex；生图：image_gen；尺寸：竖版 3:4」。
   工作台按它认风格：最后一个括号里是风格名（还没起名写「还没起名」，括号一定有），「对标：」后面到这个括号之前是风格编号，
   所以账号名里自己带括号也认得出；尺寸是 sizes.py 里三种之一。
 - 「## 记录」从第二版起只由 Skill 写（选定、按评论改、按备注改……），一行一件事；以前工作台写的行照样认。小节的先后不固定，读的时候按标题认。
@@ -301,16 +301,16 @@ def edit(candidates_dir, cid, change):
 
 
 def info_line(style_id, style_name, photos, date, app, tool, size=None):
-    """每批第一行，写法固定：对标：<风格编号>（<风格名>）；照片：<几张>；日期：…；软件：…；生图：…；尺寸：竖版 3:4"""
+    """每批第一行，写法固定：对标：<风格编号>（<风格名>）；人物参考图片：<几张>；日期：…；软件：…；生图：…；尺寸：竖版 3:4"""
     head = "对标：%s（%s）" % (style_id, style_name or "还没起名")
-    line = "%s；照片：%s；日期：%s；软件：%s；生图：%s" % (head, photos, date, app, tool)
+    line = "%s；人物参考图片：%s；日期：%s；软件：%s；生图：%s" % (head, photos, date, app, tool)
     return line + ("；尺寸：%s" % size.text if size is not None else "")
 
 
 def parse_info(line):
     """把每批第一行拆开：{"style_id", "style_name", "photos", "date", "app", "tool", "size"}（size 是 Size 或者 None）。"""
     out = {"style_id": None, "style_name": None, "photos": None, "date": None, "app": None, "tool": None, "size": None}
-    keys = {"对标": "style_id", "照片": "photos", "日期": "date", "软件": "app", "生图": "tool"}
+    keys = {"对标": "style_id", "人物参考图片": "photos", "照片": "photos", "日期": "date", "软件": "app", "生图": "tool"}  # 「照片」是 10-04 以前的写法，照样认
     for part in str(line or "").split("；"):
         key, sep, value = part.partition("：")
         if not sep:

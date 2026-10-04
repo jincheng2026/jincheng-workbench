@@ -1867,6 +1867,36 @@ input[type='search'] {
       gap: 4px;
    }
 }
+/* 页面上只留一句，几步做法点「看怎么做」才展开（原作者 10-05 嫌字太长，学 WorkBuddy 把长说明收起来） */
+.jc-how > summary {
+   list-style: none;
+}
+.jc-how > summary::-webkit-details-marker {
+   display: none;
+}
+.jc-how-toggle {
+   margin-left: 6px;
+   font-weight: 500;
+   color: var(--jc-accent);
+}
+.jc-how-less,
+.jc-how[open] .jc-how-more {
+   display: none;
+}
+.jc-how[open] .jc-how-less {
+   display: inline;
+}
+.jc-how ol {
+   margin: 6px 0 0;
+   padding-left: 18px;
+   list-style: decimal;
+}
+.jc-how li + li {
+   margin-top: 2px;
+}
+.jc-how p {
+   margin-top: 4px;
+}
 .jc-comp-thumb {
    width: 30px;
    aspect-ratio: 3 / 4;
@@ -1973,7 +2003,7 @@ input[type='search'] {
 .jc-cover-nav:hover {
    background: var(--jc-soft);
 }
-/* 「封面」页：左边风格、拆新风格、我的封面；右边角上我的照片（窄屏放到最上面） */
+/* 「封面」页：左边风格、拆新风格、我的封面；右边角上人物参考图片（窄屏放到最上面） */
 .jc-covers-page {
    display: grid;
    grid-template-columns: minmax(0, 1fr) 260px;

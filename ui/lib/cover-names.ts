@@ -25,23 +25,23 @@ export function defaultCompositions(style: Pick<Style, 'images' | 'compositions'
    return saved.length ? saved : have.slice(0, 5);
 }
 
-/** 「2026-10-04_8张」→「10 月 4 日放的」；认不出就是 null */
+/** 「2026-10-04_8张」→「10 月 4 日」；认不出就是 null */
 function droppedOn(folder: string): string | null {
    const m = folder.match(/^\d{4}-(\d{2})-(\d{2})_/);
-   return m ? `${Number(m[1])} 月 ${Number(m[2])} 日放的` : null;
+   return m ? `${Number(m[1])} 月 ${Number(m[2])} 日` : null;
 }
 
-/** 风格叫什么：拆好了用风格名；还没拆的说清是谁、几张 */
+/** 风格叫什么：拆好了用风格名；还没拆的说清是谁的封面 VI、几张图 */
 export function styleName(style: Pick<Style, 'name' | 'kind' | 'accountName' | 'folder' | 'covers'>): string {
    if (style.name) return style.name;
-   return style.kind === 'account' ? `「${style.accountName ?? style.folder}」还没拆` : `还没拆的 ${style.covers} 张图`;
+   return style.kind === 'account' ? `「${style.accountName ?? style.folder}」的封面 VI 还没拆` : `还没拆的 ${style.covers} 张图`;
 }
 
-/** 风格从哪来：对标账号「某某」（抖音）／你放进来的 8 张图（10 月 4 日放的） */
+/** 风格从哪来：来自对标账号「某某」（抖音）／来自你 10 月 4 日放进来的 8 张图 */
 export function styleSource(style: Pick<Style, 'kind' | 'accountName' | 'platform' | 'folder' | 'covers'>): string {
-   if (style.kind === 'account') return `对标账号「${style.accountName ?? style.folder}」${style.platform ? `（${style.platform}）` : ''}`;
+   if (style.kind === 'account') return `来自对标账号「${style.accountName ?? style.folder}」${style.platform ? `（${style.platform}）` : ''}`;
    const day = droppedOn(style.folder);
-   return `你放进来的 ${style.covers} 张图${day ? `（${day}）` : ''}`;
+   return `来自你${day ? ` ${day}` : ''}放进来的 ${style.covers} 张图`;
 }
 
 export type StyleGroup = { key: string; style: string | null; styleName: string | null; covers: (LibraryCover & { id: string; title: string })[] };

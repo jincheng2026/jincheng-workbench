@@ -1,8 +1,8 @@
 """封面素材/封面设置.json：主照片、默认风格、一批几张。工作台和这个 Skill 都会写它（约定见 docs/开发记录.md「封面 Skill」）。
 
-{ "photo": "我的照片/正脸.jpg", "benchmark": "风格/2026-10-04_8张", "batchSize": 5 }
+{ "photo": "人物参考图片/正脸.jpg", "benchmark": "风格/2026-10-04_8张", "batchSize": 5 }
 
-- photo：主照片，相对「封面素材」的路径；没设是 null。出封面时「我的照片」里的照片默认都用：主照片在前，再按放进来的先后，
+- photo：主照片，相对「封面素材」的路径；没设是 null。出封面时「人物参考图片」里的图默认都用：主照片在前，再按放进来的先后，
   一张封面最多 3 张当长相参考（photo_set）。
 - benchmark：默认风格的风格编号（对标账号文件夹名，或者「风格/<文件夹名>」，见 styles.py）；没设是 null。键名不改，老文件照样读。
 - batchSize：一批默认几张，默认 5。
@@ -20,7 +20,7 @@ from . import styles as ST
 from .text import read_bytes, read_json, update_text
 
 FILE = "封面设置.json"
-PHOTO_DIR = "我的照片"
+PHOTO_DIR = "人物参考图片"  # 做封面时照着它画人；工作台「封面」页角上那块也叫这个（2026-10-04 原作者改的叫法，原来叫「我的照片」）
 FAV_DIR = "收藏"
 DEFAULT_BATCH = 5
 MAX_BATCH = 30  # 一批再多，只能反复用同几张构图
@@ -99,7 +99,7 @@ def photo_path(places, rel):
 
 
 def photos(places):
-    """我的照片/ 里的照片：按放进来的先后（文件的修改时间从早到晚，和工作台列照片用的是同一个时间；一样时按名字）。"""
+    """人物参考图片/ 里的图：按放进来的先后（文件的修改时间从早到晚，和工作台列照片用的是同一个时间；一样时按名字）。"""
     folder = os.path.join(places["cover_assets"], PHOTO_DIR)
     try:
         names = [n for n in os.listdir(folder) if not n.startswith(".") and os.path.splitext(n)[1].lower() in I.PHOTO_EXTS]
@@ -117,7 +117,7 @@ def photos(places):
 
 
 def photo_set(places, settings=None, limit=MAX_PHOTOS):
-    """出封面用哪几张照片：「我的照片」里的默认都用，主照片（封面设置的 photo）在前，再按放进来的先后；一张封面最多 limit 张。
+    """出封面用哪几张人物参考图片：「人物参考图片」里的默认都用，主照片（封面设置的 photo）在前，再按放进来的先后；一张封面最多 limit 张。
     返回 {"all": 全部（排好的完整路径）, "used": 这次用的, "primary": 主照片（设置里写的）, "primary_abs", "primary_missing": 设了但找不到}。"""
     cs = settings or read(places)
     primary = cs["photo"]
@@ -132,20 +132,20 @@ def photo_set(places, settings=None, limit=MAX_PHOTOS):
 
 
 def find_photo(places, value):
-    """这次说要用的一张照片：完整路径，或者相对「封面素材」的路径，或者「我的照片」里的文件名。不复制、不改设置。找不到、不像照片报错。"""
+    """这次说要用的一张照片：完整路径，或者相对「封面素材」的路径，或者「人物参考图片」里的文件名。不复制、不改设置。找不到、不像图片报错。"""
     text = str(value or "").strip()
     candidates = [os.path.abspath(os.path.expanduser(text))] if os.path.isabs(os.path.expanduser(text)) else [
         os.path.join(places["cover_assets"], text), os.path.join(places["cover_assets"], PHOTO_DIR, text)]
     path = next((c for c in candidates if os.path.isfile(c)), None)
     if not path:
-        raise UserError("找不到照片「%s」：写完整路径，或者「我的照片」里的文件名（%s）。" % (text, os.path.join(places["cover_assets"], PHOTO_DIR)))
+        raise UserError("找不到这张图「%s」：写完整路径，或者「人物参考图片」里的文件名（%s）。" % (text, os.path.join(places["cover_assets"], PHOTO_DIR)))
     if os.path.splitext(path)[1].lower() not in I.PHOTO_EXTS or I.sniff(read_bytes(path)[:64]) not in ("JPEG", "PNG", "WEBP", "HEIC"):
         raise UserError("这不像照片：%s。能用的有 jpg、png、webp、heic。" % path)
     return os.path.abspath(path)
 
 
 def import_photo(places, source):
-    """把一张照片放进「我的照片」：已经在里面的不动；在外面的复制进去（同名不同图就加 -2，同一张图不重复放）。
+    """把一张照片放进「人物参考图片」：已经在里面的不动；在外面的复制进去（同名不同图就加 -2，同一张图不重复放）。
     返回 (相对「封面素材」的路径, 完整路径)。不改默认照片。"""
     src = os.path.abspath(os.path.expanduser(source))
     if not os.path.isfile(src):
@@ -176,7 +176,7 @@ def import_photo(places, source):
 
 
 def set_photo(places, source):
-    """把一张照片设成默认照片：先放进「我的照片」，再改设置。返回 (相对「封面素材」的路径, 完整路径)。"""
+    """把一张照片设成主照片：先放进「人物参考图片」，再改设置。返回 (相对「封面素材」的路径, 完整路径)。"""
     rel, dest = import_photo(places, source)
     update(places, "photo", rel)
     return rel, dest

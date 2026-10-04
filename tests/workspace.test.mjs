@@ -133,7 +133,7 @@ test("选题总览被删掉：界面上的「重新建一份」只补总览，�
   assert.deepEqual(restoreOverview(config), []);
   const works = readWorks(worksLayout(config));
   // 示例卡还在，所以 T001 照样显示，只是提醒总览里没有这一行
-  assert.deepEqual(works.works.map((x) => [x.id, x.issues]), [["T001", ["选题总览里没有这一行"]]]);
+  assert.deepEqual(works.works.map((x) => [x.id, x.issues]), [["T001", ["选题总览里没有这个编号"]]]);
 });
 
 test("设置里关掉的栏目不建它的文件夹；内容类型按设置建", () => {

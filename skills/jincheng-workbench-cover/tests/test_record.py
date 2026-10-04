@@ -1,6 +1,6 @@
 """生成记录.md：record batch / add / note / summary 写出来的和工作台约定的格式一字不差（第二版：每批第一行写风格编号、照片几张、尺寸）；
 没有小节时建第 1 批、往已有批次加行、「## 记录」追加、不复用编号、工作台同时在写时不丢它的行；
-尺寸说了用说的、没说用上一批的、再没有看内容类型；照片默认用「我的照片」里的、主照片在前、最多 3 张；参考构图。"""
+尺寸说了用说的、没说用上一批的、再没有看内容类型；照片默认用「人物参考图片」里的、主照片在前、最多 3 张；参考构图。"""
 import json
 import os
 import unittest
@@ -14,12 +14,12 @@ from cover_kit.text import update_text
 NOW = "2026-10-05 21:10"
 
 # 和约定（docs/开发记录.md「封面 Skill」第二版、工作台那边）里的样子一字不差
-FIRST_LINE = "对标：抖音-某某（暖黄手写风）；照片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4"
+FIRST_LINE = "对标：抖音-某某（暖黄手写风）；人物参考图片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4"
 CONVENTION = """# T002 封面生成记录
 
 ## 第 1 批
 
-对标：抖音-某某（暖黄手写风）；照片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
+对标：抖音-某某（暖黄手写风）；人物参考图片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
 
 | 编号 | 本张变化 | 自检 | 文件名 |
 | --- | --- | --- | --- |
@@ -41,8 +41,8 @@ class RecordCliTest(unittest.TestCase):
         self.wb.topic("T002", "用 AI 十分钟写周报")
         account = self.wb.account("抖音-某某")
         write(os.path.join(account, "VI拆解.md"), "# 某某：封面 VI 拆解\n风格名：暖黄手写风\n\n正文\n")
-        write(os.path.join(self.wb.assets, "我的照片", "正脸.jpg"), jpeg(30, 40))
-        write(os.path.join(self.wb.assets, "封面设置.json"), json.dumps({"photo": "我的照片/正脸.jpg", "benchmark": "抖音-某某", "batchSize": 10}, ensure_ascii=False))
+        write(os.path.join(self.wb.assets, "人物参考图片", "正脸.jpg"), jpeg(30, 40))
+        write(os.path.join(self.wb.assets, "封面设置.json"), json.dumps({"photo": "人物参考图片/正脸.jpg", "benchmark": "抖音-某某", "batchSize": 10}, ensure_ascii=False))
         self.env = self.wb.env(COVER_NOW=NOW)
 
     def tearDown(self):
@@ -102,7 +102,7 @@ class RecordCliTest(unittest.TestCase):
 
 ## 第 1 批
 
-对标：抖音-某某（暖黄手写风）；照片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
+对标：抖音-某某（暖黄手写风）；人物参考图片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
 
 | 编号 | 本张变化 | 自检 | 文件名 |
 | --- | --- | --- | --- |
@@ -110,7 +110,7 @@ class RecordCliTest(unittest.TestCase):
 
 ## 第 2 批
 
-对标：抖音-某某（暖黄手写风）；照片：1 张；日期：2026-10-05；软件：Claude Code；生图：只出提示词；尺寸：竖版 3:4
+对标：抖音-某某（暖黄手写风）；人物参考图片：1 张；日期：2026-10-05；软件：Claude Code；生图：只出提示词；尺寸：竖版 3:4
 
 | 编号 | 本张变化 | 自检 | 文件名 |
 | --- | --- | --- | --- |
@@ -132,7 +132,7 @@ class RecordCliTest(unittest.TestCase):
 
 ## 第 1 批
 
-对标：抖音-某某（暖黄手写风）；照片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
+对标：抖音-某某（暖黄手写风）；人物参考图片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4
 
 | 编号 | 本张变化 | 自检 | 文件名 |
 | --- | --- | --- | --- |
@@ -209,22 +209,22 @@ class RecordCliTest(unittest.TestCase):
         self.assertEqual(code, 2)
 
     def test_缺照片或风格就停下_这次只用说的照片不改设置(self):
-        os.remove(os.path.join(self.wb.assets, "我的照片", "正脸.jpg"))
+        os.remove(os.path.join(self.wb.assets, "人物参考图片", "正脸.jpg"))
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen")
         self.assertEqual(code, 2)
-        self.assertIn("还没有照片", out.splitlines()[0])
+        self.assertIn("还没有人物参考图片", out.splitlines()[0])
         self.assertFalse(os.path.exists(os.path.join(self.wb.drafts, "T002_用 AI 十分钟写周报")))
         other = write(os.path.join(self.wb.home, "下载", "侧脸.png"), png(10, 10))
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen", "--photo", other)
         self.assertEqual(code, 0, out)
-        self.assertIn("照片：1 张", self.record_text())
+        self.assertIn("人物参考图片：1 张", self.record_text())
         self.assertIn("    1. %s" % other, out)
-        self.assertFalse(os.path.exists(os.path.join(self.wb.assets, "我的照片", "侧脸.png")))  # 这次说的照片不复制进「我的照片」
+        self.assertFalse(os.path.exists(os.path.join(self.wb.assets, "人物参考图片", "侧脸.png")))  # 这次说的照片不复制进「人物参考图片照片」
         with open(os.path.join(self.wb.assets, "封面设置.json"), encoding="utf-8") as f:
-            self.assertEqual(json.load(f)["photo"], "我的照片/正脸.jpg")  # 主照片不改
+            self.assertEqual(json.load(f)["photo"], "人物参考图片/正脸.jpg")  # 主照片不改
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen", "--photo", os.path.join(self.wb.home, "没有这张.png"))
         self.assertEqual(code, 2)
-        self.assertIn("找不到照片", out)
+        self.assertIn("找不到这张图", out)
         write(os.path.join(self.wb.assets, "封面设置.json"), json.dumps({"photo": None, "benchmark": None}))
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen", "--photo", other)
         self.assertEqual(code, 2)
@@ -261,7 +261,7 @@ class RecordCliTest(unittest.TestCase):
 
 
 class BatchChoicesTest(unittest.TestCase):
-    """开一批时读话里的尺寸、风格、参考构图，照片默认用「我的照片」里的：第一行照约定的固定写法。"""
+    """开一批时读话里的尺寸、风格、参考构图，照片默认用「人物参考图片」里的：第一行照约定的固定写法。"""
 
     def setUp(self):
         self.wb = TempWorkbench()
@@ -328,7 +328,7 @@ class BatchChoicesTest(unittest.TestCase):
             self.assertEqual(code, 0, out)
             self.assertIn("风格：风格/2026-10-04_3张（风格名：蓝白大字风）", out)
         self.assertEqual(self.first_lines(self.record_text()),
-                         ["对标：风格/2026-10-04_3张（蓝白大字风）；照片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：方形 1:1"])
+                         ["对标：风格/2026-10-04_3张（蓝白大字风）；人物参考图片：1 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：方形 1:1"])
         info = R.parse_info(self.first_lines(self.record_text())[0])
         self.assertEqual((info["style_id"], info["style_name"], info["size"]), ("风格/2026-10-04_3张", "蓝白大字风", Z.SQUARE))
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen", "--benchmark", "风格/没有这组")
@@ -344,17 +344,17 @@ class BatchChoicesTest(unittest.TestCase):
         second = self.wb.photo("第二.png", png(10, 10), minutes_ago=40)
         main = self.wb.photo("主照片.jpg", jpeg(32, 40), minutes_ago=30)
         self.wb.photo("最晚.webp", b"RIFF\x00\x00\x00\x00WEBPVP8 ", minutes_ago=1)
-        write(os.path.join(self.wb.assets, "封面设置.json"), json.dumps({"photo": "我的照片/主照片.jpg", "benchmark": "抖音-某某"}, ensure_ascii=False))
+        write(os.path.join(self.wb.assets, "封面设置.json"), json.dumps({"photo": "人物参考图片/主照片.jpg", "benchmark": "抖音-某某"}, ensure_ascii=False))
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen")
         self.assertEqual(code, 0, out)
-        self.assertIn("照片（3 张，「我的照片」里的，主照片在前，再按放进来的先后", out)
+        self.assertIn("人物参考图片（3 张，「人物参考图片」里的，主照片在前，再按放进来的先后", out)
         lines = out.splitlines()
-        at = next(i for i, line in enumerate(lines) if line.startswith("  照片（"))
+        at = next(i for i, line in enumerate(lines) if line.startswith("  人物参考图片（"))
         self.assertEqual(lines[at + 1:at + 4], ["    1. %s" % main, "    2. %s" % first, "    3. %s" % second])
-        self.assertIn("「我的照片」里有 4 张，一张封面最多用 3 张，这批用前 3 张", out)
-        self.assertIn("；照片：3 张；", self.record_text())
+        self.assertIn("「人物参考图片」里有 4 张，一张封面最多用 3 张，这批用前 3 张", out)
+        self.assertIn("；人物参考图片：3 张；", self.record_text())
         code, out = run_cli(["where"], self.env, cwd=self.wb.work)
-        self.assertIn("照片：4 张，出封面默认都用（主照片在前，再按放进来的先后；一张封面最多 3 张当长相参考），这次用前 3 张：", out)
+        self.assertIn("人物参考图片：4 张，出封面默认都用（主照片在前，再按放进来的先后；一张封面最多 3 张当长相参考），这次用前 3 张：", out)
         self.assertIn("    1. %s（主照片）" % main, out)
         self.assertIn("另外 1 张这次不用：最晚.webp", out)
         # 主照片找不到了：用剩下的，照样能出
@@ -366,7 +366,7 @@ class BatchChoicesTest(unittest.TestCase):
         # 这次只用说的几张：写文件名就行，最多 3 张
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen", "--photo", "第二.png", "--photo", "最早.jpg")
         self.assertEqual(code, 0, out)
-        self.assertIn("照片（2 张，用户这次说的", out)
+        self.assertIn("人物参考图片（2 张，用户这次说的", out)
         code, out = self.cli("record", "batch", "T002", "--tool", "image_gen", *sum((["--photo", "第二.png"] for _ in range(4)), []))
         self.assertEqual(code, 2)
         self.assertIn("最多写 3 张", out)
@@ -452,7 +452,10 @@ class DocTest(unittest.TestCase):
         self.assertEqual(R.parse_info("对标：甲；照片：我的照片/正脸.jpg")["size"], None)
         self.assertEqual(R.Doc("", "T002").last_size(), (None, None))
         self.assertEqual(R.info_line("风格/x", "名字", "2 张", "2026-10-05", "Codex", "image_gen", Z.PORTRAIT),
-                         "对标：风格/x（名字）；照片：2 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4")
+                         "对标：风格/x（名字）；人物参考图片：2 张；日期：2026-10-05；软件：Codex；生图：image_gen；尺寸：竖版 3:4")
+        # 10-04 以前的第一行写「照片：」，照样认出几张
+        self.assertEqual(R.parse_info("对标：甲；照片：1 张")["photos"], "1 张")
+        self.assertEqual(R.parse_info("对标：甲；人物参考图片：2 张")["photos"], "2 张")
 
     def test_记录在前面_新的一批插在已有批次后面(self):
         doc = R.Doc("# T009 封面生成记录\n\n## 记录\n\n- 2026-10-05 20:00 收藏 封面-01\n\n## 第 1 批\n\n对标：甲\n\n" + R.HEAD + "\n" + R.SEP + "\n| 01 | K01 | 通过 | 封面-01.png |\n", "T009")

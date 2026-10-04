@@ -2,7 +2,7 @@
 - 选题页面的「封面」：出一批的设置（风格跟上一批、参考构图、封面上的字带创作页里定好的、尺寸、张数），
   「在 Codex 里再出一批」的链接和「复制给 AI」复制的话；这条的封面只看（选定的排第一，点开放大，没有选定、批注、收藏、删除）。
 - 「内容」栏的「封面」页：风格卡片（默认、设为默认、改默认构图）、一次全拆、贴主页链接、拖图建风格、我的封面按内容和按风格、
-  只看文章、我的照片放和拿掉；390 宽不横向滚动。
+  只看文章、人物参考图片放和拿掉；390 宽不横向滚动。
 交给 AI 的话和 ui/lib/ask-ai.ts 一字不差（用 node 读它算出来）。图片是测试里现画的纯色 PNG，不放真实图片。
 原作者 2026-10-04 定：挑一张、改一张都在 Codex 桌面版里做，工作台不再有选定、批注、并排对比、收藏、删除这些按钮。
 
@@ -47,7 +47,7 @@ RECORD = """# T001 封面生成记录
 
 ## 第 1 批
 
-对标：抖音-示例博主（暖黄手写风）；照片：1 张；日期：2026-10-04；软件：Codex；生图：image_gen；尺寸：竖版 3:4
+对标：抖音-示例博主（暖黄手写风）；人物参考图片：1 张；日期：2026-10-04；软件：Codex；生图：image_gen；尺寸：竖版 3:4
 
 | 编号 | 本张变化 | 自检 | 文件名 |
 | --- | --- | --- | --- |
@@ -127,10 +127,10 @@ class CoverBrowserTests(unittest.TestCase):
             (mine / '封面' / f'K{k:02d}.png').write_bytes(png(30, 40, (40, 70, 160 + k * 10)))
         (mine / 'VI拆解.md').write_text('# 放进来的 4 张图\n风格名：蓝白大字风\n', 'utf-8')
         (mine / '风格.json').write_text(json.dumps({'from': '放进来的图', 'createdAt': '2026-10-03T20:00:00+08:00', 'count': 4}), 'utf-8')
-        photos = cls.work / '封面素材' / '我的照片'
+        photos = cls.work / '封面素材' / '人物参考图片'
         photos.mkdir(parents=True, exist_ok=True)
         (photos / '正脸.png').write_bytes(png(40, 40, (180, 140, 120)))
-        (cls.work / '封面素材' / '封面设置.json').write_text(json.dumps({'photo': '我的照片/正脸.png', 'benchmark': '抖音-示例博主', 'batchSize': 5}, ensure_ascii=False), 'utf-8')
+        (cls.work / '封面素材' / '封面设置.json').write_text(json.dumps({'photo': '人物参考图片/正脸.png', 'benchmark': '抖音-示例博主', 'batchSize': 5}, ensure_ascii=False), 'utf-8')
         cls.pw = sync_playwright().start()
         cls.browser = cls.pw.chromium.launch(executable_path=CHROME, headless=True)
 
@@ -185,36 +185,36 @@ class CoverBrowserTests(unittest.TestCase):
         """出一批：风格跟上一批、参考构图是风格的默认构图、封面上的字带创作页里定好的、尺寸跟上一批、默认 5 张；改了以后话跟着变"""
         page = self.open()
         make = page.locator('[data-cover-make]')
-        self.assertEqual(make.locator('select[aria-label="照哪个风格出"]').input_value(), '抖音-示例博主')
-        self.assertIn('3 张（默认）', make.inner_text())
+        self.assertEqual(make.locator('select[aria-label="照哪个风格出封面"]').input_value(), '抖音-示例博主')
+        self.assertIn('默认的 3 张', make.inner_text())
         self.assertEqual(make.locator('input[aria-label="封面上的字"]').input_value(), '十分钟写完周报')
-        self.assertIn('创作页里你定的', make.inner_text())
+        self.assertIn('用的是创作页里你定的', make.inner_text())
         self.assertEqual(make.locator('[aria-label="尺寸"] [aria-checked="true"]').inner_text(), '竖版 3:4')
-        self.assertEqual(make.locator('[aria-label="这批几张"] [aria-checked="true"]').inner_text(), '5')
+        self.assertEqual(make.locator('[aria-label="这一批出几张"] [aria-checked="true"]').inner_text(), '5')
         style = "{id: '抖音-示例博主', kind: 'account', name: '暖黄手写风'}"
         expected = ask(f"a.askMakeCovers('T001', info, {{count: 5, size: '竖版 3:4', style: {style}, compositions: ['K02', 'K04', 'K01'], text: '十分钟写完周报'}})")
         prompt, folder = self.codex_prompt(make.locator('a[data-open-in="codex"]'))
         self.assertEqual(prompt, expected)
         self.assertEqual(Path(folder).resolve(), self.work.resolve(), '在工作文件夹里新开对话')
-        self.assertIn('在 Codex 里再出一批', make.locator('a[data-open-in="codex"]').inner_text())
+        self.assertIn('在 Codex 里再出一批封面', make.locator('a[data-open-in="codex"]').inner_text())
         # 改：横版、3 张、换一句字、构图去掉 K04 加上 K06
         make.locator('[aria-label="尺寸"] button', has_text='横版 2.35:1').click()
-        make.locator('[aria-label="这批几张"] button', has_text='3').click()
+        make.locator('[aria-label="这一批出几张"] button', has_text='3').click()
         make.locator('input[aria-label="封面上的字"]').fill('周报别再熬夜写')
-        make.locator('button', has_text='换几张').click()
+        make.locator('button', has_text='换参考构图').click()
         page.locator('.jc-comp-item[title="K04"]').click()
         page.locator('.jc-comp-item[title="K06"]').click()
         page.locator('button', has_text='这一批就用这几张').click()
-        self.assertIn('3 张（这一批改过）', make.inner_text())
+        self.assertIn('这一批挑的 3 张', make.inner_text())
         make.locator('button', has_text='复制给 AI').click()
         page.wait_for_timeout(300)
         expected = ask(f"a.askMakeCovers('T001', info, {{count: 3, size: '横版 2.35:1', style: {style}, compositions: ['K02', 'K01', 'K06'], text: '周报别再熬夜写'}})")
         self.assertEqual(self.clipboard(page), expected)
         self.assertNotIn(str(self.work), self.clipboard(page), '那句话不带这台电脑的路径')
         # 换风格：参考构图换成那个风格的
-        make.locator('select[aria-label="照哪个风格出"]').select_option('风格/2026-10-03_4张')
-        self.assertIn('你放进来的 4 张图', make.inner_text())
-        self.assertIn('4 张（默认）', make.inner_text())
+        make.locator('select[aria-label="照哪个风格出封面"]').select_option('风格/2026-10-03_4张')
+        self.assertIn('来自你 10 月 3 日放进来的 4 张图', make.inner_text())
+        self.assertIn('默认的 4 张', make.inner_text())
         self.assertEqual(page.errors, [])
 
     def test_2_topic_covers_view_only(self):
@@ -222,13 +222,13 @@ class CoverBrowserTests(unittest.TestCase):
         page = self.open()
         box = page.locator('#covers')
         self.assertEqual(box.locator('[data-cover-selected="02"]').count(), 1)
-        self.assertIn('用的是封面-02', box.inner_text())
+        self.assertIn('选定了封面-02', box.inner_text())
         text = box.inner_text()
         self.assertLess(text.index('第 2 批'), text.index('第 1 批'), '新的一批在前')
         self.assertIn('暖黄手写风 · 竖版 3:4', text)
         for gone in ('就用这张', '写备注', '并排对比', '收藏', '挪进回收站', '取消选定'):
             self.assertEqual(box.locator('button', has_text=gone).count(), 0, gone)
-        box.locator('[data-cover="04"] button', has_text='复制提示词').click()
+        box.locator('[data-cover="04"] button', has_text='复制生图提示词').click()
         page.wait_for_timeout(300)
         self.assertEqual(self.clipboard(page), 'Create ONE complete 3:4 portrait Chinese video cover.\n')
         box.locator('[data-cover="01"] .jc-cover-img').click()
@@ -246,7 +246,7 @@ class CoverBrowserTests(unittest.TestCase):
         ids = page.eval_on_selector_all('[data-style]', 'els => els.map(e => e.getAttribute("data-style"))')
         self.assertEqual(ids[0], '抖音-示例博主')
         self.assertIn('默认', page.locator('[data-style="抖音-示例博主"]').inner_text())
-        batch = page.locator('a[data-open-in="codex"]', has_text='把还没拆的 2 个对标都拆了')
+        batch = page.locator('a[data-open-in="codex"]', has_text='拆还没拆的 2 个对标账号')
         prompt, _ = self.codex_prompt(batch)
         names = page.eval_on_selector_all('[data-style][data-style^="小红书"], [data-style][data-style="抖音-第三个博主"]', 'els => els.map(e => e.getAttribute("data-style"))')
         self.assertEqual(len(names), 2)
@@ -267,10 +267,10 @@ class CoverBrowserTests(unittest.TestCase):
         self.assertEqual(settings['benchmark'], '风格/2026-10-03_4张')
         # 改默认构图
         card = page.locator('[data-style="抖音-示例博主"]')
-        card.locator('button', has_text='改').click()
+        card.locator('button', has_text='换参考构图').click()
         page.locator('.jc-comp-item[title="K04"]').click()
         page.locator('.jc-comp-item[title="K05"]').click()
-        page.locator('button', has_text='存成默认构图').click()
+        page.locator('button', has_text='存成默认参考构图').click()
         page.wait_for_timeout(500)
         saved = json.loads((self.work / '市场调研' / '对标账号' / '抖音-示例博主' / '默认构图.json').read_text('utf-8'))
         self.assertEqual((saved['ids'], saved['by']), (['K02', 'K01', 'K05'], '你'))
@@ -284,8 +284,8 @@ class CoverBrowserTests(unittest.TestCase):
         way.locator('button', has_text='复制给 AI').click()
         page.wait_for_timeout(300)
         self.assertEqual(self.clipboard(page), ask("a.askCoverViLink(info, 'https://www.douyin.com/user/abc')"))
-        self.assertIn('去接 TikHub', way.inner_text(), '没接 TikHub 时提示旁边就放「去接 TikHub」')
-        self.assertIn('connect=tikhub', way.locator('a', has_text='去接 TikHub').get_attribute('href'))
+        self.assertIn('接 TikHub', way.inner_text(), '没接 TikHub 时提示旁边就放「接 TikHub」')
+        self.assertIn('connect=tikhub', way.locator('a', has_text='接 TikHub').get_attribute('href'))
         files = [{'name': f'截图{i}.png', 'mimeType': 'image/png', 'buffer': png(30, 40, (20 * i, 120, 90))} for i in (1, 2)]
         page.set_input_files('input[aria-label="选几张封面图"]', files)
         page.wait_for_selector('[data-style$="_2张"]', timeout=10000)
@@ -309,7 +309,7 @@ class CoverBrowserTests(unittest.TestCase):
         self.assertIn('暖黄手写风', page.locator('[data-library-style="抖音-示例博主"]').inner_text())
         page.locator('[aria-label="只看"] button', has_text='文章').click()
         self.assertIn('还没有文章的封面', page.inner_text('body'))
-        page.set_input_files('input[aria-label="选几张你的照片"]', [{'name': '侧脸.png', 'mimeType': 'image/png', 'buffer': png(40, 40, (90, 60, 50))}])
+        page.set_input_files('input[aria-label="选几张人物参考图片"]', [{'name': '侧脸.png', 'mimeType': 'image/png', 'buffer': png(40, 40, (90, 60, 50))}])
         page.wait_for_selector('#my-photos .jc-photo[title="侧脸.png"]', timeout=8000)
         self.assertEqual(page.locator('#my-photos .jc-photo').count(), 2)
         page.locator('#my-photos button[aria-label="拿掉 侧脸.png"]').click()

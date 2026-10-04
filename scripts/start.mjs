@@ -137,7 +137,7 @@ async function startInBackground() {
     }
     if (exitCode !== null) {
       console.error(text.trimEnd());
-      bail(`后台启动的那一份停了（退出码 ${exitCode}），上面是它打印的话；完整记录在 ${show(logFile)}。`);
+      bail(`在后台启动的工作台停了（退出码 ${exitCode}），上面是它打印的话；完整记录在 ${show(logFile)}。`);
     }
     await sleep(500);
   }

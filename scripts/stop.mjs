@@ -78,7 +78,7 @@ const targets = new Set(listeners.map((pid) => {
   return parent && commandOf(parent).includes("scripts/start.mjs") ? parent : pid;
 }));
 if (!targets.size) {
-  console.error(`\n停不了：${BRAND.name}在运行（端口 ${ports.join("、")}），但查不到是哪个进程在听这些端口。可以重启电脑，或者在「活动监视器」里结束 node 进程。\n`);
+  console.error(`\n停不了：${BRAND.name}在运行（端口 ${ports.join("、")}），但查不到是哪个进程占着这些端口。可以重启电脑，或者在「活动监视器」里结束 node 进程。\n`);
   process.exit(1);
 }
 for (const pid of targets) {
@@ -103,7 +103,7 @@ if ((await answeringPorts(config)).length) {
   await sleep(500);
 }
 if ((await answeringPorts(config)).length) {
-  console.error(`\n停不了：${BRAND.name}还在应答（端口 ${ports.join("、")}）。可以重启电脑，或者在「活动监视器」里结束 node 进程。\n`);
+  console.error(`\n停不了：${BRAND.name}还在运行（端口 ${ports.join("、")}）。可以重启电脑，或者在「活动监视器」里结束 node 进程。\n`);
   process.exit(1);
 }
 console.log(`${BRAND.name}已经停了。`);

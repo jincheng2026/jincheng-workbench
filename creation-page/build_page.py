@@ -34,7 +34,7 @@ SEG_KEYS = {'id', 'title', 'role', 'refs', 'baseline', 'mine', 'note', 'locked',
 SUG_KEYS = {'id', 'segment', 'category', 'source', 'original', 'proposed', 'reason', 'basis', 'verdict', 'locked', 'fields'}
 ITEM_KEYS = {'id', 'kind', 'locked', 'fields'}
 NARRATIVE_KEYS = ('story', 'audience', 'problem')
-NARRATIVE_NAMES = {'story': '讲了个什么故事', 'audience': '给谁', 'problem': '解决什么问题'}
+NARRATIVE_NAMES = {'story': '讲了个什么故事', 'audience': '给谁看', 'problem': '解决什么问题'}
 
 
 class BuildError(Exception):

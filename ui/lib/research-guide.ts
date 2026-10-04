@@ -77,8 +77,7 @@ export function accountsEmpty(tikhubReady: boolean) {
    return {
       text: '还没有对标账号',
       hint:
-         '两种加法：自己加，点「添加对标账号」，填账号名和主页链接，放一张主页截图；或者让 AI 加，点「复制给 AI 的话」粘贴给 AI，在后面贴上主页链接发出去，' +
-         (tikhubReady ? 'AI 会用 TikHub 拉他的资料和作品。' : 'AI 会用 TikHub 拉他的资料和作品（要先在上面接好 TikHub）。'),
+         '两种加法：自己加，或者让 AI 用 TikHub 拉博主的资料和作品' + (tikhubReady ? '。' : '（要先在上面接好 TikHub）。'),
    };
 }
 
@@ -88,12 +87,12 @@ export function reportsEmpty(anyReady: boolean) {
    return anyReady
       ? {
            text: '还没有调研报告',
-           hint: `从上面三种调研里挑一种，点它的「复制给 AI 的话」粘贴给 AI，在后面贴上视频或主页链接发出去。${where}`,
+           hint: `从上面挑一种能做的调研，点它的「复制给 AI 的话」粘贴给 AI。${where}`,
            copy: false,
         }
       : {
            text: '还没有调研报告',
-           hint: `先接好上面的数据来源（TikHub，或者社媒助手导出的评论表），再点「复制给 AI 的话」粘贴给 AI，在后面贴上视频链接发出去。${where}`,
+           hint: `先接好上面的数据来源（TikHub 或评论表），再点「复制给 AI 的话」粘贴给 AI。${where}`,
            copy: true,
         };
 }
@@ -120,7 +119,7 @@ export function researchCards({
    importedComments: number;
    cost: Pick<CostEstimate, 'video' | 'account' | 'comments'>;
 }): ResearchCard[] {
-   const needTikhub = (spend: string) => `还缺 TikHub：接好约 5 分钟，${spend}。`;
+   const needTikhub = (spend: string) => `接好 TikHub 约 5 分钟，${spend}。`;
    const comments: ResearchCard = importedComments
       ? {
            kind: 'comments',
@@ -149,7 +148,7 @@ export function researchCards({
              title: '评论洞察',
              what: '读一条视频或笔记的评论区，看观众在问什么、要什么。',
              ready: false,
-             line: `还缺评论：用社媒助手导出一份评论表，第一次约 10 分钟，不花钱；或者接好 TikHub（约 5 分钟，${cost.comments}）。`,
+             line: `用社媒助手导出一份评论表，第一次约 10 分钟，不花钱；或者接好 TikHub（约 5 分钟，${cost.comments}）。`,
              action: 'social',
              actionLabel: '去导出评论',
           };
@@ -175,16 +174,16 @@ export function researchCards({
          action: tikhubReady ? 'copy' : 'tikhub',
          actionLabel: tikhubReady ? '复制给 AI 的话' : '去接 TikHub',
       },
-      // 封面 VI（1.1 加）：拆封面在「内容」栏的「封面」页做（对标账号里点一下、贴主页链接、把几张图拖进去都在那里），这里只放个入口
+      // 封面 VI（1.1 加）：拆封面在「内容」栏的「封面」页做（从对标账号里挑一个、贴主页链接、把几张图拖进去都在那里），这里只放个入口
       {
          kind: 'cover-vi',
          type: '封面VI',
          title: '封面 VI',
          what: '拆一个博主的封面：看他最近 20 张封面，找出能照着做的规律，以后出封面照他的风格来。',
          ready: true,
-         line: '在「内容」栏的「封面」里拆：对标账号里点一下、贴主页链接，或者把几张封面图拖进去（哪个平台的都行，不花钱）。',
+         line: '在「内容」栏的「封面」页里拆：从对标账号里挑一个、贴主页链接，或者把几张封面图拖进去（哪个平台的都行，不花钱）。',
          action: 'covers',
-         actionLabel: '去「封面」拆',
+         actionLabel: '拆封面 VI',
       },
    ];
 }
@@ -213,9 +212,9 @@ export function checkAdvice(check: Pick<TikhubCheck, 'result' | 'balance' | 'fre
       case 'ok':
          return { tone: empty ? ('warn' as const) : ('ok' as const), action: empty ? { label: '去充值', href: links.addCredit } : null };
       case 'bad-key':
-         return { tone: 'err' as const, action: { label: '回 TikHub 重新复制', href: links.keys } };
+         return { tone: 'err' as const, action: { label: '重新复制 key', href: links.keys } };
       case 'forbidden':
-         return { tone: 'warn' as const, action: { label: '去勾权限', href: links.keys } };
+         return { tone: 'warn' as const, action: { label: '打开 TikHub 账户', href: links.keys } };
       case 'no-balance':
          return { tone: 'warn' as const, action: { label: '去充值', href: links.addCredit } };
       default:
