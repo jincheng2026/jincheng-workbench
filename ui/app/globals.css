@@ -662,9 +662,9 @@ a.jc-button-secondary:hover {
    text-align: left;
    cursor: pointer;
 }
+/* 正在看的子页面所在的那一栏：字变深、图标变色，不加粗；加粗只给真正打开的那一项，免得两行粗字看着一大一小 */
 .jc-nav-parent[data-active] {
    color: var(--jc-ink);
-   font-weight: 600;
 }
 .jc-nav-parent[data-active] svg:first-child {
    color: var(--jc-accent);

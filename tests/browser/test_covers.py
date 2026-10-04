@@ -328,6 +328,11 @@ class CoverBrowserTests(unittest.TestCase):
         page.wait_for_selector('.jc-sidebar [data-nav-tab="research:accounts"][aria-current="page"]', timeout=5000)
         self.assertEqual(page.inner_text('h1').strip(), '对标账号')
         self.assertFalse(page.locator('.jc-column-tabs').is_visible(), '电脑上不放那排页签')
+        # 能展开的栏目名和「提示词」这种直接点开的一样大、一样粗，后面不跟展开收起的小箭头（原作者 10-04 定）
+        look = 'el => [getComputedStyle(el).fontSize, getComputedStyle(el).fontWeight, el.querySelectorAll("svg").length]'
+        plain = page.locator('.jc-sidebar a[data-nav="prompts"]').evaluate(look)
+        self.assertEqual(content.evaluate(look), plain)
+        self.assertEqual(research.evaluate(look), plain)
         content.click()
         self.assertEqual(content.get_attribute('aria-expanded'), 'true')
         self.assertIn('/research', page.url, '点栏目名只展开，不换页')
