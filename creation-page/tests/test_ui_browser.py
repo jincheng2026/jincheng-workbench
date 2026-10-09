@@ -33,6 +33,9 @@ class UiBrowserTests(unittest.TestCase):
     def test_refnote(self): self.run_scenario('refnote')  # 参考分析：两家以上先看分析、原文按家收起、讲法点着色、可以借的跳建议、骨架对照、一家照旧展开、分析里写给 AI
     def test_extension(self): self.run_scenario('extend')  # 教程假数据：新字段、新种类不报错，兜底模块能改能存；「说明」类参考
     def test_anchor(self): self.run_scenario('anchor')  # 建议贴着原文：定位原句、按原文排序、点原文亮卡、逐条看自动跳下一条、对不上的归到最后、窄屏退到下面
+    def test_cardedit(self): self.run_scenario('cardedit')  # 建议卡直接改：点删改对照就改「改成」、「采纳后在我的版本改」选中替换后的这句、自己改掉原句的那条留在原处
+    def test_readedit(self): self.run_scenario('readedit')  # 通读里直接改：「改这一段」原地变输入框、改的字存进我的版本、拼音选字途中不存、Esc 收起、回对照框高跟着字数
+    def test_longedit(self): self.run_scenario('longedit')  # 长稿改到下面：宽屏我的版本那一栏打字撑高时不跳回顶上
     def test_guide(self): self.run_scenario('guide')  # 新手指引第二段：两步（亮建议和原句、只亮采纳）、别的快捷键不响应、刷新接着走、采纳存回并弹完成反馈、Esc 跳过、第一次不采纳嵌一句提示、?hints=off 不提、窄屏不出屏
 
 

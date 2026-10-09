@@ -552,9 +552,11 @@
       R.total,
       h('div', { class: 'seg-switch', role: 'group', 'aria-label': '视图' }, [R.viewBtns.compare, has('reading') ? R.viewBtns.reading : null, R.viewBtns.record || null, R.viewBtns.publish || null]),
       h('span', { class: 'brk brk-b', 'aria-hidden': 'true' }),
-      R.nav
+      R.nav,
+      R.foldBtn = h('button', { type: 'button', class: 'btn fold-btn', 'aria-expanded': 'true', title: '收起顶栏：只留标题、保存状态、段落条和复制提词稿，给稿子腾地方', onclick: function () { toggleFold(); } }, '收起')
     ]));
     R.topbar = top;
+    if (foldPref()) setFoldUi(true);
     placeTopbar();
     if (window.matchMedia) { var mq = window.matchMedia(COMPACT_MQ); if (mq.addEventListener) mq.addEventListener('change', placeTopbar); else if (mq.addListener) mq.addListener(placeTopbar); }
     segs.forEach(function (s, i) {
@@ -595,6 +597,22 @@
     R.saveInd.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
   function closePops() { toggleMore(false); toggleSavePop(false); }
+  // 顶栏收起：所有创作页共用一个偏好，存在这台浏览器里；收起后一行，展开回到原来的样子
+  function foldPref() { try { return localStorage.getItem('jc-cp-topfold') === '1'; } catch (e) { return false; } }
+  function setFoldUi(on) {
+    R.topbar.classList.toggle('folded', on);
+    R.foldBtn.textContent = on ? '展开' : '收起';
+    R.foldBtn.setAttribute('aria-expanded', on ? 'false' : 'true');
+    R.foldBtn.title = on ? '展开顶栏：显示阶段、计数、复制给 AI、内容已确认、更多，以及对照和通读的切换' : '收起顶栏：只留标题、保存状态、段落条和复制提词稿，给稿子腾地方';
+  }
+  function toggleFold(on) {
+    if (!R.topbar) return;
+    on = on == null ? !R.topbar.classList.contains('folded') : !!on;
+    closePops();
+    setFoldUi(on);
+    try { localStorage.setItem('jc-cp-topfold', on ? '1' : '0'); } catch (e) { /* 存不了就只管这一次 */ }
+    refreshStickyPad();
+  }
   document.addEventListener('click', function (e) {
     if (!R.topbar) return;
     if (R.more.classList.contains('open') && !R.more.contains(e.target)) toggleMore(false);
@@ -828,8 +846,15 @@
     var basis = L.basis && typeof L.basis === 'object' ? L.basis : { type: '', text: String(L.basis || '') };
     c.proposed = hasField(sug, 'proposed') ? h('textarea', { class: 'proposed', 'data-item': sug.id, 'data-field': 'proposed', autocomplete: 'off', 'data-jc-wait': true, readonly: true, rows: 2, 'aria-label': '改成' }) : null;
     if (c.proposed) { c.proposed.value = val(sug.id, 'proposed'); c.proposed.addEventListener('input', function () { autoGrow(c.proposed); updateCard(sug); }); }
-    c.editBox = c.proposed ? h('div', { class: 'edit-box', hidden: true }, [h('div', { class: 'lbl' }, '改成（改好后点「采纳」；清空表示删掉这句）'), c.proposed]) : null;
-    c.change = h('div', { class: 'change' });
+    // 改「改成」时，输入框就放在删改对照原来的位置（对照先藏起来，上面只留一行不会变的原句），打字时上面的字不跟着跳；
+    // 收起或定了以后再按改好的字重画对照
+    c.origLine = c.proposed ? h('div', { class: 'orig-line' }) : null;
+    c.editBox = c.proposed ? h('div', { class: 'edit-box', hidden: true }, [c.origLine, h('div', { class: 'lbl' }, '改成（直接在这里改，改好后点「采纳」；清空表示删掉这句）'), c.proposed]) : null;
+    // 卡片上的删改对照：还没定、能采纳时点一下就打开「改成」输入框直接改
+    c.change = h('div', { class: 'change', onclick: function (e) {
+      if (!c.proposed || c.editing || val(sug.id, 'decision') || c.editFirst.disabled) return;
+      e.stopPropagation(); editFirst(sug, true);
+    } });
     if (L.reason) {
       c.reason = h('p', { class: 'reason clamp' }, [h('span', { class: 'k' }, '为什么改：'), String(L.reason)]);
       c.reasonMore = h('button', { type: 'button', class: 'reason-more', hidden: true, 'aria-expanded': 'false', onclick: function () {
@@ -848,7 +873,9 @@
     c.yes = h('button', { type: 'button', class: 'yes', onclick: function () { adopt(sug); } }, ['采纳 ', h('kbd', null, 'A')]);
     c.no = h('button', { type: 'button', onclick: function () { reject(sug); } }, ['不采纳 ', h('kbd', null, 'R')]);
     c.editFirst = c.proposed ? h('button', { type: 'button', class: 'edit-first', 'aria-expanded': 'false', onclick: function () { editFirst(sug); } }, '先改再采纳') : null;
-    c.pendingActs = h('div', { class: 'card-actions' }, [c.yes, c.no, c.editFirst]);
+    // 长建议在卡片里改看不全：先采纳，再把换进去的那部分在我的版本里选中，直接在我的版本里接着改
+    c.adoptEdit = h('button', { type: 'button', class: 'adopt-edit', title: '采纳：先用这句替换我的版本里的原句，再在我的版本里选中替换后的这句，你接着改', onclick: function () { adoptThenEdit(sug); } }, '采纳后在我的版本改');
+    c.pendingActs = h('div', { class: 'card-actions' }, [c.yes, c.no, c.editFirst, c.adoptEdit]);
     c.decided = h('span', { class: 'decided-text' });
     c.revoke = h('button', { type: 'button', title: '撤销这个决定，改回待确认', onclick: function () { revoke(sug); } }, '撤销决定');
     c.doneActs = h('div', { class: 'card-actions done', hidden: true }, [c.decided, c.revoke]);
@@ -873,9 +900,9 @@
         h('span', { class: 'grow' }), c.badge, c.foldBtn
       ]),
       c.change,
+      c.editBox,
       c.reasonBox,
       c.basisText,
-      c.editBox,
       c.miss, c.warn, c.pendingActs, c.doneActs
     ]);
     if (RO) RO.observe(c.el);
@@ -923,11 +950,26 @@
   }
   // 一段建议的显示顺序：找得到位置的按位置排（同一处按生成的先后）；找不到的已处理建议其次；找不到的待定建议（对不上了）最后。
   // 编号按这个顺序从 1 起。已采纳的按改后的句子找位置，还在原处，所以采纳、不采纳以后编号不变
+  // 待定的建议原句被用户自己改掉了：用原句开头或结尾还剩下的一截（至少 6 个字、在稿子里只出现一次）找回大概的位置，
+  // 卡片留在原来的地方，不挪到这段最后；一截都找不到才排到最后
+  function nearOf(sug, mine) {
+    var o = Array.from(norm(sug.locked.original || '')), nm = norm(mine);
+    for (var n = Math.min(14, o.length - 1); n >= 6; n--) {
+      var head = o.slice(0, n).join(''), tail = o.slice(-n).join('');
+      if (countOcc(nm, head) === 1) return nm.indexOf(head);
+      if (countOcc(nm, tail) === 1) return Math.max(0, nm.indexOf(tail) - (o.length - n));
+    }
+    return -1;
+  }
   function sugOrder(seg, mine) {
     if (mine == null) mine = mineOf(seg);
-    var list = sugsOf(seg).map(function (s, i) { return { sug: s, i: i, a: anchorOf(s, mine) }; });
-    var rank = function (x) { return x.a ? 0 : isUndecided(x.sug) ? 2 : 1; };
-    list.sort(function (x, y) { return rank(x) - rank(y) || (x.a && y.a ? x.a.start - y.a.start : 0) || x.i - y.i; });
+    var list = sugsOf(seg).map(function (s, i) {
+      var a = anchorOf(s, mine), x = { sug: s, i: i, a: a, pos: a ? a.start : -1 };
+      if (!a && isUndecided(s)) x.pos = nearOf(s, mine);
+      return x;
+    });
+    var rank = function (x) { return x.pos >= 0 ? 0 : isUndecided(x.sug) ? 2 : 1; };
+    list.sort(function (x, y) { return rank(x) - rank(y) || (x.pos >= 0 && y.pos >= 0 ? x.pos - y.pos : 0) || x.i - y.i; });
     list.forEach(function (x, k) { x.no = k + 1; x.miss = !x.a && isUndecided(x.sug); });
     return list;
   }
@@ -1657,15 +1699,15 @@
     return R.reading;
   }
   function renderReading() {
-    if (!R.readText) return;
+    if (!R.readText || ST.readEdit) return; // 正在通读里改某一段：先不重画，免得把输入框和光标冲掉；改好了再画
     clear(R.readText);
     var total = 0, need = RATE * (CFG.openingSeconds || 5), placed = false;
     segs.forEach(function (seg) { total += chars(val(seg.id, 'mine')); });
     clear(R.readHead);
-    add(R.readHead, [h('b', null, '通读'), h('span', { class: 'muted' }, '全稿 ' + total + ' 字，约 ' + fmtSecs(secs(total)) + '（每秒 ' + RATE + ' 字）。红色竖线是开头 ' + (CFG.openingSeconds || 5) + ' 秒说到的地方（第 ' + need + ' 字）。选中文字可以写给 AI。')]);
+    add(R.readHead, [h('b', null, '通读'), h('span', { class: 'muted' }, '全稿 ' + total + ' 字，约 ' + fmtSecs(secs(total)) + '（每秒 ' + RATE + ' 字）。红色竖线是开头 ' + (CFG.openingSeconds || 5) + ' 秒说到的地方（第 ' + need + ' 字）。选中文字可以写给 AI；点段落上方的「改这一段」或双击段落，直接在这里改。')]);
     var seen = 0;
     segs.forEach(function (seg) {
-      var text = val(seg.id, 'mine'), n = chars(text), body = h('div', { class: 'r-text', 'data-quote-seg': seg.id });
+      var text = val(seg.id, 'mine'), n = chars(text), body = h('div', { class: 'r-text', 'data-quote-seg': seg.id, title: '双击直接改这一段；选中文字可以写给 AI', ondblclick: function () { startReadEdit(seg); } });
       // 和提词稿一样按行排、不留空行；开头 5 秒线画在全稿第 need 个字后面
       text.split('\n').filter(function (l) { return l.trim(); }).forEach(function (line) {
         var ln = chars(line), row = h('p', { class: 'r-line' });
@@ -1682,13 +1724,55 @@
       });
       var pend = sugsOf(seg).filter(isUndecided);
       R.readText.appendChild(h('section', { class: 'r-seg', 'data-seg': seg.id }, [
-        h('div', { class: 'r-label' }, [h('span', { class: 'no' }, String(seg._no)), (seg.locked.title || '') + ' · ' + n + ' 字，约 ' + secs(n) + ' 秒', h('button', { type: 'button', class: 'link', onclick: function () { setView('compare'); goSeg(seg._no - 1, true); } }, '改这一段')]),
+        h('div', { class: 'r-label' }, [h('span', { class: 'no' }, String(seg._no)), (seg.locked.title || '') + ' · ' + n + ' 字，约 ' + secs(n) + ' 秒', h('button', { type: 'button', class: 'link r-edit-btn', title: '这一段原地变成输入框，直接改', onclick: function () { startReadEdit(seg); } }, '改这一段'), h('button', { type: 'button', class: 'link', title: '回到对照，看着参考和修改建议改这一段', onclick: function () { setView('compare'); goSeg(seg._no - 1, true); } }, '对照着改这一段')]),
         body,
         pend.length ? h('button', { type: 'button', class: 'r-flag', onclick: function () { setView('compare'); goSeg(seg._no - 1, true); } },
           '这一段有 ' + pend.length + ' 条' + CFG.sugTitle + '待确认（' + catSummary(pend) + '），点击查看') : null
       ]));
     });
     if (CP && CP.src === 'read') paintQuote(); // 通读重画过，批注框对着的原句要重新标黄
+  }
+  // 通读里直接改：这一段原地换成输入框，
+  // 改的字转给对照里的我的版本那一格（同一格、同一套保存和撤销），拼音选字时不转，选完再转，拼音不会进文件
+  // 一段藏着的时候（在通读里改、在别的段、AI 改了文件）输入框量不了高度，字数变了框还是旧的高度，字会露到框外；
+  // 这一段重新显示出来时按现在的字数重新量一次
+  function regrowSeg(seg) {
+    var ui = seg && segUi[seg.id];
+    if (!ui) return;
+    var grow = function () { [ui.mine, ui.note].forEach(function (ta) { if (ta) autoGrow(ta); }); };
+    grow();
+    requestAnimationFrame(grow); // 切视图时这一段要等这一帧换完显示才量得到
+  }
+  function startReadEdit(seg) {
+    var ui = segUi[seg.id];
+    if (!ui || !ui.mine) return;
+    if (!kitReady() || ui.mine.readOnly) return toast('保存功能启动中，请稍后再试');
+    if (ST.readEdit) finishReadEdit();
+    var sec = R.readText.querySelector('.r-seg[data-seg="' + seg.id + '"]'), body = sec && sec.querySelector('.r-text');
+    if (!body) return;
+    var ta = h('textarea', { class: 'r-edit-box', autocomplete: 'off', 'aria-label': '在通读里改第 ' + seg._no + ' 段' }), comp = false;
+    ta.value = ui.mine.value;
+    var sync = function () { if (ui.mine.value === ta.value) return; ui.mine.value = ta.value; ui.mine.dispatchEvent(new Event('input', { bubbles: true })); };
+    ta.addEventListener('compositionstart', function () { comp = true; });
+    ta.addEventListener('compositionend', function () { comp = false; sync(); autoGrow(ta); });
+    ta.addEventListener('input', function () { autoGrow(ta); if (!comp) sync(); });
+    ta.addEventListener('keydown', function (e) { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finishReadEdit(); } });
+    ta.addEventListener('blur', function () { setTimeout(function () { if (ST.readEdit && ST.readEdit.ta === ta && document.activeElement !== ta) finishReadEdit(); }, 150); });
+    var wrap = h('div', { class: 'r-edit' }, [ta, h('div', { class: 'r-edit-bar' }, [
+      h('span', { class: 'muted' }, '停笔 1 秒自动保存到文件，和对照里的「我的版本」是同一份。按 Esc 或点别处收起'),
+      h('button', { type: 'button', class: 'btn r-edit-done', onmousedown: function (e) { e.preventDefault(); }, onclick: function () { finishReadEdit(); } }, '改好了')
+    ])]);
+    ST.readEdit = { seg: seg.id, ta: ta };
+    body.parentNode.replaceChild(wrap, body);
+    autoGrow(ta);
+    ta.focus({ preventScroll: true });
+  }
+  function finishReadEdit() {
+    if (!ST.readEdit) return;
+    var ta = ST.readEdit.ta;
+    if (ta) ta.dispatchEvent(new Event('compositionend')); // 万一选字到一半就收起，也把字转过去
+    ST.readEdit = null;
+    renderReading();
   }
   function catSummary(list) {
     var c = {};
@@ -1714,9 +1798,17 @@
   // ======================= 刷新显示 =======================
   function autoGrow(ta) {
     if (!ta || !ta.offsetParent) return;
-    var y = window.scrollY;
+    // 先记下页面和外面每一层能滚动的盒子（宽屏时我的版本那一栏自己会滚）滚到哪了：高度先设成 auto 的一瞬间盒子变矮，
+    // 浏览器会把它们的滚动位置压回去，长稿改到下面时整栏会跳回顶上，量完再还原
+    var y = window.scrollY, boxes = [];
+    for (var el = ta.parentElement; el && el !== document.body; el = el.parentElement) {
+      if (el.scrollTop) boxes.push([el, el.scrollTop]);
+    }
     ta.style.height = 'auto';
     ta.style.height = (ta.scrollHeight + ta.offsetHeight - ta.clientHeight) + 'px';
+    // 框变高以后外面那一栏可能多出一条滚动条、变窄，字就多折一行，再量一两次直到放得下，字不会露到框外
+    for (var k = 0; k < 3 && ta.scrollHeight > ta.clientHeight + 1; k++) ta.style.height = (ta.scrollHeight + ta.offsetHeight - ta.clientHeight) + 'px';
+    boxes.forEach(function (b) { if (b[0].scrollTop !== b[1]) b[0].scrollTop = b[1]; });
     if (window.scrollY !== y) window.scrollTo(window.scrollX, y);
   }
   var segTimers = {};
@@ -1872,9 +1964,9 @@
     var no = item ? String(item.no) : '';
     c.num.textContent = no; c.foldNum.textContent = no; c.num.hidden = c.foldNum.hidden = !no;
     c.num.title = item && item.a ? '在我的版本里看这一句' : '这一句在我的版本里找不到了';
-    c.foldState.textContent = dec ? (DECISION_TEXT[dec] || dec) : miss ? '对不上了' : L.verdict === '不用改' ? '无需修改' : '';
+    c.foldState.textContent = dec ? (DECISION_TEXT[dec] || dec) : miss ? '你改过了' : L.verdict === '不用改' ? '无需修改' : '';
     c.foldState.className = 'fold-state ' + (dec === '采纳' ? 'fs-ok' : dec === '不采纳' ? 'fs-no' : dec ? 'fs-part' : miss ? 'fs-miss' : 'fs-keep');
-    c.foldSnip.textContent = miss ? '这句你已经改过，这条建议对不上了：「' + snippet(L.original, 24) + '」' :
+    c.foldSnip.textContent = miss ? '这句你已经自己改过了：「' + snippet(L.original, 24) + '」' :
       dec === '采纳' ? (del ? '删掉了「' + snippet(L.original, 24) + '」' : '换成「' + snippet(prop, 26) + '」') : '「' + snippet(L.original, 26) + '」';
     c.foldBtn.hidden = !foldable || folded || hold;
     // 改的是哪一句：前一句的结尾、后一句的开头用灰字，中间是原句 → 改成的逐字删改对照；删整句时前面标「删掉这句」
@@ -1899,9 +1991,12 @@
     c.decided.textContent = dec === '采纳' ? (del ? '已从我的版本删掉这句' : '已替换我的版本里的原句') : dec === '不采纳' ? '我的版本保持不变' : dec ? '决定：' + dec : '';
     c.revoke.disabled = !ready;
     c.yes.disabled = !ready || occ !== 1; c.no.disabled = !ready; if (c.editFirst) c.editFirst.disabled = !ready || occ !== 1;
+    c.adoptEdit.disabled = !ready || occ !== 1; c.adoptEdit.hidden = del; // 删整句没有替换后的字可选
+    c.change.classList.toggle('editable', !!c.proposed && !dec && !c.editing && occ === 1 && ready);
+    if (c.change.classList.contains('editable')) c.change.title = '点一下直接改「改成」\n' + c.change.title;
     c.yes.title = del ? '采纳：从我的版本删掉这句' : '采纳：用这句替换我的版本里的原句';
     c.miss.hidden = dec || occ === 1;
-    c.miss.textContent = occ === 0 ? '这句你已经改过，这条建议对不上了' : occ > 1 ? '这句在我的版本里出现了 ' + occ + ' 次，无法确定替换哪一处。先把多出来的几处改掉，再采纳' : '';
+    c.miss.textContent = occ === 0 ? '这句你已经自己改过了，这条建议无法再一键采纳。想照它改，就看着上面的对照在我的版本里改' : occ > 1 ? '这句在我的版本里出现了 ' + occ + ' 次，无法确定替换哪一处。先把多出来的几处改掉，再采纳' : '';
     var warn = L.verdict === '已定要改' && dec === '不采纳' ? '此前已决定要改，这次未采纳' : L.verdict === '不用改' && dec === '采纳' ? '结论是无需修改，这次已采纳' : '';
     c.warn.hidden = !warn; c.warn.textContent = warn;
     // 「改成」输入框：点了「先改再采纳」才出来；已经定了就收起；这一格被 kit 锁住（有冲突）时一直露着
@@ -1909,6 +2004,8 @@
       if (dec) c.editing = false;
       var locked = c.proposed.classList.contains('jc-kit-locked');
       c.editBox.hidden = !(c.editing || locked);
+      c.change.hidden = !c.editBox.hidden;
+      if (!c.editBox.hidden) { clear(c.origLine); add(c.origLine, [h('span', { class: 'k' }, '原句：'), String(L.original || '')]); }
       c.editFirst.textContent = c.editing ? '收起修改框' : '先改再采纳';
       c.editFirst.setAttribute('aria-expanded', c.editing ? 'true' : 'false');
       if (!c.editBox.hidden) autoGrow(c.proposed);
@@ -2028,6 +2125,7 @@
       if (s._nav) { s._nav.classList.toggle('now', j === i); s._nav.setAttribute('aria-current', j === i ? 'true' : 'false'); }
     });
     var seg = segs[i];
+    regrowSeg(seg);
     navIntoView(seg._nav);
     var first = pendingInOrder(seg).filter(cardVisible)[0]; // 原文里第一条待确认的
     ST.activeSug = first ? first.id : null;
@@ -2049,6 +2147,7 @@
   }
   var stepsOpenBefore = null; // 进录制视图前各段「录屏步骤」开没开，出来时还原
   function setView(v) {
+    if (ST.readEdit && v !== 'reading') { var _e = ST.readEdit; ST.readEdit = null; if (_e.ta) _e.ta.dispatchEvent(new Event('compositionend')); }
     if (v === 'reading' && !R.reading) return;
     if (v === 'record' && !R.recordHead) return;
     if (v === 'publish' && !R.publish) return;
@@ -2071,7 +2170,7 @@
       stepsOpenBefore = null;
     }
     if (v === 'reading') { renderReading(); if (R.recorded) autoGrow(R.recorded); }
-    else if (segs[ST.seg]) refreshSeg(segs[ST.seg]);
+    else if (segs[ST.seg]) { regrowSeg(segs[ST.seg]); refreshSeg(segs[ST.seg]); }
     persist();
     refreshAll();
     // 录制视图是一整张清单：切过去时从清单顶上看起；从录制切回对照时回到当前这一段（对照只显示这一段）
@@ -2133,23 +2232,39 @@
   }
 
   // ======================= 操作 =======================
-  function adopt(sug) {
+  function adopt(sug, then) {
     var seg = segOf(sug), L = sug.locked, c = cardUi[sug.id];
     if (!seg) return toast('找不到这条建议对应的段落，请让 AI 检查这条建议');
     if (!kitReady()) return toast('保存功能启动中，请稍后再试');
     if (val(sug.id, 'decision')) return toast('这条建议' + (DECISION_TEXT[val(sug.id, 'decision')] || '已有决定') + '。要重新决定，先点卡片上的「撤销决定」');
     var mine = val(seg.id, 'mine'), prop = c && c.proposed ? c.proposed.value : val(sug.id, 'proposed'), occ = countOcc(mine, L.original);
-    if (occ === 0) return toast('这句你已经改过，这条建议对不上了');
+    if (occ === 0) return toast('这句你已经自己改过了，这条建议无法再一键采纳');
     if (occ > 1) return toast('这句在我的版本里出现了不止一次，无法确定替换哪一处');
     var del = isDeletion(prop), next = replaceOnce(mine, L.original, prop);
-    if (next == null) return toast('这句你已经改过，这条建议对不上了');
+    if (next == null) return toast('这句你已经自己改过了，这条建议无法再一键采纳');
     // 我的版本和决定同组提交，全成或全不成；删掉整句也一样
     var steps = [{ item: seg.id, field: 'mine', old: mine, new: next }, { item: sug.id, field: 'decision', old: val(sug.id, 'decision'), new: '采纳' }];
     if (c && c.proposed && !same(prop, kit.fileValue(sug.id, 'proposed'))) steps.push({ item: sug.id, field: 'proposed', old: kit.fileValue(sug.id, 'proposed'), new: prop, noUndo: true }); // 先改再采纳：改过的「改成」一起提交
     applySteps(steps, '采纳第 ' + seg._no + ' 段「' + snippet(L.original, 10) + '」' + (del ? '（删掉这句）' : '')).then(function (ok) {
       if (!ok) return;
-      if (!guideAdopted(sug)) toast(del ? '已采纳，从第 ' + seg._no + ' 段的「我的版本」里删掉了这句' : '已采纳，替换了第 ' + seg._no + ' 段「我的版本」里的原句');
+      if (!guideAdopted(sug) && !then) toast(del ? '已采纳，从第 ' + seg._no + ' 段的「我的版本」里删掉了这句' : '已采纳，替换了第 ' + seg._no + ' 段「我的版本」里的原句');
       afterDecide(sug, seg);
+      if (then) then(seg, prop);
+    });
+  }
+  function adoptThenEdit(sug) { // 采纳，再在我的版本里选中替换后的这句，光标留在我的版本
+    adopt(sug, function (seg, prop) {
+      var ui = segUi[seg.id];
+      if (!ui || !ui.mine) return;
+      requestAnimationFrame(function () {
+        var v = norm(ui.mine.value), p = norm(prop), at = v.indexOf(p);
+        if (at < 0) return toast('已采纳，但在我的版本里没找到替换后的这句，请直接在我的版本里改');
+        activateSug(sug, { text: true, force: true });
+        ui.mine.focus({ preventScroll: true });
+        ui.mine.setSelectionRange(at, at + p.length);
+        revealSentence(sug, true);
+        toast('已采纳，替换后的这句已在我的版本里选中，直接改就行');
+      });
     });
   }
   function reject(sug) {
@@ -2162,14 +2277,15 @@
   }
   // 定了一条以后：逐条看时跳到原文里的下一条（这一段看完就到下一段）；没在逐条看就只把「当前」挪到这段第一条待确认的
   function afterDecide(sug, seg) { if (ST.walk) walkNext(sug); else nextActive(seg); }
-  function editFirst(sug) { // 打开「改成」输入框并全选；再点一下收起（改过的字照样自动写回）
+  function editFirst(sug, caretEnd) { // 打开「改成」输入框并全选（点删改对照进来时光标放到最后）；再点一下收起（改过的字照样自动写回）
     var c = cardUi[sug.id];
     if (!c || !c.proposed) return;
     setActive(sug.id);
     c.editing = !c.editing;
     updateCard(sug);
     if (!c.editing) return;
-    c.proposed.focus(); c.proposed.select();
+    c.proposed.focus();
+    if (caretEnd) c.proposed.setSelectionRange(c.proposed.value.length, c.proposed.value.length); else c.proposed.select();
     toast('改好「改成」后点「采纳」；清空表示删掉这句');
   }
   function revoke(sug) {
@@ -2899,7 +3015,7 @@
     teleprompterText: teleprompterText, aiMarkdown: aiMarkdown, goSeg: goSeg, setView: setView, undo: function () { undo(false); }, redo: function () { undo(true); },
     state: function () { return { view: ST.view, stage: STAGE, seg: segs[ST.seg] ? segs[ST.seg].id : null, activeSug: ST.activeSug, undo: undoStack.length, redo: redoStack.length, cats: effectiveCats(), catFilter: catFilterOn(), onlyPending: ST.onlyPending, others: others.length, compact: isCompact(), walk: ST.walk }; },
     saveLabel: saveLabel, replaceOnce: replaceOnce, closePops: closePops, ctxAround: ctxAround, startWalk: function (segId) { startWalk(segId ? byId[segId] : null); },
-    order: function (segId) { var s = byId[segId]; return s ? sugOrder(s).map(function (x) { return { id: x.sug.id, no: x.no, start: x.a ? x.a.start : -1, miss: x.miss }; }) : []; },
+    order: function (segId) { var s = byId[segId]; return s ? sugOrder(s).map(function (x) { return { id: x.sug.id, no: x.no, start: x.a ? x.a.start : -1, near: x.pos, miss: x.miss }; }) : []; },
     side: function (segId) { return sideBySide(segUi[segId]); },
     guide: function () { return GD ? { sug: GD.sug.id, done: GD.done, step: GD.step } : null; },
     config: CFG, type: TYPE

@@ -129,7 +129,7 @@ S.flow = async (c) => {
     c.ok(await p.ev(`!${cardSel(g2)}.hidden && !${cardSel(g3)}.hidden && document.querySelector('#seg-${s2} .sug-hidden').hidden`), '写稿阶段默认显示全部类别：「表达」那条也在，没有「按类别筛掉了」');
     c.ok(await p.ev(`${cardSel(g2)}.querySelector('.yes').disabled === false`), '原句还在时可以采纳');
     await selectIn(p, mineSel(s2), '结果，他在'); await p.type('结果呢，他在');
-    c.ok(await waitFor(() => p.ev(`${cardSel(g2)}.querySelector('.yes').disabled && ${cardSel(g2)}.querySelector('.miss').textContent === '这句你已经改过，这条建议对不上了'`), 3000), '原句被改后采纳按钮变灰，写明对不上了');
+    c.ok(await waitFor(() => p.ev(`${cardSel(g2)}.querySelector('.yes').disabled && ${cardSel(g2)}.querySelector('.miss').textContent.startsWith('这句你已经自己改过了')`), 3000), '原句被改后采纳按钮变灰，写明「这句你已经自己改过了」');
     c.ok(await waitFor(() => fieldOf(file, s2, 'mine').includes('结果呢，他在'), 6000), '改动照样写回');
     await blur(p);
     // 6. R 键不采纳（当前选中的卡是「表达」那条：衔接那条已对不上，A 会提示）
@@ -456,11 +456,14 @@ S.cards = async (c) => {
     const g1card = `document.querySelector('.card[data-sug=${q(g1)}]')`;
     await p.click(`${g1card}.querySelector('.edit-first')`);
     c.ok(await p.ev(`!${g1card}.querySelector('.edit-box').hidden && document.activeElement === ${g1card}.querySelector('textarea.proposed') && ${g1card}.querySelector('.edit-first').textContent === '收起修改框'`), '「先改再采纳」打开输入框、光标放进去，按钮变「收起修改框」');
+    const hBefore = await p.ev(`${g1card}.querySelector('textarea.proposed').getBoundingClientRect().top`);
     await p.type('我自己都觉得在做梦');
-    c.ok(await waitFor(() => p.ev(`${g1card}.querySelector('.change ins') && ${g1card}.querySelector('.change').textContent.includes('在做梦')`), 2000), '改的字即时出现在删改对照里');
+    c.ok(await p.ev(`${g1card}.querySelector('.change').hidden && ${g1card}.querySelector('.orig-line').textContent.includes(${q('我自己都觉得跟做梦一样')})`), '改的时候删改对照藏起来，输入框上面只留一行不变的原句');
+    c.ok(Math.abs((await p.ev(`${g1card}.querySelector('textarea.proposed').getBoundingClientRect().top`)) - hBefore) < 2, '打字时输入框上面的内容不动');
     c.ok(await waitFor(() => fieldOf(file, g1, 'proposed') === '我自己都觉得在做梦', 6000), '改的「改成」照样写回文件');
     await p.click(`${g1card}.querySelector('.edit-first')`);
     c.ok(await p.ev(`${g1card}.querySelector('.edit-box').hidden`), '再点「收起修改框」收起');
+    c.ok(await waitFor(() => p.ev(`!${g1card}.querySelector('.change').hidden && ${g1card}.querySelector('.change ins') && ${g1card}.querySelector('.change').textContent.includes('在做梦')`), 2000), '收起以后，删改对照按改好的字重画');
 
     // 「改成」有冲突（用户正在改，AI 同时改了同一格）：输入框收着也要露出来并锁住，冲突框挂在卡片里
     const g4 = pg.ids.sugs[3], g4card = `document.querySelector('.card[data-sug=${q(g4)}]')`;
@@ -480,8 +483,8 @@ S.cards = async (c) => {
     await p.viewport(380, 820, false); await sleep(300);
     await p.ev('jcApp.goSeg(1, true), true'); await sleep(300);
     const narrow = await p.ev(`(function(){var k=${card};k.scrollIntoView({block:'center'});var b=[...k.querySelectorAll('.card-actions:not(.done) button')];
-      return {same:b.every(x=>x.offsetTop===b[0].offsetTop),inside:b.every(x=>x.getBoundingClientRect().right<=k.getBoundingClientRect().right+0.5),h:Math.round(k.getBoundingClientRect().height),sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth};})()`);
-    c.ok(narrow.same && narrow.inside, '380 宽建议卡的按钮一行排下，不出卡片', narrow);
+      return {same:b.slice(0,3).every(x=>x.offsetTop===b[0].offsetTop),inside:b.every(x=>x.getBoundingClientRect().right<=k.getBoundingClientRect().right+0.5),h:Math.round(k.getBoundingClientRect().height),sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth};})()`);
+    c.ok(narrow.same && narrow.inside, '380 宽建议卡的采纳、不采纳、先改再采纳一行排下，所有按钮不出卡片', narrow);
     c.ok(narrow.sw <= narrow.cw && narrow.h <= 260, `380 宽不横向滚动，卡片高 ${narrow.h} 像素`, narrow);
     await sleep(200); await p.shot(path.join(dir, '建议卡_380.png'));
     c.note('截图在 ' + dir);
@@ -979,7 +982,7 @@ S.anchor = async (c) => {
     c.ok(Math.abs(al.card - al.sent) <= 24, '第一张卡和它改的那一句差不多对齐', al);
     const ctx = await p.ev(`[...${card(d5)}.querySelectorAll('.change .cx')].map(function(x){return x.textContent;})`);
     c.ok(ctx.length === 2 && ctx[0].endsWith('招一个剪辑，') && ctx[1].startsWith('结果，他在微信上'), '卡片上带改的那一句的前一句结尾、后一句开头（灰字）', ctx);
-    c.ok(await p.ev(`${card(x6)}.classList.contains('is-folded') && ${card(x6)}.querySelector('.fold-snip').textContent.startsWith('这句你已经改过，这条建议对不上了')`), '找不到原句的那条收成一行，写明「这句你已经改过，这条建议对不上了」');
+    c.ok(await p.ev(`${card(x6)}.classList.contains('is-folded') && ${card(x6)}.querySelector('.fold-snip').textContent.startsWith('这句你已经自己改过了')`), '找不到原句的那条收成一行，写明「这句你已经自己改过了」');
     await p.shot(path.join(dir, '贴着原文_1440.png'));
 
     // 点原文那一句：对应的卡亮起来；点卡：原文那一句亮起来
@@ -1135,6 +1138,79 @@ S.guide = async (c) => {
       c.ok(box.l >= 0 && box.r <= box.w && box.t >= 0 && box.b <= box.h && box.sw <= box.w, '390 宽：气泡整个在屏幕里，页面不横向滚动', box);
       await p.shot(path.join(t.dir, '新手指引_390.png'));
     } else c.note('没有剩下待确认的建议，跳过窄屏这一项');
+    c.ok(p.errors.length === 0 && p.logs.length === 0, '页面没有脚本报错', p.errors.concat(p.logs));
+  } finally { await teardown(t); }
+};
+
+// 建议卡直接改：点删改对照就能改「改成」；「采纳后在我的版本改」采纳后在我的版本里选中替换后的这句；
+// 自己在我的版本里改掉原句的建议，留在原来的位置，写明「这句你已经自己改过了」
+S.cardedit = async (c) => {
+  const t = await setup('cardedit', c), { p, file, pg } = t;
+  const [, s2] = pg.ids.segs, [, g2, g3] = pg.ids.sugs;
+  try {
+    await waitFor(async () => (await p.bar()).state === 'green', 5000);
+    await p.ev(`jcApp.goSeg(1, true), true`); await sleep(300);
+    await p.click(`${cardSel(g3)}.querySelector('.change')`);
+    c.ok(await waitFor(() => p.ev(`!${cardSel(g3)}.querySelector('.edit-box').hidden && document.activeElement === ${cardSel(g3)}.querySelector('textarea.proposed')`), 2000), '点删改对照，直接打开「改成」输入框，光标在里面');
+    c.ok(await p.ev(`(function(){var t=${cardSel(g3)}.querySelector('textarea.proposed');return t.selectionStart===t.value.length&&t.selectionEnd===t.value.length;})()`), '光标放在最后，不全选');
+    await p.click(`${cardSel(g3)}.querySelector('.edit-first')`); await sleep(200);
+    await p.click(`${cardSel(g3)}.querySelector('.adopt-edit')`);
+    c.ok(await waitFor(() => fieldOf(file, g3, 'decision') === '采纳' && fieldOf(file, s2, 'mine').includes('有个几百万粉丝的大博主'), 6000), '「采纳后在我的版本改」：照样采纳、替换我的版本里的原句');
+    const sel = await p.ev(`(function(){var m=${mineSel(s2)};return {focus:document.activeElement===m,text:m.value.slice(m.selectionStart,m.selectionEnd)};})()`);
+    c.ok(sel.focus && sel.text === '有个几百万粉丝的大博主', '采纳后光标在我的版本，换进去的字已经选中', sel);
+    await selectIn(p, mineSel(s2), '结果，他在'); await p.type('结果呢，他在');
+    c.ok(await waitFor(() => p.ev(`${cardSel(g2)}.querySelector('.miss').textContent.startsWith('这句你已经自己改过了')`), 3000), '自己改掉原句：卡片写明「这句你已经自己改过了」');
+    const ord = await p.ev(`jcApp.order(${q(s2)})`), me = ord.filter(x => x.id === g2)[0];
+    c.ok(me && me.miss && me.near >= 0, '改掉原句的那条还找得到大概位置，留在原处，不挪到最后', ord);
+    c.ok(p.errors.length === 0 && p.logs.length === 0, '页面没有脚本报错', p.errors.concat(p.logs));
+  } finally { await teardown(t); }
+};
+
+// 通读里直接改：点「改这一段」原地变输入框，改的字写回我的版本那一格；拼音选字时不写，选完才写；Esc 收起
+S.readedit = async (c) => {
+  const t = await setup('readedit', c), { p, file, pg } = t;
+  const [s1] = pg.ids.segs;
+  try {
+    await waitFor(async () => (await p.bar()).state === 'green', 5000);
+    await p.ev(`jcApp.setView('reading'), true`); await sleep(300);
+    const btn = `document.querySelector('.r-seg[data-seg=${q(s1)}] .r-edit-btn')`;
+    c.ok(await p.ev(`!!${btn}`), '通读每段上方有「改这一段」');
+    await p.click(btn);
+    const ta = `document.querySelector('.r-seg[data-seg=${q(s1)}] textarea.r-edit-box')`;
+    c.ok(await waitFor(() => p.ev(`!!${ta} && document.activeElement === ${ta}`), 2000), '点了以后这一段原地变成输入框，光标在里面');
+    await p.ev(`(function(){var t=${ta};t.setSelectionRange(t.value.length,t.value.length);return true;})()`);
+    await p.type('【通读里加的】' + '这是在通读里一口气加上的很长一句话，用来把我的版本撑高好几行。'.repeat(4));
+    c.ok(await waitFor(() => fieldOf(file, s1, 'mine').endsWith('撑高好几行。'), 6000), '在通读里改的字写回我的版本', fieldOf(file, s1, 'mine').slice(-20));
+    // 拼音选字中：不写；选完：写
+    await p.ev(`(function(){var t=${ta};t.dispatchEvent(new Event('compositionstart'));t.value+='zhong';t.dispatchEvent(new Event('input'));return true;})()`);
+    await sleep(1800);
+    c.ok(!fieldOf(file, s1, 'mine').includes('zhong'), '拼音选字途中不写进文件');
+    await p.ev(`(function(){var t=${ta};t.value=t.value.replace(/zhong$/,'中');t.dispatchEvent(new Event('compositionend'));t.dispatchEvent(new Event('input'));return true;})()`);
+    c.ok(await waitFor(() => fieldOf(file, s1, 'mine').endsWith('撑高好几行。中'), 6000), '选完字才写进文件', fieldOf(file, s1, 'mine').slice(-20));
+    await p.key('Escape', 'Escape', 0, 27);
+    c.ok(await waitFor(() => p.ev(`!${ta} && document.querySelector('.r-seg[data-seg=${q(s1)}] .r-text').textContent.includes('撑高好几行。中')`), 2000), '按 Esc 收起，通读显示改好的字');
+    await p.ev(`jcApp.setView('compare'), true`); await sleep(300);
+    c.ok(await p.ev(`${mineSel(s1)}.value.endsWith('撑高好几行。中')`), '回到对照，我的版本也是改好的字');
+    const fit = await p.ev(`(function(){var m=${mineSel(s1)};return {sh:m.scrollHeight,ch:m.clientHeight};})()`);
+    c.ok(fit.sh <= fit.ch + 2, '回到对照，我的版本输入框撑到新字数的高度，字不会露到框外', fit);
+    c.ok(p.errors.length === 0 && p.logs.length === 0, '页面没有脚本报错', p.errors.concat(p.logs));
+  } finally { await teardown(t); }
+};
+
+// 长稿改到下面：宽屏时我的版本那一栏自己滚动，打字自动撑高时不能跳回顶上
+S.longedit = async (c) => {
+  const long = Array.from({ length: 40 }, (_, i) => `第 ${i + 1} 句，这是一段很长的我的版本，用来把右边那一栏撑得比屏幕还高。`).join('');
+  const t = await setup('longedit', c, { height: 700, mutate: d => { d.segments[0].mine = long; d.segments[0].baseline = long; } }), { p, pg } = t;
+  const [s1] = pg.ids.segs;
+  try {
+    await waitFor(async () => (await p.bar()).state === 'green', 5000);
+    const cell = `document.querySelector('#seg-${s1} .mine-cell')`;
+    const before = await p.ev(`(function(){var m=${cell},t=${mineSel(s1)};t.focus();t.setSelectionRange(t.value.length,t.value.length);m.scrollTop=m.scrollHeight;return {top:m.scrollTop,sh:m.scrollHeight,ch:m.clientHeight,pos:getComputedStyle(m).position,y:scrollY};})()`);
+    c.ok(before.pos === 'sticky' && before.sh > before.ch + 100 && before.top > 100, '宽屏我的版本那一栏自己滚动，已滚到下面', before);
+    await p.type('加一句');
+    await sleep(300);
+    const after = await p.ev(`(function(){var m=${cell};return {top:m.scrollTop,y:scrollY};})()`);
+    c.ok(Math.abs(after.top - before.top) < 40, '在下面打字，那一栏的滚动位置不跳回顶上', { before, after });
     c.ok(p.errors.length === 0 && p.logs.length === 0, '页面没有脚本报错', p.errors.concat(p.logs));
   } finally { await teardown(t); }
 };
